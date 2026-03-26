@@ -1,0 +1,208 @@
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Quicksand:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 20 33% 97%;
+    --foreground: 0 0% 20%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 20%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 20%;
+
+    --primary: 14 68% 62%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 230 30% 63%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 20 20% 94%;
+    --muted-foreground: 0 0% 45%;
+
+    --accent: 14 68% 62%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 65% 58%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 150 45% 50%;
+    --success-foreground: 0 0% 100%;
+
+    --border: 20 15% 90%;
+    --input: 20 15% 88%;
+    --ring: 14 68% 62%;
+
+    --radius: 1rem;
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 0 0% 20%;
+    --sidebar-primary: 14 68% 62%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 20 20% 94%;
+    --sidebar-accent-foreground: 0 0% 20%;
+    --sidebar-border: 20 15% 90%;
+    --sidebar-ring: 14 68% 62%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(14 68% 62%), hsl(230 30% 63%));
+    --gradient-hero: linear-gradient(135deg, hsl(14 68% 62% / 0.1) 0%, hsl(230 30% 63% / 0.08) 50%, hsl(20 33% 97%) 100%);
+    --gradient-warm: linear-gradient(135deg, #E07A5F, #C06A9F, #7F8BC4);
+
+    --font-display: 'Quicksand', sans-serif;
+    --font-body: 'Be Vietnam Pro', 'Nunito', sans-serif;
+  }
+
+  .dark {
+    --background: 0 0% 9%;
+    --foreground: 220 13% 95%;
+
+    --card: 0 0% 14%;
+    --card-foreground: 220 13% 95%;
+
+    --popover: 0 0% 14%;
+    --popover-foreground: 220 13% 95%;
+
+    --primary: 14 68% 62%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 230 30% 63%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 0 0% 18%;
+    --muted-foreground: 220 10% 60%;
+
+    --accent: 14 68% 62%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 65% 58%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 150 45% 50%;
+    --success-foreground: 0 0% 100%;
+
+    --border: 0 0% 22%;
+    --input: 0 0% 20%;
+    --ring: 14 68% 62%;
+
+    --sidebar-background: 0 0% 14%;
+    --sidebar-foreground: 220 13% 95%;
+    --sidebar-primary: 14 68% 62%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 18%;
+    --sidebar-accent-foreground: 220 13% 95%;
+    --sidebar-border: 0 0% 22%;
+    --sidebar-ring: 14 68% 62%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(14 68% 62%), hsl(230 30% 63%));
+    --gradient-hero: linear-gradient(135deg, hsl(14 68% 62% / 0.15) 0%, hsl(230 30% 63% / 0.12) 50%, hsl(0 0% 9%) 100%);
+    --gradient-warm: linear-gradient(135deg, #E07A5F, #C06A9F, #7F8BC4);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-body);
+    font-size: 16px;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+  }
+}
+
+@layer components {
+  .btn-primary-gradient {
+    background: var(--gradient-primary);
+    @apply text-primary-foreground font-semibold rounded-2xl px-8 py-3 transition-transform duration-200 shadow-md;
+  }
+
+  .btn-primary-gradient:hover {
+    transform: scale(1.03);
+    box-shadow: 0 8px 25px -5px hsl(14 68% 62% / 0.4);
+  }
+
+  .btn-primary-gradient:active {
+    transform: scale(0.95);
+  }
+
+  .btn-secondary {
+    @apply px-6 py-3 rounded-2xl border-2 border-secondary text-secondary font-semibold transition-all;
+  }
+
+  .btn-secondary:hover {
+    @apply bg-secondary text-secondary-foreground;
+  }
+
+  .glass-nav {
+    @apply backdrop-blur-md border-b border-border;
+    background: hsl(var(--background) / 0.85);
+  }
+
+  .card-pastel {
+    @apply bg-card rounded-2xl border border-border shadow-sm;
+  }
+
+  .speech-bubble {
+    @apply bg-card rounded-2xl p-4 shadow-lg border border-border relative;
+  }
+
+  .speech-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    right: 40px;
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 10px solid hsl(var(--card));
+  }
+
+  .coral-box {
+    background: var(--gradient-primary);
+    @apply text-primary-foreground rounded-2xl px-6 py-3 font-bold text-2xl text-center shadow-md;
+    font-family: var(--font-display);
+  }
+
+  .guide-panel {
+    @apply bg-card rounded-2xl border border-border p-4 shadow-sm;
+  }
+
+  .progress-ring {
+    animation: spin-ring 3s linear infinite;
+  }
+
+  @keyframes spin-ring {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-3px); }
+    20%, 40%, 60%, 80% { transform: translateX(3px); }
+  }
+
+  .animate-shake {
+    animation: shake 0.5s ease-in-out;
+  }
+
+  @keyframes pop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+  }
+
+  .animate-pop {
+    animation: pop 0.3s ease-in-out;
+  }
+}
