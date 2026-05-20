@@ -104,104 +104,104 @@
 
 ## US-33
 - Classification: Not Implemented
-- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 130; Flow 138); `src/pages/VocabularyPack.tsx:396-404`; `src/contexts/AuthContext.tsx:178-186`.
 - Why: Lesson completion persists completed lessons and minutes only; XP state and XP award logic are absent.
+- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 130; Flow 138); `src/pages/VocabularyPack.tsx:396-404`; `src/contexts/AuthContext.tsx:178-186`.
 - FE Solution: Add `xp` to `LearningStats`, increment on lesson completion, and persist with duplicate-award guard.
 - US/AC Solution: Specify XP formula per lesson and AC for duplicate completion attempts.
 - Release/Effort: v1.1 / M
 
 ## US-34
 - Classification: Not Implemented
-- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 121; Flow 125; Flow 130); `src/pages/VocabularyPack.tsx:296`; `src/pages/VocabularyPack.tsx:373-375`; `src/contexts/AuthContext.tsx:178-186`.
 - Why: Quiz completion transitions to lesson completion but does not trigger a quiz-specific XP award path.
+- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 121; Flow 125; Flow 130); `src/pages/VocabularyPack.tsx:296`; `src/pages/VocabularyPack.tsx:373-375`; `src/contexts/AuthContext.tsx:178-186`.
 - FE Solution: Add `grantXp("quiz_complete")` in quiz completion flow with correctness-aware payload.
 - US/AC Solution: Define eligible quiz types, pass threshold, and retry policy for quiz XP.
 - Release/Effort: v1.1 / M
 
 ## US-35
 - Classification: Not Implemented
-- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 130; no matching flow for XP reward popup); `src/pages/VocabularyPack.tsx:396-404`; `src/pages/Profile.tsx:157-181`.
 - Why: No XP animation/toast component is triggered after lesson or quiz completion.
+- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 130; no matching flow for XP reward popup); `src/pages/VocabularyPack.tsx:396-404`; `src/pages/Profile.tsx:157-181`.
 - FE Solution: Add animated XP popup/toast showing reward amount and updated total XP.
 - US/AC Solution: Define popup timing, duration, and behavior for consecutive rewards.
 - Release/Effort: v1.1 / S
 
 ## US-36
 - Classification: Not Implemented
-- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 100; Flow 101); `src/pages/Profile.tsx:157-181`; `src/contexts/AuthContext.tsx:16-21`.
 - Why: Profile stat cards display streak/completed/minutes only; total XP is not modeled or rendered.
+- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 100; Flow 101); `src/pages/Profile.tsx:157-181`; `src/contexts/AuthContext.tsx:16-21`.
 - FE Solution: Add XP into context stats and render a dedicated XP metric card on profile.
 - US/AC Solution: Clarify whether XP display is lifetime or period-based.
 - Release/Effort: v1.1 / S
 
 ## US-37
 - Classification: Mismatch
-- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 28; Flow 31); `src/contexts/AuthContext.tsx:75-83`; `src/contexts/AuthContext.tsx:120-134`.
 - Why: Streak is currently incremented by login date checks, not by first learning action of the day.
+- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 28; Flow 31); `src/contexts/AuthContext.tsx:75-83`; `src/contexts/AuthContext.tsx:120-134`.
 - FE Solution: Move streak increment trigger to first daily learning completion and keep login-time reconciliation fallback.
 - US/AC Solution: Explicitly define streak trigger semantics (login vs learning completion) and timezone rule.
 - Release/Effort: v1.1 / M
 
 ## US-38
 - Classification: Mismatch
-- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 100; Flow 101); `src/pages/Profile.tsx:163-165`; `src/pages/Profile.tsx:270-274`.
 - Why: Streak value is displayed but no explicit "streak increased" visual feedback exists.
+- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 100; Flow 101); `src/pages/Profile.tsx:163-165`; `src/pages/Profile.tsx:270-274`.
 - FE Solution: Add streak-delta animation/toast when streak increases.
 - US/AC Solution: Define when feedback is shown and whether it appears once per day.
 - Release/Effort: v1.1 / S
 
 ## US-39
 - Classification: Mismatch
-- Evidence: docs/EXE101_FE_Business_Flows.md (no matching flow for streak-reset notification); `src/contexts/AuthContext.tsx:75-83`; `src/pages/Profile.tsx:270-274`.
 - Why: Reset-to-1 logic exists, but learners are not notified when a streak is reset.
+- Evidence: docs/EXE101_FE_Business_Flows.md (no matching flow for streak-reset notification); `src/contexts/AuthContext.tsx:75-83`; `src/pages/Profile.tsx:270-274`.
 - FE Solution: Track reset reason/time and surface a reset notification banner/toast on next session.
 - US/AC Solution: Add AC for reset message copy, visibility, and dismiss behavior.
 - Release/Effort: v1.1 / S
 
 ## US-40
 - Classification: Not Implemented
-- Evidence: docs/EXE101_FE_Business_Flows.md (no matching flow for longest-streak capture/display); `src/contexts/AuthContext.tsx:16-21`; `src/pages/Profile.tsx:157-181`.
 - Why: Only current streak is tracked; no `longestStreak` metric is stored or shown.
+- Evidence: docs/EXE101_FE_Business_Flows.md (no matching flow for longest-streak capture/display); `src/contexts/AuthContext.tsx:16-21`; `src/pages/Profile.tsx:157-181`.
 - FE Solution: Add `longestStreak` to stats, update it during streak growth, and render in profile.
 - US/AC Solution: Define longest-streak reset/carry-over behavior.
 - Release/Effort: v1.1 / M
 
 ## US-41
 - Classification: Not Implemented
-- Evidence: docs/EXE101_FE_Business_Flows.md (no matching flow for XP multiplier rules); `src/contexts/AuthContext.tsx:16-21`; `src/pages/VocabularyPack.tsx:396-404`.
 - Why: No XP system or streak-milestone multiplier logic exists in current reward path.
+- Evidence: docs/EXE101_FE_Business_Flows.md (no matching flow for XP multiplier rules); `src/contexts/AuthContext.tsx:16-21`; `src/pages/VocabularyPack.tsx:396-404`.
 - FE Solution: Implement configurable multiplier table and apply it during XP grants.
 - US/AC Solution: Specify milestone thresholds, multiplier values, and rounding rules.
 - Release/Effort: v2 / M
 
 ## US-43
 - Classification: Not Implemented
-- Evidence: docs/EXE101_FE_Business_Flows.md (no matching flow for leaderboard period switching); `src/pages/Leaderboard.tsx:39`; `src/pages/Leaderboard.tsx:12-23`.
 - Why: Leaderboard is fixed to weekly wording/data and has no monthly mode selector.
+- Evidence: docs/EXE101_FE_Business_Flows.md (no matching flow for leaderboard period switching); `src/pages/Leaderboard.tsx:39`; `src/pages/Leaderboard.tsx:12-23`.
 - FE Solution: Add Week/Month tabs with period state and monthly data branch.
 - US/AC Solution: Define month-boundary, timezone, and tie-break rules.
 - Release/Effort: v1.1 / M
 
 ## US-44
 - Classification: Not Implemented
-- Evidence: docs/EXE101_FE_Business_Flows.md (no matching flow for self-rank highlight interactions); `src/pages/Leaderboard.tsx:73-94`; `src/pages/Leaderboard.tsx:12-23`.
 - Why: Current leaderboard does not identify current user row or pin self rank.
+- Evidence: docs/EXE101_FE_Business_Flows.md (no matching flow for self-rank highlight interactions); `src/pages/Leaderboard.tsx:73-94`; `src/pages/Leaderboard.tsx:12-23`.
 - FE Solution: Add `isCurrentUser` highlighting and "your rank" pinned row when outside top list.
 - US/AC Solution: Define behavior for users outside top 10 and highlight accessibility requirements.
 - Release/Effort: v1.1 / S
 
 ## US-46
 - Classification: Mismatch
-- Evidence: docs/EXE101_FE_Business_Flows.md (no matching flow for XP milestone badge unlock); `src/pages/Profile.tsx:242`; `src/pages/Profile.tsx:254`; `src/contexts/AuthContext.tsx:16-21`.
 - Why: XP milestone badge exists but is hardcoded locked (`unlocked: false`) due missing XP tracking.
+- Evidence: docs/EXE101_FE_Business_Flows.md (no matching flow for XP milestone badge unlock); `src/pages/Profile.tsx:242`; `src/pages/Profile.tsx:254`; `src/contexts/AuthContext.tsx:16-21`.
 - FE Solution: Bind XP badge unlock rules to actual `stats.xp` thresholds.
 - US/AC Solution: Define milestone ladder and unlock persistence behavior.
 - Release/Effort: v1.1 / S
 
 ## US-48
 - Classification: Mismatch
-- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 117; Flow 125); `src/pages/VocabularyPack.tsx:195-201`; `src/pages/Profile.tsx:243`.
 - Why: Perfect-score badge exists, but quiz flows do not persist perfect-score results and badge remains hardcoded locked.
+- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 117; Flow 125); `src/pages/VocabularyPack.tsx:195-201`; `src/pages/Profile.tsx:243`.
 - FE Solution: Persist quiz accuracy/perfect-attempt outcomes and unlock badge when criteria are met.
 - US/AC Solution: Define perfect-score criteria and retry constraints.
 - Release/Effort: v1.1 / M
