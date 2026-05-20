@@ -123,3 +123,32 @@
 | US-73 | Xem toan bo giao dich thanh toan | Current payment flow is end-user checkout only; there is no admin transaction-monitoring dashboard or list. | docs/EXE101_FE_Business_Flows.md (Flow 33; Flow 37; Flow 44; Flow 55; Flow 67); src/components/PremiumModal.tsx:11-18; src/components/PremiumModal.tsx:130-239; src/pages/Dashboard.tsx:42-50; src/App.tsx:18-45 | Not Implemented | Monetization UI was implemented for user conversion, without an operations/finance administration workspace. | Phase-2 blueprint: add `AdminTransactionsPage` with server-side pagination, filter by provider/status/date, transaction detail drawer, export CSV action, and reconciliation status tags. | Align US/AC to operations scope: define mandatory transaction fields, filter/export behavior, and SLA expectations for data freshness and traceability. | Must | phase-2 admin | M | Payment transaction reporting APIs + provider metadata mapping | High |
 | US-74 | Thu cong cap nhat trang thai giao dich | FE has no admin override control for payment/subscription status correction or manual reconciliation actions. | docs/EXE101_FE_Business_Flows.md (Flow 33; Flow 44; Flow 55; Flow 67); src/components/PremiumModal.tsx:38-45; src/contexts/AuthContext.tsx:37-38; src/contexts/AuthContext.tsx:166; src/App.tsx:18-45 | Not Implemented | No admin operations tooling exists for exceptional payment states needing manual correction. | Phase-2 blueprint: implement transaction detail actions (`mark_paid`, `mark_failed`, `retry_sync`) with reason capture modal, dual-confirm safeguard, permission check, and immutable audit log timeline. | Align US/AC to controlled override governance: define allowed transitions, required reason codes, approval rules, and auditable trace requirements per manual action. | Must | phase-2 admin | M | Admin override APIs + audit-log service + RBAC approvals | High |
 | US-75 | Dashboard KPI Admin | FE has no admin analytics page showing platform KPIs; existing dashboard content is learner-personalized only. | docs/EXE101_FE_Business_Flows.md (Flow 54; Flow 55; Flow 67); src/pages/Dashboard.tsx:17-23; src/pages/Dashboard.tsx:42-50; src/pages/Dashboard.tsx:289-302; src/contexts/AuthContext.tsx:16-21; src/App.tsx:18-45 | Not Implemented | Current dashboard architecture targets individual learning progress, not cross-platform admin reporting. | Phase-2 blueprint: add `AdminKpiDashboardPage` with KPI cards (total users, active subscriptions, DAU, revenue), trend charts, date-range controls, and drill-down links to users/transactions modules. | Align US/AC to measurable KPI definitions: formalize metric formulas, refresh cadence, date-range defaults/timezone, and acceptance thresholds for chart/card consistency. | Could | phase-2 admin | M | Analytics aggregation APIs + KPI definitions from product/data team | High |
+
+## Prioritized Delivery Backlog
+
+### Wave 1 (v1.1)
+- Must (11): US-01, US-02, US-06, US-08, US-17, US-37, US-50, US-58, US-59, US-60, US-62
+- Should (47): US-04, US-05, US-07, US-09, US-10, US-11, US-12, US-13, US-14, US-15, US-16, US-18, US-19, US-20, US-21, US-22, US-23, US-24, US-25, US-26, US-27, US-28, US-32, US-33, US-34, US-36, US-38, US-39, US-40, US-42, US-43, US-44, US-45, US-46, US-47, US-48, US-49, US-51, US-52, US-53, US-54, US-55, US-56, US-57, US-61, US-63, US-64
+- Could (1): US-35
+
+### Wave 2 (v2)
+- Must (0): None
+- Should (4): US-03, US-29, US-30, US-41
+- Could (1): US-31
+
+### Wave 3 (phase-2 admin)
+- Must (3): US-71, US-73, US-74
+- Should (5): US-65, US-66, US-67, US-70, US-72
+- Could (3): US-68, US-69, US-75
+
+| Release | Must | Should | Could | S | M | L |
+|---|---|---|---|---|---|---|
+| v1.1 | 11 | 47 | 1 | 40 | 19 | 0 |
+| v2 | 0 | 4 | 1 | 0 | 5 | 0 |
+| phase-2 admin | 3 | 5 | 3 | 0 | 11 | 0 |
+
+## Execution Notes
+- Sequence mismatch fixes in active learner-facing modules first (auth, progression, paywall/payment, dictionary access) before adding net-new flows.
+- Sequence user-facing not-implemented stories next, completing v1.1 gaps before v2 enhancements.
+- Keep `phase-2 admin` delivery as the final track after learner-facing releases stabilize.
+- Synchronize every FE implementation change with paired US/AC wording updates to keep behavior and acceptance criteria aligned.
