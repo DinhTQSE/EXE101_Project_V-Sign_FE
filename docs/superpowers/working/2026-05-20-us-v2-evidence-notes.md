@@ -208,8 +208,8 @@
 
 ## US-50
 - Classification: Mismatch
-- Why: Dictionary is implemented as a Dashboard tab, so guest/public access path is not exposed in this module set.
-- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 55; Flow 67); `src/pages/Dashboard.tsx:42-50`; `src/pages/Dashboard.tsx:297`.
+- Why: Dictionary is implemented as a Dashboard tab and `/dashboard` is auth-guarded, so guest/public access path is not exposed.
+- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 55; Flow 67); `src/pages/Dashboard.tsx:42-50`; `src/pages/Dashboard.tsx:297`; `src/App.tsx:22`; `src/App.tsx:31`.
 - FE Solution: Add a public `/dictionary` route and guest navigation entry, while preserving the dashboard tab for signed-in users.
 - US/AC Solution: Clarify guest entrypoint and define expected behavior when guest taps "Luyen tap ngay" (redirect/login).
 - Release/Effort: v1.1 / M
@@ -217,7 +217,7 @@
 ## US-54
 - Classification: Not Implemented
 - Why: Dictionary entries and modal currently show word/category/description/video only, with no difficulty metadata or controls.
-- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 69; Flow 70; Flow 71; Flow 72); `src/pages/Dictionary.tsx:5-12`; `src/pages/Dictionary.tsx:14-46`; `src/pages/Dictionary.tsx:132-135`.
+- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 69; Flow 70; Flow 71; Flow 72); `src/pages/Dictionary.tsx:5-12`; `src/pages/Dictionary.tsx:14-46`; `src/pages/Dictionary.tsx:132-135`; `src/pages/Dictionary.tsx:172-173`.
 - FE Solution: Add `difficulty` in dictionary model/API mapping, render difficulty badge, and add difficulty filter/sort controls.
 - US/AC Solution: Define difficulty taxonomy and acceptance rules for display/filter behavior.
 - Release/Effort: v1.1 / M
@@ -234,17 +234,17 @@
 - Classification: Mismatch
 - Why: MoMo/ZaloPay is shown only as shared e-wallet text, without provider-specific MoMo QR transaction flow/state.
 - Evidence: docs/EXE101_FE_Business_Flows.md (Flow 37; Flow 44); `src/components/PremiumModal.tsx:11`; `src/components/PremiumModal.tsx:134-143`; `src/components/PremiumModal.tsx:237-250`.
-- FE Solution: Add provider selection (`momo`/`zalopay`) and fetch provider-specific QR/deep-link payload tied to transaction state.
-- US/AC Solution: Specify provider-specific steps, QR-expiry handling, and provider branding requirements.
+- FE Solution: Implement shared QR-payment foundation first (provider selector, create-order call, transaction lifecycle, QR rendering), then deliver MoMo provider config on that base.
+- US/AC Solution: Split AC into shared QR-payment core AC and MoMo-specific provider AC.
 - Release/Effort: v1.1 / M
 
 ## US-59
 - Classification: Mismatch
 - Why: QR flow is generic/static and does not expose a distinct ZaloPay-specific checkout branch.
 - Evidence: docs/EXE101_FE_Business_Flows.md (Flow 37; Flow 43; Flow 44); `src/components/PremiumModal.tsx:134-143`; `src/components/PremiumModal.tsx:195-225`; `src/components/PremiumModal.tsx:237-250`.
-- FE Solution: Implement explicit ZaloPay provider option and bind checkout status/QR to selected provider transaction context.
-- US/AC Solution: Add AC for ZaloPay-specific success/failure and QR-regeneration behavior.
-- Release/Effort: v1.1 / M
+- FE Solution: Reuse US-58 shared payment foundation and add only ZaloPay provider adapter/config plus provider-specific UI copy/assets.
+- US/AC Solution: Define ZaloPay as provider extension AC of shared QR-payment flow (provider-specific failure/retry rules).
+- Release/Effort: v1.1 / S
 
 ## US-62
 - Classification: Not Implemented
