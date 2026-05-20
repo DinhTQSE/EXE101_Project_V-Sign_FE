@@ -10,6 +10,12 @@
 - Mismatch
 - Not Implemented
 
+## Status Counts Summary
+- Total US rows: 75
+- Matched: 28
+- Mismatch: 17
+- Not Implemented: 30
+
 ## US-by-US Remediation Matrix
 
 ### Epic 1: Authentication & Profile (US-01..US-08)
@@ -72,10 +78,10 @@
 | US-39 | Thong bao reset Streak ro rang | Streak resets to 1 after missed days, but no explicit reset message is surfaced to the learner. | docs/EXE101_FE_Business_Flows.md (no matching flow for streak-reset notification); src/contexts/AuthContext.tsx:75-83; src/pages/Profile.tsx:270-274 | Mismatch | Reset happens implicitly in `calculateStreak` with no UX notification state. | Track reset reason/date and show contextual banner/toast on next session when streak is reset. | Add AC for reset-notification copy, visibility duration, and dismissal behavior. | Should | v1.1 | S | Reset metadata in streak state | High |
 | US-40 | Longest Streak tren Profile | Current stats keep only active streak; longest streak history is neither stored nor displayed. | docs/EXE101_FE_Business_Flows.md (no matching flow for longest-streak capture/display); src/contexts/AuthContext.tsx:16-21; src/pages/Profile.tsx:157-181 | Not Implemented | `LearningStats` lacks `longestStreak` and profile UI has no slot for this metric. | Add `longestStreak` in stats, update it when streak grows, and render longest-streak card on profile. | Define AC for carry-over behavior after resets and expected initial value. | Should | v1.1 | M | Streak model extension + migration fallback | High |
 | US-41 | XP Multiplier theo Streak Milestone | No multiplier config or computation exists in lesson/quiz reward paths. | docs/EXE101_FE_Business_Flows.md (no matching flow for XP multiplier rules); src/contexts/AuthContext.tsx:16-21; src/pages/VocabularyPack.tsx:396-404 | Not Implemented | XP economy is not modeled yet, so streak-based multiplier logic cannot execute. | Implement multiplier table (e.g., day 3/7/14), apply multiplier during XP grant, and show applied multiplier in reward feedback. | Add AC defining milestone thresholds, multiplier values, and rounding rules. | Should | v2 | M | Gamification economy spec + backend sync contract | High |
-| US-42 | Bang xep hang tuan | Leaderboard tab is navigable from Dashboard and renders weekly Top 10 with XP and streak data. | docs/EXE101_FE_Business_Flows.md (Flow 55; Flow 67); src/pages/Dashboard.tsx:45; src/pages/Dashboard.tsx:298; src/pages/Leaderboard.tsx:12-23; src/pages/Leaderboard.tsx:39; src/pages/Leaderboard.tsx:73-94 | Matched | None; weekly leaderboard path and content are present. | None; behavior verified in current frontend. | No change to US/AC required. | Should | v1.1 | S | None | High |
+| US-42 | Bang xep hang tuan | Leaderboard tab is reachable, but ranking data is static/hardcoded and not computed from a true weekly ranking source. | docs/EXE101_FE_Business_Flows.md (Flow 55; Flow 67); src/pages/Dashboard.tsx:45; src/pages/Dashboard.tsx:298; src/pages/Leaderboard.tsx:12-23; src/pages/Leaderboard.tsx:39; src/pages/Leaderboard.tsx:73-94 | Mismatch | Leaderboard view uses fixed local entries and lacks weekly window aggregation, recalculation, and rank tie handling. | Integrate weekly leaderboard API/data source with week-boundary parameters, dynamic sort/tie-break logic, and loading/empty/error states. | Update AC to require dynamic weekly ranking behavior (window definition, timezone reset, tie-break, and refresh cadence). | Should | v1.1 | M | Leaderboard weekly ranking API + weekly window/tie-break rules | High |
 | US-43 | Bang xep hang thang | Leaderboard only labels "Top 10 tuan nay" and has no month selector or monthly dataset. | docs/EXE101_FE_Business_Flows.md (no matching flow for leaderboard period switching); src/pages/Leaderboard.tsx:39; src/pages/Leaderboard.tsx:12-23 | Not Implemented | Screen is single-period static view without timeframe filter state. | Add Week/Month tabs, period state, and monthly ranking query branch with loading/empty states. | Define AC for month boundary, timezone, and ranking tie handling. | Should | v1.1 | M | Leaderboard API with monthly aggregation | High |
 | US-44 | Highlight vi tri cua minh | Leaderboard rows are rendered uniformly and do not identify or pin the current user's rank. | docs/EXE101_FE_Business_Flows.md (no matching flow for self-rank highlight interactions); src/pages/Leaderboard.tsx:73-94; src/pages/Leaderboard.tsx:12-23 | Not Implemented | No current-user identity mapping exists in leaderboard row model. | Add `isCurrentUser` mapping and highlight/pin logic; show own rank card when outside top list. | Add AC for behavior when user is not in top 10 and for accessibility contrast on highlighted row. | Should | v1.1 | S | Auth identity + leaderboard rank API | High |
-| US-45 | Badge cho Streak Milestone | Badge grid includes a streak milestone badge unlocked when `streak >= 7`. | docs/EXE101_FE_Business_Flows.md (Flow 100; Flow 101); src/pages/Profile.tsx:240; src/pages/Profile.tsx:244-255; src/contexts/AuthContext.tsx:75-83 | Matched | None; streak milestone unlock rule is implemented in profile badge mapping. | None; behavior verified in current frontend. | No change to US/AC required. | Should | v1.1 | S | None | High |
+| US-45 | Badge cho Streak Milestone | Badge unlock checks `streak >= 7`, but the underlying streak metric still follows login-based semantics from US-37. | docs/EXE101_FE_Business_Flows.md (Flow 100; Flow 101); src/pages/Profile.tsx:240; src/pages/Profile.tsx:244-255; src/contexts/AuthContext.tsx:75-83; src/contexts/AuthContext.tsx:120-134 | Mismatch | Badge logic depends on a streak source whose increment trigger is misaligned with learning-activity streak requirements. | After US-37, derive badge eligibility from activity-based streak events and persist deterministic unlock state with timestamp/source metadata. | Align AC with US-37 semantics so streak milestone badges unlock only from qualifying daily learning activity streaks (with timezone rule). | Should | v1.1 | S | US-37 streak semantics alignment | High |
 | US-46 | Badge cho XP Milestone | XP milestone badge exists in UI, but it is permanently locked because XP is not tracked. | docs/EXE101_FE_Business_Flows.md (no matching flow for XP milestone badge unlock); src/pages/Profile.tsx:242; src/pages/Profile.tsx:254; src/contexts/AuthContext.tsx:16-21 | Mismatch | Badge shell is present, but unlock condition is hardcoded `false`. | Wire badge unlock to `stats.xp` thresholds and recalculate unlock state after XP updates. | Add AC listing XP milestone tiers and badge unlock persistence expectations. | Should | v1.1 | S | XP tracking implementation (US-33) | High |
 | US-47 | Badge bai hoc dau tien | Profile badge unlocks after first completed lesson using `completedLessons.length >= 1`. | docs/EXE101_FE_Business_Flows.md (Flow 130); src/contexts/AuthContext.tsx:178-184; src/pages/Profile.tsx:241 | Matched | None; first-lesson completion is persisted and reflected in badge state. | Keep current logic; add small regression test for first-lesson unlock transition. | Keep AC unchanged. | Should | v1.1 | S | None | High |
 | US-48 | Badge diem tuyet doi | Perfect-score badge exists visually but is hardcoded locked with no quiz-accuracy tracking model. | docs/EXE101_FE_Business_Flows.md (Flow 117; Flow 125); src/pages/VocabularyPack.tsx:195-201; src/pages/Profile.tsx:243 | Mismatch | Quiz handlers do not persist perfect-score outcomes and badge unlock is static `false`. | Add quiz accuracy tracking, persist perfect-attempt counter, and unlock badge when criteria are met. | Clarify AC for perfect-score definition (single quiz, consecutive quizzes, retry policy). | Should | v1.1 | M | Quiz scoring persistence + badge rules config | High |
@@ -132,7 +138,7 @@ Remediation Track (Mismatch + Not Implemented)
 | Priority | US IDs | Count |
 |---|---|---|
 | Must | US-01, US-02, US-06, US-08, US-17, US-37, US-50, US-58, US-59, US-62 | 10 |
-| Should | US-14, US-18, US-26, US-32, US-33, US-34, US-36, US-38, US-39, US-40, US-43, US-44, US-46, US-48, US-54, US-55, US-63, US-64 | 18 |
+| Should | US-14, US-18, US-26, US-32, US-33, US-34, US-36, US-38, US-39, US-40, US-42, US-43, US-44, US-45, US-46, US-48, US-54, US-55, US-63, US-64 | 20 |
 | Could | US-35 | 1 |
 
 Stabilization Track (Matched: regression/test/hardening only)
@@ -140,7 +146,7 @@ Stabilization Track (Matched: regression/test/hardening only)
 | Priority | US IDs | Count |
 |---|---|---|
 | Must | US-60 | 1 |
-| Should | US-04, US-05, US-07, US-09, US-10, US-11, US-12, US-13, US-15, US-16<br>US-19, US-20, US-21, US-22, US-23, US-24, US-25, US-27, US-28, US-42<br>US-45, US-47, US-49, US-51, US-52, US-53, US-56, US-57, US-61 | 29 |
+| Should | US-04, US-05, US-07, US-09, US-10, US-11, US-12, US-13, US-15, US-16<br>US-19, US-20, US-21, US-22, US-23, US-24, US-25, US-27, US-28, US-47<br>US-49, US-51, US-52, US-53, US-56, US-57, US-61 | 27 |
 | Could | None | 0 |
 
 ### Wave 2 (v2)
@@ -181,7 +187,7 @@ Combined totals below aggregate both Remediation and Stabilization tracks for ea
 
 | Release | Must | Should | Could | S | M | L |
 |---|---|---|---|---|---|---|
-| v1.1 | 11 | 47 | 1 | 40 | 19 | 0 |
+| v1.1 | 11 | 47 | 1 | 39 | 20 | 0 |
 | v2 | 0 | 4 | 1 | 0 | 5 | 0 |
 | phase-2 admin | 3 | 5 | 3 | 0 | 11 | 0 |
 

@@ -1,3 +1,7 @@
+_Remediation scope note: this working file includes only non-matched stories (`Mismatch` + `Not Implemented`) from the v2 verification matrix._
+_Stories classified `Matched` are intentionally excluded unless they are reclassified into remediation scope._
+_Entry order follows US IDs so diffs stay aligned with the matrix report._
+
 ## US-01
 - Classification: Mismatch
 - Why: Signup and login currently share a demo-style auth path, so registration intent is not fully represented.
@@ -174,6 +178,14 @@
 - US/AC Solution: Specify milestone thresholds, multiplier values, and rounding rules.
 - Release/Effort: v2 / M
 
+## US-42
+- Classification: Mismatch
+- Why: Leaderboard displays a weekly Top 10 shell but uses static/hardcoded entries instead of true weekly ranking computation.
+- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 55; Flow 67); `src/pages/Dashboard.tsx:45`; `src/pages/Dashboard.tsx:298`; `src/pages/Leaderboard.tsx:12-23`; `src/pages/Leaderboard.tsx:39`; `src/pages/Leaderboard.tsx:73-94`.
+- FE Solution: Replace static leaderboard data with weekly API-backed ranking data, week-boundary parameters, and deterministic sort/tie-break logic.
+- US/AC Solution: Define weekly ranking semantics in AC (timezone/reset boundary, tie-break rules, refresh cadence, and empty-state behavior).
+- Release/Effort: v1.1 / M
+
 ## US-43
 - Classification: Not Implemented
 - Why: Leaderboard is fixed to weekly wording/data and has no monthly mode selector.
@@ -188,6 +200,14 @@
 - Evidence: docs/EXE101_FE_Business_Flows.md (no matching flow for self-rank highlight interactions); `src/pages/Leaderboard.tsx:73-94`; `src/pages/Leaderboard.tsx:12-23`.
 - FE Solution: Add `isCurrentUser` highlighting and "your rank" pinned row when outside top list.
 - US/AC Solution: Define behavior for users outside top 10 and highlight accessibility requirements.
+- Release/Effort: v1.1 / S
+
+## US-45
+- Classification: Mismatch
+- Why: Streak badge unlock rule (`streak >= 7`) depends on login-driven streak semantics, so milestone unlock can occur without qualifying daily learning activity.
+- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 100; Flow 101); `src/pages/Profile.tsx:240`; `src/pages/Profile.tsx:244-255`; `src/contexts/AuthContext.tsx:75-83`; `src/contexts/AuthContext.tsx:120-134`.
+- FE Solution: Recompute streak-badge eligibility from the US-37 activity-based streak source and persist deterministic unlock state metadata.
+- US/AC Solution: Link badge AC to US-37 streak semantics so unlocks require qualifying daily learning-activity streak milestones with timezone rules.
 - Release/Effort: v1.1 / S
 
 ## US-46
