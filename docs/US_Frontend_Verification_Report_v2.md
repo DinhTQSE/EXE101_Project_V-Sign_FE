@@ -127,19 +127,55 @@
 ## Prioritized Delivery Backlog
 
 ### Wave 1 (v1.1)
-- Must (11): US-01, US-02, US-06, US-08, US-17, US-37, US-50, US-58, US-59, US-60, US-62
-- Should (47): US-04, US-05, US-07, US-09, US-10, US-11, US-12, US-13, US-14, US-15, US-16, US-18, US-19, US-20, US-21, US-22, US-23, US-24, US-25, US-26, US-27, US-28, US-32, US-33, US-34, US-36, US-38, US-39, US-40, US-42, US-43, US-44, US-45, US-46, US-47, US-48, US-49, US-51, US-52, US-53, US-54, US-55, US-56, US-57, US-61, US-63, US-64
-- Could (1): US-35
+Remediation Track (Mismatch + Not Implemented)
+
+| Priority | US IDs | Count |
+|---|---|---|
+| Must | US-01, US-02, US-06, US-08, US-17, US-37, US-50, US-58, US-59, US-62 | 10 |
+| Should | US-14, US-18, US-26, US-32, US-33, US-34, US-36, US-38, US-39, US-40, US-43, US-44, US-46, US-48, US-54, US-55, US-63, US-64 | 18 |
+| Could | US-35 | 1 |
+
+Stabilization Track (Matched: regression/test/hardening only)
+
+| Priority | US IDs | Count |
+|---|---|---|
+| Must | US-60 | 1 |
+| Should | US-04, US-05, US-07, US-09, US-10, US-11, US-12, US-13, US-15, US-16<br>US-19, US-20, US-21, US-22, US-23, US-24, US-25, US-27, US-28, US-42<br>US-45, US-47, US-49, US-51, US-52, US-53, US-56, US-57, US-61 | 29 |
+| Could | None | 0 |
 
 ### Wave 2 (v2)
-- Must (0): None
-- Should (4): US-03, US-29, US-30, US-41
-- Could (1): US-31
+Remediation Track (Mismatch + Not Implemented)
+
+| Priority | US IDs | Count |
+|---|---|---|
+| Must | None | 0 |
+| Should | US-03, US-29, US-30, US-41 | 4 |
+| Could | US-31 | 1 |
+
+Stabilization Track (Matched: regression/test/hardening only)
+
+| Priority | US IDs | Count |
+|---|---|---|
+| Must | None | 0 |
+| Should | None | 0 |
+| Could | None | 0 |
 
 ### Wave 3 (phase-2 admin)
-- Must (3): US-71, US-73, US-74
-- Should (5): US-65, US-66, US-67, US-70, US-72
-- Could (3): US-68, US-69, US-75
+Remediation Track (Mismatch + Not Implemented)
+
+| Priority | US IDs | Count |
+|---|---|---|
+| Must | US-71, US-73, US-74 | 3 |
+| Should | US-65, US-66, US-67, US-70, US-72 | 5 |
+| Could | US-68, US-69, US-75 | 3 |
+
+Stabilization Track (Matched: regression/test/hardening only)
+
+| Priority | US IDs | Count |
+|---|---|---|
+| Must | None | 0 |
+| Should | None | 0 |
+| Could | None | 0 |
 
 | Release | Must | Should | Could | S | M | L |
 |---|---|---|---|---|---|---|
@@ -148,7 +184,7 @@
 | phase-2 admin | 3 | 5 | 3 | 0 | 11 | 0 |
 
 ## Execution Notes
-- Sequence mismatch fixes in active learner-facing modules first (auth, progression, paywall/payment, dictionary access) before adding net-new flows.
-- Sequence user-facing not-implemented stories next, completing v1.1 gaps before v2 enhancements.
-- Keep `phase-2 admin` delivery as the final track after learner-facing releases stabilize.
-- Synchronize every FE implementation change with paired US/AC wording updates to keep behavior and acceptance criteria aligned.
+- In each wave, execute Remediation Track before Stabilization Track.
+- Within Remediation Track, resolve mismatch fixes in active modules first (auth, progression, paywall/payment, dictionary access), then complete user-facing not-implemented stories.
+- Keep `phase-2 admin` as the final track after learner-facing waves (`v1.1`, then `v2`) stabilize.
+- Synchronize each frontend change with corresponding US/AC updates so implemented behavior and acceptance criteria remain aligned.
