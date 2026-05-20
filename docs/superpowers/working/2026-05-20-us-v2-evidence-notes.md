@@ -205,3 +205,67 @@
 - FE Solution: Persist quiz accuracy/perfect-attempt outcomes and unlock badge when criteria are met.
 - US/AC Solution: Define perfect-score criteria and retry constraints.
 - Release/Effort: v1.1 / M
+
+## US-50
+- Classification: Mismatch
+- Why: Dictionary is implemented as a Dashboard tab, so guest/public access path is not exposed in this module set.
+- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 55; Flow 67); `src/pages/Dashboard.tsx:42-50`; `src/pages/Dashboard.tsx:297`.
+- FE Solution: Add a public `/dictionary` route and guest navigation entry, while preserving the dashboard tab for signed-in users.
+- US/AC Solution: Clarify guest entrypoint and define expected behavior when guest taps "Luyen tap ngay" (redirect/login).
+- Release/Effort: v1.1 / M
+
+## US-54
+- Classification: Not Implemented
+- Why: Dictionary entries and modal currently show word/category/description/video only, with no difficulty metadata or controls.
+- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 69; Flow 70; Flow 71; Flow 72); `src/pages/Dictionary.tsx:5-12`; `src/pages/Dictionary.tsx:14-46`; `src/pages/Dictionary.tsx:132-135`.
+- FE Solution: Add `difficulty` in dictionary model/API mapping, render difficulty badge, and add difficulty filter/sort controls.
+- US/AC Solution: Define difficulty taxonomy and acceptance rules for display/filter behavior.
+- Release/Effort: v1.1 / M
+
+## US-55
+- Classification: Not Implemented
+- Why: Dictionary detail modal has no "Luyen tap ngay" CTA to start related learning flow.
+- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 72; Flow 73; Flow 75); `src/pages/Dictionary.tsx:168-192`; `src/pages/Dashboard.tsx:46`.
+- FE Solution: Add "Luyen tap ngay" CTA in dictionary modal and navigate to mapped lesson/mock-exam context with selected sign payload.
+- US/AC Solution: Define guest-vs-logged-in behavior and mapping rule when a sign can map to multiple lessons.
+- Release/Effort: v1.1 / M
+
+## US-58
+- Classification: Mismatch
+- Why: MoMo/ZaloPay is shown only as shared e-wallet text, without provider-specific MoMo QR transaction flow/state.
+- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 37; Flow 44); `src/components/PremiumModal.tsx:11`; `src/components/PremiumModal.tsx:134-143`; `src/components/PremiumModal.tsx:237-250`.
+- FE Solution: Add provider selection (`momo`/`zalopay`) and fetch provider-specific QR/deep-link payload tied to transaction state.
+- US/AC Solution: Specify provider-specific steps, QR-expiry handling, and provider branding requirements.
+- Release/Effort: v1.1 / M
+
+## US-59
+- Classification: Mismatch
+- Why: QR flow is generic/static and does not expose a distinct ZaloPay-specific checkout branch.
+- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 37; Flow 43; Flow 44); `src/components/PremiumModal.tsx:134-143`; `src/components/PremiumModal.tsx:195-225`; `src/components/PremiumModal.tsx:237-250`.
+- FE Solution: Implement explicit ZaloPay provider option and bind checkout status/QR to selected provider transaction context.
+- US/AC Solution: Add AC for ZaloPay-specific success/failure and QR-regeneration behavior.
+- Release/Effort: v1.1 / M
+
+## US-62
+- Classification: Not Implemented
+- Why: Payment path is hardcoded to success and has no error state, failure message, or retry UX.
+- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 44); `src/components/PremiumModal.tsx:16-18`; `src/components/PremiumModal.tsx:38-44`; `src/components/PremiumModal.tsx:241-250`.
+- FE Solution: Add explicit payment error state with failure messaging, retry CTA, and change-method option.
+- US/AC Solution: Define failure-case AC (cancelled, insufficient funds, timeout) and required recovery path.
+- Release/Effort: v1.1 / M
+
+## US-63
+- Classification: Not Implemented
+- Why: UI only shows boolean premium badge; subscription status details (plan/expiry/remaining days/state) are absent.
+- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 55; Flow 67); `src/pages/Dashboard.tsx:66`; `src/pages/Dashboard.tsx:281-285`; `src/components/PremiumModal.tsx:43`.
+- FE Solution: Extend auth state with structured subscription object and render subscription status card on dashboard/profile surfaces.
+- US/AC Solution: Define required status lifecycle fields and refresh behavior after payment confirmation.
+- Release/Effort: v1.1 / M
+
+## US-64
+- Classification: Not Implemented
+- Why: There is no payment-history screen or navigation in dashboard tabs or premium modal.
+- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 55; Flow 67; Flow 33); `src/pages/Dashboard.tsx:42-50`; `src/pages/Dashboard.tsx:297-301`; `src/components/PremiumModal.tsx:106-252`.
+- FE Solution: Add payment history page with transaction list, status tags, timestamps, amounts, and payment method/provider details.
+- US/AC Solution: Specify filter/pagination AC, empty state, and visibility scope per account.
+- Release/Effort: v1.1 / M
