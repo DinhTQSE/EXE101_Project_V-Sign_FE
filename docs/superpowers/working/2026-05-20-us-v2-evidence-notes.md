@@ -282,7 +282,7 @@
 ## US-66
 - Classification: Not Implemented
 - Why: Chapter structures are hardcoded in learner course data and mapped into progress cards, with no chapter-edit surface or premium-toggle governance action.
-- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 54; Flow 55; Flow 143; Flow 146); `src/pages/VocabularyPack.tsx:45-57`; `src/pages/CourseMap.tsx:20-37`; `src/pages/CourseMap.tsx:133-145`; `src/App.tsx:18-45`.
+- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 54; Flow 55; Flow 143; Flow 146); `src/pages/VocabularyPack.tsx:45-57`; `src/pages/CourseMap.tsx:20-37` (legacy corroboration); `src/pages/CourseMap.tsx:133-145` (legacy corroboration); `src/App.tsx:18-45`.
 - FE Solution: Phase-2 admin blueprint: add `AdminChaptersPage` with chapter CRUD by unit, `is_premium` toggle workflow, ordering drag-sort, and audit note capture.
 - US/AC Solution: Align AC to chapter schema, premium-toggle semantics, ordering persistence, and audit requirements.
 - Release/Effort: phase-2 admin / M
@@ -322,7 +322,7 @@
 ## US-71
 - Classification: Not Implemented
 - Why: Navigation and mounted content are learner-feature tabs, while auth state models only the current signed-in profile instead of an admin-managed user collection.
-- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 54; Flow 55; Flow 61; Flow 67); `src/pages/Dashboard.tsx:42-50`; `src/pages/Dashboard.tsx:294-302`; `src/contexts/AuthContext.tsx:23-44`; `src/contexts/AuthContext.tsx:190-197`; `src/App.tsx:18-45`.
+- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 54; Flow 55; Flow 61; Flow 67); `src/pages/Dashboard.tsx:42-50`; `src/pages/Dashboard.tsx:294-302`; `src/contexts/AuthContext.tsx:23-44`; `src/contexts/AuthContext.tsx:191-197`; `src/App.tsx:18-45`.
 - FE Solution: Phase-2 admin blueprint: implement `AdminUsersPage` with paginated table, filters (status/plan/search), and user-detail drawer under RBAC controls.
 - US/AC Solution: Align AC to visible fields, filtering/sorting expectations, and privacy/audit constraints for admin access.
 - Release/Effort: phase-2 admin / M
@@ -338,7 +338,7 @@
 ## US-73
 - Classification: Not Implemented
 - Why: Payment UI handles only in-session checkout selections and success confirmation; no transaction index, filters, or reconciliation list exists.
-- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 33; Flow 37; Flow 44; Flow 55; Flow 67); `src/components/PremiumModal.tsx:11-18`; `src/components/PremiumModal.tsx:130-250`; `src/pages/Dashboard.tsx:42-50`; `src/App.tsx:18-45`.
+- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 33; Flow 37; Flow 44; Flow 55; Flow 67); `src/components/PremiumModal.tsx:11-18`; `src/components/PremiumModal.tsx:130-239`; `src/pages/Dashboard.tsx:42-50`; `src/App.tsx:18-45`.
 - FE Solution: Phase-2 admin blueprint: add `AdminTransactionsPage` with server-side paging, provider/status/date filters, detail drawer, and CSV export.
 - US/AC Solution: Align AC to mandatory transaction fields, filter/export rules, and data-freshness traceability expectations.
 - Release/Effort: phase-2 admin / M
