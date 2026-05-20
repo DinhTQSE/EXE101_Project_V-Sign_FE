@@ -271,89 +271,90 @@
 - Release/Effort: v1.1 / M
 
 ## US-65
+- Taxonomy note: `phase-2 admin` is a dedicated admin release track for back-office capabilities, separate from learner-facing `v1.x` releases.
 - Classification: Not Implemented
-- Why: Frontend navigation and routing expose only learner experiences; no admin route/panel exists for unit CRUD.
-- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 54; Flow 55; Flow 145; Flow 146); `src/App.tsx:30-45`; `src/pages/Dashboard.tsx:42-50`; `src/pages/Dashboard.tsx:74-83`; `src/pages/Dashboard.tsx:294-302`.
+- Why: Routing and dashboard composition only load learner modules; unit data is embedded directly in learner page state with no admin workspace.
+- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 54; Flow 55; Flow 145; Flow 146); `src/App.tsx:7-10`; `src/App.tsx:18-45`; `src/pages/Dashboard.tsx:42-50`; `src/pages/VocabularyPack.tsx:48-52`.
 - FE Solution: Phase-2 admin blueprint: add `/admin` role-gated route, `AdminLayout`, and `AdminUnitsPage` with table/list, search/filter, create/edit modal forms, and delete confirmation with optimistic updates.
 - US/AC Solution: Scope AC to admin-only unit CRUD, required fields/validation, and explicit success/error/empty states.
 - Release/Effort: phase-2 admin / M
 
 ## US-66
 - Classification: Not Implemented
-- Why: Chapter behavior in FE is learner progress/navigation only; there is no admin chapter management UI or `is_premium` toggle control.
-- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 54; Flow 55; Flow 143; Flow 146); `src/App.tsx:30-45`; `src/pages/Dashboard.tsx:42-50`; `src/pages/Dashboard.tsx:74-83`; `src/pages/Dashboard.tsx:294-302`.
+- Why: Chapter structures are hardcoded in learner course data and mapped into progress cards, with no chapter-edit surface or premium-toggle governance action.
+- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 54; Flow 55; Flow 143; Flow 146); `src/pages/VocabularyPack.tsx:45-57`; `src/pages/CourseMap.tsx:20-37`; `src/pages/CourseMap.tsx:133-145`; `src/App.tsx:18-45`.
 - FE Solution: Phase-2 admin blueprint: add `AdminChaptersPage` with chapter CRUD by unit, `is_premium` toggle workflow, ordering drag-sort, and audit note capture.
 - US/AC Solution: Align AC to chapter schema, premium-toggle semantics, ordering persistence, and audit requirements.
 - Release/Effort: phase-2 admin / M
 
 ## US-67
 - Classification: Not Implemented
-- Why: FE supports lesson video playback but has no admin upload pipeline or S3 media management surface.
-- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 120; Flow 121; Flow 128); `src/App.tsx:30-45`; `src/pages/Dashboard.tsx:42-50`; `src/pages/Dashboard.tsx:294-302`.
+- Why: Lesson media is consumed from fixed local `videoUrl`/`videoSrc` mappings and resolved in-view, with no upload state machine or media-ingestion route.
+- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 120; Flow 121; Flow 128); `src/pages/VocabularyPack.tsx:55-75`; `src/components/LessonModal.tsx:19-31`; `src/components/LessonModal.tsx:88-90`; `src/App.tsx:18-45`.
 - FE Solution: Phase-2 admin blueprint: create `AdminLessonMediaPage` with presigned S3 upload flow, progress/errors, retry/cancel, and lesson-media binding after upload finalization.
 - US/AC Solution: Align AC to upload lifecycle states, file constraints, failure handling, and post-upload verification.
 - Release/Effort: phase-2 admin / M
 
 ## US-68
 - Classification: Not Implemented
-- Why: Quiz flows are learner exam-taking only; no admin interface exists for MCQ authoring/editing.
-- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 85; Flow 87; Flow 91); `src/App.tsx:30-45`; `src/pages/Dashboard.tsx:42-50`; `src/pages/Dashboard.tsx:294-302`.
+- Why: MCQ content is declared inline inside learner lesson configs and rendered directly by quiz components; there is no authoring repository or CRUD UI.
+- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 85; Flow 87; Flow 91); `src/pages/VocabularyPack.tsx:57-60`; `src/pages/VocabularyPack.tsx:95-99`; `src/components/LessonModal.tsx:15-16`; `src/components/LessonModal.tsx:127-157`; `src/App.tsx:18-45`.
 - FE Solution: Phase-2 admin blueprint: add `AdminMcqBankPage` with question CRUD grid, option editor, correct-answer validation, lesson binding, and preview-run modal.
 - US/AC Solution: Align AC to mandatory MCQ fields, validation rules, draft/publish lifecycle, and preview acceptance checks.
 - Release/Effort: phase-2 admin / M
 
 ## US-69
 - Classification: Not Implemented
-- Why: AI quiz execution exists for learners, but there is no admin authoring surface for AI question metadata/rubrics.
-- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 118; Flow 125; Flow 127); `src/App.tsx:30-45`; `src/pages/Dashboard.tsx:42-50`; `src/pages/Dashboard.tsx:294-302`.
+- Why: AI practice is either "coming soon" in dashboard tabs or fixed `ai_review` prompts in learner data; no admin rubric/prompt management exists.
+- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 118; Flow 125; Flow 127); `src/pages/Dashboard.tsx:48`; `src/pages/Dashboard.tsx:302-309`; `src/pages/VocabularyPack.tsx:76-78`; `src/pages/VocabularyPack.tsx:87-89`; `src/App.tsx:18-45`.
 - FE Solution: Phase-2 admin blueprint: implement `AdminAiQuizPage` for sign-label/prompt/rubric CRUD with sandbox preview before publish.
 - US/AC Solution: Align AC to AI-question schema, threshold semantics, preview criteria, and change/version governance.
 - Release/Effort: phase-2 admin / M
 
 ## US-70
 - Classification: Not Implemented
-- Why: Dictionary is learner-facing browse/search only; no admin dictionary CRUD route or moderation workflow exists.
-- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 54; Flow 55; Flow 69; Flow 70; Flow 71; Flow 72); `src/App.tsx:30-45`; `src/pages/Dashboard.tsx:42-50`; `src/pages/Dashboard.tsx:294-302`.
+- Why: Dictionary entries are static in-page data with only search/filter and video preview interactions, not managed via admin CRUD flows.
+- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 54; Flow 55; Flow 69; Flow 70; Flow 71; Flow 72); `src/pages/Dictionary.tsx:14-46`; `src/pages/Dictionary.tsx:51-63`; `src/pages/Dictionary.tsx:72-107`; `src/App.tsx:18-45`.
 - FE Solution: Phase-2 admin blueprint: add `AdminDictionaryPage` with entry CRUD, video/difficulty fields, bulk import/export, and duplicate detection.
 - US/AC Solution: Align AC to dictionary field constraints, uniqueness/moderation rules, and create/edit/delete acceptance behavior.
 - Release/Effort: phase-2 admin / M
 
 ## US-71
 - Classification: Not Implemented
-- Why: Dashboard tabs and routes do not expose an admin user-list workspace.
-- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 54; Flow 55; Flow 61; Flow 67); `src/App.tsx:30-45`; `src/pages/Dashboard.tsx:42-50`; `src/pages/Dashboard.tsx:74-83`; `src/pages/Dashboard.tsx:294-302`.
+- Why: Navigation and mounted content are learner-feature tabs, while auth state models only the current signed-in profile instead of an admin-managed user collection.
+- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 54; Flow 55; Flow 61; Flow 67); `src/pages/Dashboard.tsx:42-50`; `src/pages/Dashboard.tsx:294-302`; `src/contexts/AuthContext.tsx:23-44`; `src/contexts/AuthContext.tsx:190-197`; `src/App.tsx:18-45`.
 - FE Solution: Phase-2 admin blueprint: implement `AdminUsersPage` with paginated table, filters (status/plan/search), and user-detail drawer under RBAC controls.
 - US/AC Solution: Align AC to visible fields, filtering/sorting expectations, and privacy/audit constraints for admin access.
 - Release/Effort: phase-2 admin / M
 
 ## US-72
 - Classification: Not Implemented
-- Why: FE only displays premium state for the logged-in learner and has no admin view for per-user subscription monitoring.
-- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 55; Flow 67); `src/App.tsx:30-45`; `src/pages/Dashboard.tsx:66`; `src/pages/Dashboard.tsx:281-285`; `src/pages/Dashboard.tsx:294-302`.
+- Why: Subscription is represented as a single `isPremium` boolean and rendered as a badge, so per-user status lifecycle tracking for admins is unavailable.
+- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 55; Flow 67); `src/contexts/AuthContext.tsx:37-38`; `src/contexts/AuthContext.tsx:104-106`; `src/contexts/AuthContext.tsx:166`; `src/pages/Dashboard.tsx:281-285`; `src/App.tsx:18-45`.
 - FE Solution: Phase-2 admin blueprint: extend admin users module with subscription columns/status timeline and explicit refresh action after payment events.
 - US/AC Solution: Align AC to canonical subscription lifecycle states, timestamps, and required admin visibility per account.
 - Release/Effort: phase-2 admin / M
 
 ## US-73
 - Classification: Not Implemented
-- Why: Payment UI scope is end-user checkout; no admin transaction monitoring list/dashboard is available.
-- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 33; Flow 37; Flow 44; Flow 55; Flow 67); `src/App.tsx:30-45`; `src/pages/Dashboard.tsx:42-50`; `src/pages/Dashboard.tsx:294-302`.
+- Why: Payment UI handles only in-session checkout selections and success confirmation; no transaction index, filters, or reconciliation list exists.
+- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 33; Flow 37; Flow 44; Flow 55; Flow 67); `src/components/PremiumModal.tsx:11-18`; `src/components/PremiumModal.tsx:130-250`; `src/pages/Dashboard.tsx:42-50`; `src/App.tsx:18-45`.
 - FE Solution: Phase-2 admin blueprint: add `AdminTransactionsPage` with server-side paging, provider/status/date filters, detail drawer, and CSV export.
 - US/AC Solution: Align AC to mandatory transaction fields, filter/export rules, and data-freshness traceability expectations.
 - Release/Effort: phase-2 admin / M
 
 ## US-74
 - Classification: Not Implemented
-- Why: There is no admin control to manually reconcile or override payment/subscription transaction states.
-- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 33; Flow 44; Flow 55; Flow 67); `src/App.tsx:30-45`; `src/pages/Dashboard.tsx:42-50`; `src/pages/Dashboard.tsx:294-302`.
+- Why: Payment state is a direct happy-path toggle (`handlePay` -> `setPremium(true)`) with no explicit override actions, reason codes, or audit trail controls.
+- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 33; Flow 44; Flow 55; Flow 67); `src/components/PremiumModal.tsx:38-45`; `src/contexts/AuthContext.tsx:37-38`; `src/contexts/AuthContext.tsx:166`; `src/App.tsx:18-45`.
 - FE Solution: Phase-2 admin blueprint: add transaction actions (`mark_paid`, `mark_failed`, `retry_sync`) with reason modal, dual-confirm, permission checks, and audit timeline.
 - US/AC Solution: Align AC to allowed manual transitions, reason-code requirements, approval policy, and immutable audit logging.
 - Release/Effort: phase-2 admin / M
 
 ## US-75
 - Classification: Not Implemented
-- Why: Current dashboard is personalized for learners and does not provide platform-level admin KPI analytics.
-- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 54; Flow 55; Flow 67); `src/App.tsx:30-45`; `src/pages/Dashboard.tsx:42-50`; `src/pages/Dashboard.tsx:289-327`.
+- Why: Dashboard widgets and stats are learner-personalized (progress/streak/premium badge), with no route or state model for platform-wide KPI aggregation.
+- Evidence: docs/EXE101_FE_Business_Flows.md (Flow 54; Flow 55; Flow 67); `src/pages/Dashboard.tsx:17-23`; `src/pages/Dashboard.tsx:42-50`; `src/pages/Dashboard.tsx:289-302`; `src/contexts/AuthContext.tsx:16-21`; `src/App.tsx:18-45`.
 - FE Solution: Phase-2 admin blueprint: build `AdminKpiDashboardPage` with KPI cards (users/subscriptions/DAU/revenue), trend charts, date-range controls, and drill-down links.
 - US/AC Solution: Align AC to KPI formulas, refresh cadence, timezone/date-range semantics, and card-chart consistency criteria.
 - Release/Effort: phase-2 admin / M
