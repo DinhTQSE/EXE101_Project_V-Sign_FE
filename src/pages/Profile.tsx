@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { motion } from "framer-motion";
-import { Flame, BookOpen, Clock, TrendingUp, Pencil, Camera, Save, X, Crown, Bell } from "lucide-react";
+import { Flame, BookOpen, Clock, TrendingUp, Pencil, Camera, Save, X, Crown, Bell, KeyRound, WalletCards, Star } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import mascotImg from "@/assets/mascot.png";
 import {
@@ -26,27 +26,42 @@ const chartConfig = {
 
 export default function Profile() {
   const {
-    userName, stats, profile, updateProfile, isPremium,
+    userName, stats, profile, updateProfile, isPremium, changePassword, subscription, paymentHistory,
     reminderEnabled, setReminderEnabled, reminderTime, setReminderTime,
   } = useAuth();
-  const { streak, completedLessons, totalMinutes } = stats;
+  const { streak, longestStreak, completedLessons, totalMinutes, xp, perfectQuizCount } = stats;
 
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState(profile.displayName || userName);
   const [editBio, setEditBio] = useState(profile.bio);
   const [previewAvatar, setPreviewAvatar] = useState(profile.avatarUrl);
+  const [profileMessage, setProfileMessage] = useState("");
+  const [securityMessage, setSecurityMessage] = useState("");
+  const [securityError, setSecurityError] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (!["image/jpeg", "image/png"].includes(file.type) || file.size > 2 * 1024 * 1024) {
+      setProfileMessage("Ảnh đại diện chỉ hỗ trợ JPG/PNG và tối đa 2MB.");
+      return;
+    }
     const reader = new FileReader();
     reader.onload = () => setPreviewAvatar(reader.result as string);
     reader.readAsDataURL(file);
   };
 
-  const handleSave = () => {
-    updateProfile({ displayName: editName, bio: editBio, avatarUrl: previewAvatar });
+  const handleSave = async () => {
+    if (!editName.trim()) {
+      setProfileMessage("Tên hiển thị không được để trống.");
+      return;
+    }
+    await updateProfile({ displayName: editName.trim(), bio: editBio, avatarUrl: previewAvatar });
+    setProfileMessage("Đã lưu hồ sơ.");
     setEditing(false);
   };
 
@@ -54,7 +69,30 @@ export default function Profile() {
     setEditName(profile.displayName || userName);
     setEditBio(profile.bio);
     setPreviewAvatar(profile.avatarUrl);
+    setProfileMessage("");
     setEditing(false);
+  };
+
+  const handleChangePassword = async () => {
+    setSecurityError("");
+    setSecurityMessage("");
+    if (newPassword.length < 8 || !/[A-Z]/.test(newPassword) || !/\d/.test(newPassword)) {
+      setSecurityError("Mật khẩu mới cần tối thiểu 8 ký tự, có chữ hoa và số.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setSecurityError("Mật khẩu xác nhận không khớp.");
+      return;
+    }
+    try {
+      await changePassword(currentPassword, newPassword);
+      setSecurityMessage("Đã đổi mật khẩu thành công.");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (err: any) {
+      setSecurityError(err?.message || "Không thể đổi mật khẩu.");
+    }
   };
 
   const displayName = profile.displayName || userName || "Người học mới";
@@ -151,11 +189,20 @@ export default function Profile() {
           }`}>
             {isPremium ? "Premium" : "Free"}
           </span>
+          <span className="text-[11px] text-muted-foreground mt-2">
+            {subscription.status === "ACTIVE" ? `Còn ${subscription.remainingDays} ngày` : "Chưa kích hoạt"}
+          </span>
         </div>
       </div>
 
+      {profileMessage && (
+        <div className="card-pastel p-3 mb-6 text-sm text-foreground border-l-4 border-primary">
+          {profileMessage}
+        </div>
+      )}
+
       {/* Stat cards row */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="card-pastel p-5 flex flex-col items-center text-center">
           <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-3">
             <Flame className="w-6 h-6 text-primary" />
@@ -173,12 +220,76 @@ export default function Profile() {
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="card-pastel p-5 flex flex-col items-center text-center">
+          <div className="w-12 h-12 rounded-2xl bg-amber-100 flex items-center justify-center mb-3">
+            <Star className="w-6 h-6 text-amber-600" />
+          </div>
+          <span className="font-display font-bold text-xl text-foreground">{xp}</span>
+          <span className="text-xs text-muted-foreground font-body">Tổng XP</span>
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="card-pastel p-5 flex flex-col items-center text-center">
           <div className="w-12 h-12 rounded-2xl bg-[hsl(var(--success))]/10 flex items-center justify-center mb-3">
             <Clock className="w-6 h-6 text-[hsl(var(--success))]" />
           </div>
           <span className="font-display font-bold text-xl text-foreground">{totalMinutes}</span>
           <span className="text-xs text-muted-foreground font-body">Phút học tập</span>
         </motion.div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+        <div className="card-pastel p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <KeyRound className="w-5 h-5 text-primary" />
+            <h3 className="font-display font-bold text-foreground text-sm">Bảo mật tài khoản</h3>
+          </div>
+          <div className="space-y-3">
+            <input type="password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)}
+              placeholder="Mật khẩu hiện tại"
+              className="w-full px-3 py-2 rounded-xl border border-input bg-background text-foreground font-body text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+            <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)}
+              placeholder="Mật khẩu mới"
+              className="w-full px-3 py-2 rounded-xl border border-input bg-background text-foreground font-body text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+            <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
+              placeholder="Xác nhận mật khẩu mới"
+              className="w-full px-3 py-2 rounded-xl border border-input bg-background text-foreground font-body text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+            {securityError && <p className="text-xs text-destructive">{securityError}</p>}
+            {securityMessage && <p className="text-xs text-primary">{securityMessage}</p>}
+            <button onClick={handleChangePassword} className="btn-primary-gradient text-sm py-2 px-4">Đổi mật khẩu</button>
+          </div>
+        </div>
+
+        <div className="card-pastel p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <WalletCards className="w-5 h-5 text-primary" />
+            <h3 className="font-display font-bold text-foreground text-sm">Gói cước & thanh toán</h3>
+          </div>
+          <div className="rounded-2xl bg-muted/50 p-3 mb-3">
+            <p className="text-sm font-body text-foreground">
+              Trạng thái: <span className="font-display font-bold">{subscription.status === "ACTIVE" ? "Premium Active" : "Free"}</span>
+            </p>
+            {subscription.expiresAt && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Hết hạn: {new Date(subscription.expiresAt).toLocaleDateString("vi-VN")}
+              </p>
+            )}
+          </div>
+          <div className="space-y-2 max-h-40 overflow-y-auto">
+            {paymentHistory.length === 0 ? (
+              <p className="text-xs text-muted-foreground">Chưa có giao dịch.</p>
+            ) : paymentHistory.map((tx) => (
+              <div key={tx.transactionId} className="flex items-center justify-between rounded-xl border border-border p-2 text-xs">
+                <div>
+                  <p className="font-body font-semibold text-foreground">{tx.provider} · {tx.planType}</p>
+                  <p className="text-muted-foreground">{new Date(tx.createdAt).toLocaleString("vi-VN")}</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-display font-bold text-primary">{tx.amount.toLocaleString("vi-VN")}đ</p>
+                  <p className={tx.status === "SUCCESS" ? "text-[hsl(var(--success))]" : "text-destructive"}>{tx.status}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Reminder + Chart row */}
@@ -239,8 +350,8 @@ export default function Profile() {
             { emoji: "🦉", name: "Cú đêm học tập", desc: "Học sau 10 giờ tối", unlocked: true },
             { emoji: "🔥", name: "Chuỗi 7 ngày", desc: "Streak 7 ngày liên tiếp", unlocked: streak >= 7 },
             { emoji: "⭐", name: "Ngôi sao mới", desc: "Hoàn thành bài đầu tiên", unlocked: completedLessons.length >= 1 },
-            { emoji: "💎", name: "Kim cương", desc: "Đạt 1000 XP", unlocked: false },
-            { emoji: "🎯", name: "Bách phát bách trúng", desc: "Trả lời đúng 20 câu liên tiếp", unlocked: false },
+            { emoji: "💎", name: "Kim cương", desc: "Đạt 1000 XP", unlocked: xp >= 1000 },
+            { emoji: "🎯", name: "Bách phát bách trúng", desc: "Một bài thi đạt điểm tuyệt đối", unlocked: perfectQuizCount >= 1 },
           ].map((badge) => (
             <div
               key={badge.name}
@@ -268,10 +379,10 @@ export default function Profile() {
         <div className="speech-bubble flex-1">
           <p className="font-body text-sm text-foreground">
             {streak >= 7
-              ? `Tuyệt vời quá ${displayName} ơi! ${streak} ngày liên tiếp — bạn là ngôi sao! 🌟🔥`
+              ? `Tuyệt vời quá ${displayName} ơi! ${streak} ngày liên tiếp, kỷ lục ${longestStreak} ngày.`
               : streak >= 3
-              ? `Giỏi quá ${displayName} ơi! Streak ${streak} ngày rồi! Tiếp tục phát huy nhé! 🔥🎉`
-              : `Chào ${displayName}! Hãy học mỗi ngày để tăng streak nhé! 💪`
+              ? `Giỏi quá ${displayName} ơi! Streak ${streak} ngày rồi. Tiếp tục phát huy nhé!`
+              : `Chào ${displayName}! Hãy học mỗi ngày để tăng streak nhé.`
             }
           </p>
         </div>

@@ -1,80 +1,73 @@
-# V-sign - Học Ngôn ngữ Ký hiệu Việt Nam (VSL)
+# Welcome to your Lovable project
 
-V-sign là một nền tảng học tập hiện đại dành cho người khiếm thính và những người muốn tìm hiểu về Ngôn ngữ Ký hiệu Việt Nam (VSL). Dự án tập trung vào tính tương tác cao, giao diện thân thiện và hỗ trợ AI nhận diện ký hiệu.
+## Project info
 
-## 🚀 Công nghệ sử dụng
-Dự án được xây dựng với bộ công cụ hiện đại:
-- **Framework**: Vite + React + TypeScript
-- **UI/UX**: Tailwind CSS + Shadcn UI + Framer Motion
-- **State Management**: React Context (`AuthContext`) + TanStack Query
-- **Local Storage**: Lưu trữ tiến độ học tập và thông tin người dùng cục bộ.
+**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
 
-## 📁 Cấu trúc dự án (Project Structure)
-```text
-src/
-├── assets/          # Logo, mascot và hình ảnh minh họa
-├── components/      # Các thành phần giao diện tái sử dụng (Shadcn UI, LessonModal, WebcamFeed...)
-├── contexts/        # Quản lý trạng thái toàn cục (Xác thực, Tiến độ học tập)
-├── hooks/           # Các custom hooks (Camera, Theme)
-├── lib/             # Các hàm tiện ích (utils, configuration)
-├── pages/           # Các màn hình chính (Landing, Dashboard, VocabularyPack, ReviewChallenge...)
-└── main.tsx         # Điểm khởi đầu của ứng dụng
+## How can I edit this code?
 
-public/
-└── videos/          # Các video hướng dẫn ký hiệu VSL
+There are several ways of editing your application.
+
+**Use Lovable**
+
+Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+
+Changes made via Lovable will be committed automatically to this repo.
+
+**Use your preferred IDE**
+
+If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+
+The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+
+Follow these steps:
+
+```sh
+# Step 1: Clone the repository using the project's Git URL.
+git clone <YOUR_GIT_URL>
+
+# Step 2: Navigate to the project directory.
+cd <YOUR_PROJECT_NAME>
+
+# Step 3: Install the necessary dependencies.
+npm i
+
+# Step 4: Start the development server with auto-reloading and an instant preview.
+npm run dev
 ```
 
-## 🔄 Luồng ứng dụng (Application Flow)
+**Edit a file directly in GitHub**
 
-1. **Chào mừng (Landing Page)**: 
-   - Giới thiệu dự án và kêu gọi người dùng bắt đầu.
-   - Kiểm tra trạng thái đăng nhập tự động qua `localStorage`.
+- Navigate to the desired file(s).
+- Click the "Edit" button (pencil icon) at the top right of the file view.
+- Make your changes and commit the changes.
 
-2. **Khởi tạo (Onboarding)**:
-   - Nếu là người dùng mới, hệ thống sẽ hỏi thông tin về: vai trò, độ tuổi và mục tiêu học tập.
-   - Tự động chuyển đổi giao diện sang **Chế độ Trẻ em** hoặc **Người lớn** tùy theo độ tuổi.
+**Use GitHub Codespaces**
 
-3. **Bảng điều khiển (Dashboard)**:
-   - Hub trung tâm chứa các phân khóa học, từ điển, và xếp hạng.
-   - Hiển thị Widget tiến độ hàng ngày.
+- Navigate to the main page of your repository.
+- Click on the "Code" button (green button) near the top right.
+- Select the "Codespaces" tab.
+- Click on "New codespace" to launch a new Codespace environment.
+- Edit files directly within the Codespace and commit and push your changes once you're done.
 
-4. **Học tập (Learning Flow)**:
-   - Chọn **Khóa học** -> **Unit** -> **Chương** -> **Bài học**.
-   - Mỗi bài học gồm 3 bước: 
-     - 📽️ **Lý thuyết**: Xem video hướng dẫn.
-     - ✍️ **Thực hành**: Làm bài tập trắc nghiệm hoặc điền từ.
-     - 🤖 **Kiểm tra AI**: Thực hiện ký hiệu trước camera (giả lập nhận diện).
+## What technologies are used for this project?
 
-5. **Ôn tập & Thử thách (Review & Challenge)**:
-   - Chơi các trò chơi: Lật thẻ (Flashcards), Trắc nghiệm tốc độ (Speed Quiz), và Nối từ (Matching).
+This project is built with:
 
-## 📋 Yêu cầu hệ thống (Prerequisites)
-Trước khi cài đặt, hãy đảm bảo máy tính của bạn đã cài đặt:
-- **Node.js**: Phiên bản `>= 18.x`
-- **npm**: Phiên bản `>= 9.x`
+- Vite
+- TypeScript
+- React
+- shadcn-ui
+- Tailwind CSS
 
-Điều này giúp đảm bảo tính tương thích với các thư viện hiện đại như Vite 5 và các plugin của React 18.
+## How can I deploy this project?
 
-## 🛠️ Hướng dẫn cài đặt & Chạy dự án
+Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
 
-1. **Cài đặt thư viện**:
-   ```bash
-   npm install
-   ```
+## Can I connect a custom domain to my Lovable project?
 
-2. **Chạy server phát triển**:
-   ```bash
-   npm run dev
-   ```
-   Sau đó mở trình duyệt tại: `http://localhost:5173`
+Yes, you can!
 
-## 🧪 Kiến trúc AI & Backend (Hiện tại & Tương lai)
-Hiện tại, dự án đang ở giai đoạn **Frontend Mockup**. Phần nhận diện ngôn ngữ ký hiệu được thiết kế để mở rộng theo 2 hướng:
-1. **Local Processing**: Tích hợp trực tiếp các thư viện như `TensorFlow.js` hoặc `MediaPipe` vào Frontend để xử lý nhận diện ngay trên trình duyệt (thông qua `hooks/useWebcam.ts`).
-2. **Backend API**: Gọi API đến một máy chủ Backend xử lý AI chuyên sâu (như Python/FastAPI với các model LSTM/CNN).
+To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
-> [!IMPORTANT]
-> **Trạng thái hiện tại**: Toàn bộ luồng nhận diện AI trong các bài học (`CameraStep`) và Tab "Nhận diện AI" đang sử dụng cơ chế **giả lập (mocking)** để minh họa trải nghiệm người dùng. Các kết quả trả về hiện tại là cố định và phục vụ mục đích kiểm thử giao diện.
-
----
-*Dự án được generate và phát triển với sự hỗ trợ của Lovable AI.*
+Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)

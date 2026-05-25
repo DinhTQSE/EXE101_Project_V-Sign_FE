@@ -14,8 +14,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ["Quicksand", "sans-serif"],
-        body: ["Nunito", "sans-serif"],
+        display: ["Baloo 2", "Be Vietnam Pro", "sans-serif"],
+        body: ["Be Vietnam Pro", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",

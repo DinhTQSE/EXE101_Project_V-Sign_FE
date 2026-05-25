@@ -72,7 +72,7 @@ export default function Onboarding() {
       dailyTime: responses.dailyTime || "10 phút",
     });
     setHasOnboarded(true);
-    navigate("/dashboard");
+    navigate("/home");
   };
 
   return (
@@ -160,7 +160,7 @@ export default function Onboarding() {
                   dailyTime: responses.dailyTime || "10 phút",
                 });
                 setHasOnboarded(true);
-                navigate("/dashboard");
+                navigate("/home");
               }}
             >
               Hoàn thành

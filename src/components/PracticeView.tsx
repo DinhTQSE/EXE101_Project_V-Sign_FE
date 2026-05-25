@@ -1,103 +1,80 @@
-import { useState, useCallback } from "react";
-import { motion } from "framer-motion";
-import { Loader2, CheckCircle, XCircle } from "lucide-react";
-import { toast } from "sonner";
-import mascotImg from "@/assets/mascot.png";
-import WebcamFeed from "@/components/WebcamFeed";
+import { useState } from "react";
+import { Cpu, ChevronRight } from "lucide-react";
+import AiCameraPractice from "@/components/AiCameraPractice";
+import { AI_PRACTICE_TARGETS } from "@/services/aiRecognition";
 
 export default function PracticeView() {
-  const [scanning, setScanning] = useState(false);
-  const [result, setResult] = useState<"success" | "fail" | null>(null);
+  const [targetIndex, setTargetIndex] = useState(0);
+  const current = AI_PRACTICE_TARGETS[targetIndex];
 
-  const checkSign = useCallback(() => {
-    if (scanning) return;
-    setScanning(true);
-    setResult(null);
-    setTimeout(() => {
-      setScanning(false);
-      const isCorrect = Math.random() > 0.3;
-      setResult(isCorrect ? "success" : "fail");
-      if (isCorrect) {
-        toast.success("Tuyệt vời! Bạn đã ra hiệu đúng từ 'CẢM ƠN'! 🎉");
-      } else {
-        toast.error("Chưa chính xác, hãy thử lại nhé! 💪");
-      }
-    }, 3000);
-  }, [scanning]);
+  const cycleTarget = () => {
+    setTargetIndex((prev) => (prev + 1) % AI_PRACTICE_TARGETS.length);
+  };
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <h2 className="text-2xl font-display font-bold text-foreground text-center mb-2">
-        AI Luyện Tập Mode
-      </h2>
-      <p className="text-center text-muted-foreground font-body mb-8">
-        Thực hiện ký hiệu trước camera để AI kiểm tra
-      </p>
-
-      <div className="grid md:grid-cols-2 gap-6 mb-6">
-        {/* Left: Word card */}
-        <div className="card-pastel p-6 flex flex-col items-center justify-center">
-          <div className="coral-box w-full mb-4">CẢM ƠN</div>
-          <span className="text-7xl mb-4">🙏</span>
-          <p className="text-sm text-muted-foreground font-body text-center">
-            Thực hiện ký hiệu này trước camera
-          </p>
+    <div className="max-w-5xl mx-auto">
+      {/* Hero header */}
+      <div className="hero-panel p-5 md:p-7 flex items-center gap-4 mb-6">
+        <div
+          className="icon-tile shrink-0"
+          style={{ background: "var(--gradient-primary)" }}
+        >
+          <Cpu className="w-7 h-7 text-primary-foreground" />
         </div>
-
-        {/* Right: Camera */}
-        <div className="relative">
-          <WebcamFeed glowOnActive />
-
-          {scanning && (
-            <div className="absolute inset-0 flex items-center justify-center bg-foreground/20 backdrop-blur-sm rounded-2xl">
-              <motion.div
-                className="w-40 h-40 border-4 border-secondary rounded-full"
-                animate={{ rotate: 360 }}
-                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-              />
-              <div className="absolute flex flex-col items-center">
-                <Loader2 className="w-8 h-8 text-secondary animate-spin" />
-                <span className="text-white font-display font-bold mt-2 text-sm">Đang phân tích...</span>
-              </div>
-            </div>
-          )}
-          {result === "success" && (
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              className="absolute inset-0 flex items-center justify-center bg-[hsl(var(--success))]/20 backdrop-blur-sm rounded-2xl"
-            >
-              <div className="flex flex-col items-center">
-                <CheckCircle className="w-16 h-16 text-[hsl(var(--success))]" />
-                <span className="font-display font-bold text-[hsl(var(--success))] text-xl mt-2">CHÍNH XÁC!</span>
-                <img src={mascotImg} alt="" className="w-16 h-16 object-contain mt-2" />
-              </div>
-            </motion.div>
-          )}
-          {result === "fail" && (
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              className="absolute inset-0 flex items-center justify-center bg-destructive/20 backdrop-blur-sm rounded-2xl"
-            >
-              <div className="flex flex-col items-center">
-                <XCircle className="w-16 h-16 text-destructive" />
-                <span className="font-display font-bold text-destructive text-xl mt-2">THỬ LẠI</span>
-                <img src={mascotImg} alt="" className="w-12 h-12 object-contain mt-2 opacity-70" />
-              </div>
-            </motion.div>
-          )}
+        <div>
+          <h2 className="font-display font-extrabold text-3xl md:text-4xl text-white leading-tight">Nhận diện AI</h2>
+          <p className="font-body text-sm md:text-base text-white/85">
+            Thực hiện ký hiệu trước camera để AI nhận diện.
+          </p>
         </div>
       </div>
 
-      <div className="flex justify-center gap-4">
-        <button
-          onClick={checkSign}
-          disabled={scanning}
-          className="btn-primary-gradient flex items-center gap-2 disabled:opacity-50"
-        >
-          Check Ký hiệu
-        </button>
+      {/* Target selector */}
+      <div className="card-pop p-4 md:p-5 mb-6">
+        <p className="text-xs font-body text-muted-foreground mb-3 uppercase tracking-wide">
+          Chọn ký hiệu luyện tập
+        </p>
+        <div className="flex gap-2 flex-wrap">
+          {AI_PRACTICE_TARGETS.map((target, idx) => (
+            <button
+              key={target.label}
+              onClick={() => setTargetIndex(idx)}
+              className={`font-body transition-all ${
+                idx === targetIndex
+                  ? "chip-active"
+                  : "chip-soft text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {target.display}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-6 mb-6">
+        {/* Target display */}
+        <div className="card-pop p-6 flex flex-col items-center justify-center min-h-[340px]">
+          <div className="coral-box w-full mb-4">{current.display}</div>
+          <p className="text-sm text-muted-foreground font-body text-center">
+            Hãy thực hiện ký hiệu "{current.display}" trước camera.
+          </p>
+          <button
+            onClick={cycleTarget}
+            className="mt-4 flex items-center gap-1.5 text-xs font-body font-semibold text-primary hover:underline"
+          >
+            Đổi bài luyện tập <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        {/* Camera panel */}
+        <AiCameraPractice
+          key={current.label}
+          question={`Thực hiện ký hiệu '${current.display}' trước camera`}
+          targetLabel={current.label}
+          targetDisplay={current.display}
+          practiceItemId={current.practiceItemId}
+          minConfidence={0.7}
+        />
       </div>
     </div>
   );

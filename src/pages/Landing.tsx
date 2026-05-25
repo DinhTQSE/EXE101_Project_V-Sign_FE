@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Video, Camera, Brain, ChevronDown, Sparkles } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
 import logo from "@/assets/vsign-logo.png";
 import mascotImg from "@/assets/mascot.png";
 import { LoginModal } from "@/components/LoginModal";
 
 export default function Landing() {
+  const location = useLocation();
   const [loginOpen, setLoginOpen] = useState(false);
   const [loginMode, setLoginMode] = useState<"login" | "signup">("signup");
 
@@ -15,6 +17,14 @@ export default function Landing() {
 
   const openLogin = () => { setLoginMode("login"); setLoginOpen(true); };
   const openSignup = () => { setLoginMode("signup"); setLoginOpen(true); };
+
+  useEffect(() => {
+    const authMode = (location.state as { authMode?: "login" | "signup" } | null)?.authMode;
+    if (authMode) {
+      setLoginMode(authMode);
+      setLoginOpen(true);
+    }
+  }, [location.state]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -26,6 +36,7 @@ export default function Landing() {
             <div className="hidden md:flex items-center gap-6">
               <button onClick={() => scrollTo("about")} className="text-sm font-body font-medium text-muted-foreground hover:text-primary transition-colors">Về V-Sign</button>
               <button onClick={() => scrollTo("features")} className="text-sm font-body font-medium text-muted-foreground hover:text-primary transition-colors">Khóa học</button>
+              <Link to="/dictionary" className="text-sm font-body font-medium text-muted-foreground hover:text-primary transition-colors">Từ điển</Link>
               <button onClick={() => scrollTo("contact")} className="text-sm font-body font-medium text-muted-foreground hover:text-primary transition-colors">Liên hệ</button>
             </div>
           </div>

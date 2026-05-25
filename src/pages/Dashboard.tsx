@@ -1,18 +1,19 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BookOpen, Trophy, Users, LogOut, Menu, X, User, GraduationCap, Cpu, Crown, Lock, Sun, Moon, Search, Clock } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useTheme } from "@/hooks/useTheme";
 import logo from "@/assets/vsign-logo.png";
 import mascotImg from "@/assets/mascot.png";
 import VocabularyPack from "@/pages/VocabularyPack";
 import Profile from "@/pages/Profile";
-import MockExam from "@/pages/MockExam";
+import AssessmentExam from "@/pages/AssessmentExam";
 import ReviewChallenge from "@/pages/ReviewChallenge"; // kept for potential future use
 import Dictionary from "@/pages/Dictionary";
 import Leaderboard from "@/pages/Leaderboard";
 import PremiumModal from "@/components/PremiumModal";
+import PracticeView from "@/components/PracticeView";
 
 function DailyProgressWidget() {
   const { onboardingResponses, stats } = useAuth();
@@ -43,33 +44,46 @@ const tabs = [
   { id: "courses", label: "Khóa học", icon: BookOpen },
   { id: "dictionary", label: "Từ điển", icon: Search },
   { id: "leaderboard", label: "Xếp hạng", icon: Trophy },
-  { id: "mock-exam", label: "Thi thử", icon: GraduationCap },
+  { id: "assessment", label: "Thi thử", icon: GraduationCap },
   { id: "community", label: "Cộng đồng", icon: Users, comingSoon: true },
-  { id: "ai-camera", label: "Nhận diện AI", icon: Cpu, comingSoon: true },
+  { id: "ai-camera", label: "Nhận diện AI", icon: Cpu },
   { id: "profile", label: "Hồ sơ", icon: User },
 ] as const;
 
 type TabId = (typeof tabs)[number]["id"];
 
 // Bottom nav tabs for mobile
-const bottomNavTabs = ["courses", "dictionary", "leaderboard", "mock-exam", "profile"] as const;
+const bottomNavTabs = ["courses", "dictionary", "leaderboard", "assessment", "profile"] as const;
 
 interface DashboardProps {
   defaultTab?: string;
 }
 
 export default function Dashboard({ defaultTab = "courses" }: DashboardProps) {
-  const [activeTab, setActiveTab] = useState<TabId>(defaultTab as TabId);
+  const location = useLocation();
+  const routeState = location.state as { defaultTab?: TabId; openPremium?: boolean; practiceSign?: string } | null;
+  const [activeTab, setActiveTab] = useState<TabId>((routeState?.defaultTab || defaultTab) as TabId);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [premiumOpen, setPremiumOpen] = useState(false);
-  const { userName, logout, profile, layoutMode, isPremium } = useAuth();
+  const { userName, logout, profile, layoutMode, isPremium, lastReward, clearLastReward, stats } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
   const isChildMode = layoutMode === "child";
 
   const handleLogout = () => { logout(); navigate("/"); };
+
+  useEffect(() => {
+    if (routeState?.defaultTab) setActiveTab(routeState.defaultTab);
+    if (routeState?.openPremium) setPremiumOpen(true);
+  }, [routeState?.defaultTab, routeState?.openPremium]);
+
+  useEffect(() => {
+    if (!lastReward) return;
+    const t = setTimeout(clearLastReward, 3200);
+    return () => clearTimeout(t);
+  }, [clearLastReward, lastReward]);
 
   const handleTabChange = (tabId: TabId) => {
     const tab = tabs.find(t => t.id === tabId);
@@ -88,7 +102,7 @@ export default function Dashboard({ defaultTab = "courses" }: DashboardProps) {
       : `Chào ${userName || "bạn"}! Chọn khóa học để bắt đầu! 🗺️`,
     dictionary: "Tra cứu ký hiệu bất kỳ trong từ điển VSL! 📖🔍",
     leaderboard: "Cùng thi đua với bạn bè nào! 🏆🔥",
-    "mock-exam": "Bình tĩnh và tự tin nhé! 📝",
+    assessment: "Bình tĩnh và tự tin nhé! 📝",
     community: "Kết nối với cộng đồng! 🤝",
     "ai-camera": "Tính năng AI đang phát triển! 🤖",
     profile: `Xem tiến trình của bạn nào! 📊`,
@@ -289,7 +303,18 @@ export default function Dashboard({ defaultTab = "courses" }: DashboardProps) {
         <main className="flex-1 flex overflow-hidden">
           <div className="flex-1 p-4 md:p-6 overflow-y-auto pb-20 md:pb-6">
             {/* Daily Progress Widget */}
-            {activeTab === "courses" && <DailyProgressWidget />}
+            {activeTab === "courses" && (
+              <>
+                {routeState?.practiceSign && (
+                  <div className="card-pastel p-4 mb-4 border-l-4 border-primary">
+                    <p className="text-sm font-body text-foreground">
+                      Gợi ý luyện tập từ từ điển: <span className="font-display font-bold">{routeState.practiceSign}</span>
+                    </p>
+                  </div>
+                )}
+                <DailyProgressWidget />
+              </>
+            )}
 
             <AnimatePresence mode="wait">
               <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.25 }}>
@@ -297,13 +322,14 @@ export default function Dashboard({ defaultTab = "courses" }: DashboardProps) {
                 {activeTab === "dictionary" && <Dictionary />}
                 {activeTab === "leaderboard" && <Leaderboard />}
                 
-                {activeTab === "mock-exam" && <MockExam />}
+                {activeTab === "assessment" && <AssessmentExam />}
                 {activeTab === "profile" && <Profile />}
-                {(activeTab === "community" || activeTab === "ai-camera") && (
+                {activeTab === "ai-camera" && <PracticeView />}
+                {activeTab === "community" && (
                   <div className="max-w-2xl mx-auto text-center py-16">
                     <Users className="w-16 h-16 text-secondary mx-auto mb-4" />
                     <h2 className="text-2xl font-display font-bold text-foreground mb-2">
-                      {activeTab === "community" ? "Cộng đồng" : "Nhận diện AI"}
+                      Cộng đồng
                     </h2>
                     <p className="text-muted-foreground font-body">Tính năng đang phát triển. Sắp ra mắt!</p>
                   </div>
@@ -312,7 +338,7 @@ export default function Dashboard({ defaultTab = "courses" }: DashboardProps) {
             </AnimatePresence>
           </div>
 
-          {!["courses", "profile", "mock-exam"].includes(activeTab) && (
+          {!["courses", "profile", "assessment"].includes(activeTab) && (
             <aside className="hidden lg:flex w-72 border-l border-border bg-card flex-col p-4 shrink-0 overflow-y-auto">
               <div className="guide-panel flex flex-col items-center text-center mb-4">
                 <motion.img src={mascotImg} alt="V-Sign Guide" className={`object-contain mb-3 drop-shadow-lg ${isChildMode ? "w-28 h-28" : "w-24 h-24"}`}
@@ -352,6 +378,24 @@ export default function Dashboard({ defaultTab = "courses" }: DashboardProps) {
       </nav>
 
       <PremiumModal open={premiumOpen} onClose={() => setPremiumOpen(false)} />
+      <AnimatePresence>
+        {lastReward && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="fixed right-4 bottom-20 md:bottom-6 z-50 card-pastel p-4 shadow-xl border-l-4 border-primary max-w-xs"
+          >
+            <p className="font-display font-bold text-foreground">{lastReward.message}</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Tổng XP: {stats.xp}{stats.streakChangedToday ? ` · Streak ${stats.streak} ngày` : ""}
+            </p>
+            {stats.streakResetNotified && (
+              <p className="text-xs text-amber-700 mt-1">Streak cũ đã reset vì bỏ lỡ ngày học theo UTC+7.</p>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

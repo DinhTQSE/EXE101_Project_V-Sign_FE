@@ -1,33 +1,67 @@
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Check, CreditCard, QrCode, Wallet, Loader2, CheckCircle } from "lucide-react";
+import { X, Check, QrCode, Loader2, CheckCircle, AlertCircle, RefreshCcw } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { paymentApi, PaymentOrderResponse, PaymentProvider, PaymentTransaction, PlanType, USE_BACKEND } from "@/services/vsignApi";
 
 interface PremiumModalProps {
   open: boolean;
   onClose: () => void;
 }
 
-type PaymentMethod = "ewallet" | "card" | "qr" | null;
+type CheckoutState = "selecting" | "qr" | "processing" | "success" | "error";
+
+const providerMeta: Record<PaymentProvider, { label: string; color: string }> = {
+  MOMO: { label: "MoMo", color: "bg-pink-100 text-pink-700 border-pink-200" },
+  ZALOPAY: { label: "ZaloPay", color: "bg-blue-100 text-blue-700 border-blue-200" },
+};
+
+const planMeta: Record<PlanType, { label: string; price: string; saving?: string }> = {
+  MONTHLY: { label: "Theo tháng", price: "49.000 VNĐ" },
+  YEARLY: { label: "Theo năm", price: "399.000 VNĐ", saving: "Tiết kiệm 32%" },
+};
+
+function errorMessage(error: unknown, fallback: string) {
+  if (error && typeof error === "object" && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === "string" && message) return message;
+  }
+  return fallback;
+}
 
 export default function PremiumModal({ open, onClose }: PremiumModalProps) {
-  const { setPremium } = useAuth();
-  const [method, setMethod] = useState<PaymentMethod>(null);
+  const { accessToken, setPremium } = useAuth();
+  const [planType, setPlanType] = useState<PlanType>("MONTHLY");
+  const [provider, setProvider] = useState<PaymentProvider>("MOMO");
+  const [checkoutState, setCheckoutState] = useState<CheckoutState>("selecting");
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [qrCountdown, setQrCountdown] = useState(600);
+  const [order, setOrder] = useState<PaymentOrderResponse | null>(null);
+  const [error, setError] = useState("");
+  const [now, setNow] = useState(Date.now());
 
-  const [cardNumber, setCardNumber] = useState("");
-  const [cardName, setCardName] = useState("");
-  const [cardExpiry, setCardExpiry] = useState("");
-  const [cardCvv, setCardCvv] = useState("");
+  const benefits = [
+    "Mở khóa toàn bộ lộ trình học",
+    "Không giới hạn AI Camera luyện tập",
+    "Theo dõi XP, streak, badge và bảng xếp hạng đầy đủ",
+  ];
+
+  const secondsLeft = useMemo(() => {
+    if (!order) return 0;
+    return Math.max(0, Math.floor((new Date(order.expiresAt).getTime() - now) / 1000));
+  }, [order, now]);
 
   useEffect(() => {
-    if (method !== "qr" || success || loading) return;
-    if (qrCountdown <= 0) return;
-    const t = setInterval(() => setQrCountdown(p => p - 1), 1000);
+    if (!open || checkoutState !== "qr") return;
+    const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
-  }, [method, success, loading, qrCountdown]);
+  }, [open, checkoutState]);
+
+  useEffect(() => {
+    if (checkoutState === "qr" && order && secondsLeft === 0) {
+      setCheckoutState("error");
+      setError("Mã QR đã hết hạn. Vui lòng tạo mã mới.");
+    }
+  }, [checkoutState, order, secondsLeft]);
 
   const formatQrTime = (s: number) => {
     const m = Math.floor(s / 60);
@@ -35,34 +69,78 @@ export default function PremiumModal({ open, onClose }: PremiumModalProps) {
     return `${m.toString().padStart(2, "0")}:${sec.toString().padStart(2, "0")}`;
   };
 
-  const handlePay = () => {
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      setSuccess(true);
-      setPremium(true);
-    }, 2000);
+  const resetCheckout = () => {
+    setCheckoutState("selecting");
+    setLoading(false);
+    setOrder(null);
+    setError("");
+    setNow(Date.now());
   };
 
   const handleClose = () => {
-    if (!loading) {
-      setMethod(null);
+    if (loading) return;
+    resetCheckout();
+    onClose();
+  };
+
+  const createOrder = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const nextOrder = await paymentApi.createOrder({ provider, planType });
+      setOrder(nextOrder);
+      setNow(Date.now());
+      setCheckoutState("qr");
+    } catch (err: unknown) {
+      setError(errorMessage(err, "Không thể tạo giao dịch thanh toán."));
+      setCheckoutState("error");
+    } finally {
       setLoading(false);
-      setSuccess(false);
-      setQrCountdown(600);
-      setCardNumber("");
-      setCardName("");
-      setCardExpiry("");
-      setCardCvv("");
-      onClose();
     }
   };
 
-  const benefits = [
-    "Mở khóa toàn bộ lộ trình học",
-    "Không giới hạn AI Camera luyện tập",
-    "Tham gia thử thách nhóm và nhận chứng chỉ",
-  ];
+  const finishPayment = async (status: "SUCCESS" | "FAILED") => {
+    if (!order) return;
+    setLoading(true);
+    setCheckoutState("processing");
+    await new Promise((resolve) => setTimeout(resolve, 900));
+    let transaction: PaymentTransaction = {
+      transactionId: order.transactionId,
+      providerTransactionId: order.providerTransactionId,
+      provider: order.provider,
+      planType: order.planType,
+      amount: order.amount,
+      currency: order.currency,
+      status,
+      createdAt: new Date().toISOString(),
+    };
+
+    if (USE_BACKEND) {
+      try {
+        transaction = await paymentApi.getPaymentStatus(order.transactionId, accessToken);
+      } catch (err: unknown) {
+        setCheckoutState("error");
+        setError(errorMessage(err, "Chưa thể xác nhận trạng thái giao dịch. Vui lòng thử lại."));
+        setLoading(false);
+        return;
+      }
+    } else {
+      await paymentApi.recordPayment(transaction);
+    }
+
+    if (transaction.status === "SUCCESS") {
+      setPremium(true, transaction);
+      setCheckoutState("success");
+      setError("");
+    } else if (transaction.status === "PENDING") {
+      setCheckoutState("qr");
+      setError("Giao dịch vẫn đang chờ xác nhận. Vui lòng thử lại sau khi thanh toán.");
+    } else {
+      setCheckoutState("error");
+      setError("Thanh toán không thành công. Bạn có thể tạo mã mới hoặc đổi ví thanh toán.");
+    }
+    setLoading(false);
+  };
 
   return (
     <AnimatePresence>
@@ -81,22 +159,20 @@ export default function PremiumModal({ open, onClose }: PremiumModalProps) {
             className="card-pastel w-full md:max-w-lg max-h-[100vh] md:max-h-[90vh] overflow-y-auto rounded-t-3xl md:rounded-2xl"
             onClick={e => e.stopPropagation()}
           >
-            {success ? (
+            {checkoutState === "success" ? (
               <div className="p-8 text-center">
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ type: "spring", stiffness: 200 }}
-                  className="w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center" style={{ background: "var(--gradient-primary)" }}
+                  className="w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center"
+                  style={{ background: "var(--gradient-primary)" }}
                 >
                   <CheckCircle className="w-10 h-10 text-primary-foreground" />
                 </motion.div>
-                <h2 className="text-2xl font-display font-bold text-foreground mb-2">
-                  Thanh toán thành công!
-                </h2>
-                <p className="text-muted-foreground font-body mb-8">
-                  Chào mừng bạn đến với V-Sign Premium.
-                </p>
+                <h2 className="text-2xl font-display font-bold text-foreground mb-2">Thanh toán thành công!</h2>
+                <p className="text-muted-foreground font-body mb-2">Premium đã được kích hoạt trên phiên hiện tại.</p>
+                {order && <p className="text-xs text-muted-foreground font-body mb-8">Mã giao dịch: {order.providerTransactionId}</p>}
                 <button onClick={handleClose} className="btn-primary-gradient w-full text-center min-h-[48px]">
                   Bắt đầu học ngay
                 </button>
@@ -104,16 +180,30 @@ export default function PremiumModal({ open, onClose }: PremiumModalProps) {
             ) : (
               <>
                 <div className="p-6 border-b border-border flex items-center justify-between">
-                  <h2 className="text-xl font-display font-bold text-foreground">Nâng cấp V-Sign Premium</h2>
+                  <div>
+                    <h2 className="text-xl font-display font-bold text-foreground">Nâng cấp V-Sign Premium</h2>
+                    <p className="text-xs text-muted-foreground mt-1">QR payment contract-ready cho MoMo/ZaloPay</p>
+                  </div>
                   <button onClick={handleClose} className="p-2 rounded-full hover:bg-muted transition-colors">
                     <X className="w-5 h-5 text-muted-foreground" />
                   </button>
                 </div>
 
                 <div className="p-6 space-y-6">
-                  <div className="text-center">
-                    <span className="text-4xl font-display font-bold text-primary"><span className="text-4xl font-display font-bold text-primary">49.000 VNĐ</span></span>
-                    <span className="text-muted-foreground font-body"> / tháng</span>
+                  <div className="grid grid-cols-2 gap-3">
+                    {(Object.keys(planMeta) as PlanType[]).map((plan) => (
+                      <button
+                        key={plan}
+                        onClick={() => setPlanType(plan)}
+                        className={`rounded-2xl border p-4 text-left transition-all ${
+                          planType === plan ? "border-primary bg-primary/10" : "border-border bg-card"
+                        }`}
+                      >
+                        <span className="block text-sm font-display font-bold text-foreground">{planMeta[plan].label}</span>
+                        <span className="block text-lg font-display font-bold text-primary mt-1">{planMeta[plan].price}</span>
+                        {planMeta[plan].saving && <span className="text-xs text-secondary font-semibold">{planMeta[plan].saving}</span>}
+                      </button>
+                    ))}
                   </div>
 
                   <div className="space-y-3">
@@ -128,125 +218,91 @@ export default function PremiumModal({ open, onClose }: PremiumModalProps) {
                   </div>
 
                   <div>
-                    <p className="font-display font-bold text-foreground text-sm mb-3">Chọn phương thức thanh toán</p>
-                    <div className="space-y-2">
-                      <button
-                        onClick={() => setMethod("ewallet")}
-                        className={`w-full card-pastel p-4 flex items-center gap-3 text-left transition-all min-h-[56px] ${
-                          method === "ewallet" ? "border-2 border-primary" : ""
-                        }`}
-                      >
-                        <Wallet className="w-5 h-5 text-primary shrink-0" />
-                        <div className="flex-1">
-                          <span className="font-body font-semibold text-sm text-foreground">Ví điện tử</span>
-                          <p className="text-xs text-muted-foreground">MoMo · ZaloPay</p>
-                        </div>
-                        <div className={`w-5 h-5 rounded-full border-2 ${method === "ewallet" ? "border-primary bg-primary" : "border-border"} flex items-center justify-center`}>
-                          {method === "ewallet" && <div className="w-2 h-2 rounded-full bg-primary-foreground" />}
-                        </div>
-                      </button>
-
-                      <div>
+                    <p className="font-display font-bold text-foreground text-sm mb-3">Chọn ví thanh toán</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      {(Object.keys(providerMeta) as PaymentProvider[]).map((p) => (
                         <button
-                          onClick={() => setMethod("card")}
-                          className={`w-full card-pastel p-4 flex items-center gap-3 text-left transition-all min-h-[56px] ${
-                            method === "card" ? "border-2 border-primary rounded-b-none" : ""
+                          key={p}
+                          onClick={() => setProvider(p)}
+                          className={`rounded-2xl border p-4 flex items-center gap-3 text-left transition-all ${
+                            provider === p ? "border-primary bg-primary/10" : "border-border bg-card"
                           }`}
                         >
-                          <CreditCard className="w-5 h-5 text-primary shrink-0" />
-                          <div className="flex-1">
-                            <span className="font-body font-semibold text-sm text-foreground">Thẻ Ngân hàng / Thẻ Tín dụng</span>
-                          </div>
-                          <div className={`w-5 h-5 rounded-full border-2 ${method === "card" ? "border-primary bg-primary" : "border-border"} flex items-center justify-center`}>
-                            {method === "card" && <div className="w-2 h-2 rounded-full bg-primary-foreground" />}
-                          </div>
+                          <span className={`text-xs font-bold px-2 py-1 rounded-full border ${providerMeta[p].color}`}>{providerMeta[p].label}</span>
+                          <span className="text-xs text-muted-foreground">QR/deep link</span>
                         </button>
-                        <AnimatePresence>
-                          {method === "card" && (
-                            <motion.div
-                              initial={{ height: 0, opacity: 0 }}
-                              animate={{ height: "auto", opacity: 1 }}
-                              exit={{ height: 0, opacity: 0 }}
-                              className="overflow-hidden border-2 border-t-0 border-primary rounded-b-2xl bg-card"
-                            >
-                              <div className="p-4 space-y-3">
-                                <input type="text" placeholder="Số thẻ" value={cardNumber}
-                                  onChange={e => setCardNumber(e.target.value)}
-                                  className="w-full px-3 py-3 rounded-xl border border-input bg-background text-foreground font-body text-sm focus:outline-none focus:ring-2 focus:ring-ring min-h-[48px]" />
-                                <input type="text" placeholder="Tên chủ thẻ" value={cardName}
-                                  onChange={e => setCardName(e.target.value)}
-                                  className="w-full px-3 py-3 rounded-xl border border-input bg-background text-foreground font-body text-sm focus:outline-none focus:ring-2 focus:ring-ring min-h-[48px]" />
-                                <div className="grid grid-cols-2 gap-3">
-                                  <input type="text" placeholder="Ngày hết hạn" value={cardExpiry}
-                                    onChange={e => setCardExpiry(e.target.value)}
-                                    className="w-full px-3 py-3 rounded-xl border border-input bg-background text-foreground font-body text-sm focus:outline-none focus:ring-2 focus:ring-ring min-h-[48px]" />
-                                  <input type="text" placeholder="CVV" value={cardCvv}
-                                    onChange={e => setCardCvv(e.target.value)}
-                                    className="w-full px-3 py-3 rounded-xl border border-input bg-background text-foreground font-body text-sm focus:outline-none focus:ring-2 focus:ring-ring min-h-[48px]" />
-                                </div>
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-
-                      <div>
-                        <button
-                          onClick={() => setMethod("qr")}
-                          className={`w-full card-pastel p-4 flex items-center gap-3 text-left transition-all min-h-[56px] ${
-                            method === "qr" ? "border-2 border-primary rounded-b-none" : ""
-                          }`}
-                        >
-                          <QrCode className="w-5 h-5 text-primary shrink-0" />
-                          <div className="flex-1">
-                            <span className="font-body font-semibold text-sm text-foreground">Chuyển khoản VietQR</span>
-                          </div>
-                          <div className={`w-5 h-5 rounded-full border-2 ${method === "qr" ? "border-primary bg-primary" : "border-border"} flex items-center justify-center`}>
-                            {method === "qr" && <div className="w-2 h-2 rounded-full bg-primary-foreground" />}
-                          </div>
-                        </button>
-                        <AnimatePresence>
-                          {method === "qr" && (
-                            <motion.div
-                              initial={{ height: 0, opacity: 0 }}
-                              animate={{ height: "auto", opacity: 1 }}
-                              exit={{ height: 0, opacity: 0 }}
-                              className="overflow-hidden border-2 border-t-0 border-primary rounded-b-2xl bg-card"
-                            >
-                              <div className="p-4 flex flex-col items-center">
-                                <div className="rounded-xl p-4 bg-white shadow-sm">
-                                  <img
-                                    src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=Thanh_toan_VSign_Premium_49000"
-                                    alt="VietQR"
-                                    className="w-40 h-40"
-                                  />
-                                </div>
-                                <p className="text-xs text-muted-foreground font-body mt-3 mb-2"><p className="text-xs text-muted-foreground font-body mt-3 mb-2">Quét mã để thanh toán 49.000 VNĐ</p></p>
-                                <span className="text-sm font-display font-bold text-primary">{formatQrTime(qrCountdown)}</span>
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
+                      ))}
                     </div>
                   </div>
+
+                  {checkoutState === "qr" && order && (
+                    <div className="rounded-2xl border border-primary/30 bg-card p-4 text-center">
+                      <div className="inline-flex items-center gap-2 text-sm font-display font-bold text-foreground mb-3">
+                        <QrCode className="w-4 h-4 text-primary" /> Quét mã {providerMeta[order.provider].label}
+                      </div>
+                      <div className="rounded-xl p-4 bg-white shadow-sm inline-block">
+                        <img
+                          src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(order.qrCodeData)}`}
+                          alt={`${order.provider} QR`}
+                          className="w-44 h-44"
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground font-body mt-3">
+                        {order.amount.toLocaleString("vi-VN")} VNĐ · Hết hạn sau <span className="font-bold text-primary">{formatQrTime(secondsLeft)}</span>
+                      </p>
+                      <div className={`grid gap-2 mt-4 ${USE_BACKEND ? "grid-cols-1" : "grid-cols-2"}`}>
+                        <button onClick={() => finishPayment("SUCCESS")} disabled={loading} className="btn-primary-gradient text-sm py-2">
+                          {USE_BACKEND ? "Kiểm tra thanh toán" : "Tôi đã thanh toán"}
+                        </button>
+                        {!USE_BACKEND && (
+                          <button
+                            onClick={() => finishPayment("FAILED")}
+                            disabled={loading}
+                            className="rounded-2xl border border-border px-4 py-2 text-sm font-body font-semibold text-foreground hover:bg-muted"
+                          >
+                            Mô phỏng lỗi
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {checkoutState === "processing" && (
+                    <div className="rounded-2xl border border-border bg-card p-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                      <Loader2 className="w-4 h-4 animate-spin" /> Đang xác nhận trạng thái giao dịch...
+                    </div>
+                  )}
+
+                  {checkoutState === "error" && error && (
+                    <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-4">
+                      <div className="flex items-start gap-2 text-sm text-destructive">
+                        <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                        <span>{error}</span>
+                      </div>
+                      <button
+                        onClick={resetCheckout}
+                        className="mt-3 inline-flex items-center gap-2 text-sm font-body font-semibold text-foreground hover:text-primary"
+                      >
+                        <RefreshCcw className="w-4 h-4" /> Tạo lại mã hoặc đổi ví
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <div className="p-6 border-t border-border">
                   <button
-                    onClick={handlePay}
-                    disabled={!method || loading}
+                    onClick={createOrder}
+                    disabled={loading || checkoutState === "qr" || checkoutState === "processing"}
                     className="btn-primary-gradient w-full text-center flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed min-h-[48px]"
                   >
-                    {loading ? (
+                    {loading && checkoutState === "selecting" ? (
                       <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        Đang xử lý...
+                        <Loader2 className="w-5 h-5 animate-spin" /> Đang tạo mã...
                       </>
-                    ) : method === "qr" ? (
-                      "Đã chuyển khoản"
+                    ) : checkoutState === "qr" ? (
+                      "Đang chờ thanh toán"
                     ) : (
-                      "Thanh toán 49.000 VNĐ"
+                      `Tạo mã ${providerMeta[provider].label}`
                     )}
                   </button>
                 </div>
