@@ -712,20 +712,26 @@ export const learningApi = {
     return asArray(record.units).map(toUnitSummary).sort((a, b) => a.orderIndex - b.orderIndex);
   },
 
-  async listChapters(unitId: string): Promise<ChapterSummaryDto[]> {
-    const raw = await requestJson<unknown>(`/units/${encodeURIComponent(unitId)}/chapters`);
+  async listChapters(unitId: string, token?: string): Promise<ChapterSummaryDto[]> {
+    const raw = await requestJson<unknown>(`/units/${encodeURIComponent(unitId)}/chapters`, {
+      headers: token ? authHeader(token) : undefined,
+    });
     const record = asRecord(raw);
     return asArray(record.chapters).map(toChapterSummary).sort((a, b) => a.orderIndex - b.orderIndex);
   },
 
-  async listLessons(chapterId: string): Promise<LessonSummaryDto[]> {
-    const raw = await requestJson<unknown>(`/chapters/${encodeURIComponent(chapterId)}/lessons`);
+  async listLessons(chapterId: string, token?: string): Promise<LessonSummaryDto[]> {
+    const raw = await requestJson<unknown>(`/chapters/${encodeURIComponent(chapterId)}/lessons`, {
+      headers: token ? authHeader(token) : undefined,
+    });
     const record = asRecord(raw);
     return asArray(record.lessons).map(toLessonSummary).sort((a, b) => a.orderIndex - b.orderIndex);
   },
 
-  async getLesson(lessonId: string): Promise<LessonDetailDto> {
-    const raw = await requestJson<unknown>(`/lessons/${encodeURIComponent(lessonId)}`);
+  async getLesson(lessonId: string, token?: string): Promise<LessonDetailDto> {
+    const raw = await requestJson<unknown>(`/lessons/${encodeURIComponent(lessonId)}`, {
+      headers: token ? authHeader(token) : undefined,
+    });
     return toLessonDetail(raw);
   },
 
@@ -738,9 +744,11 @@ export const learningApi = {
     return toLessonProgress(raw, lessonId);
   },
 
-  async getLessonQuiz(lessonId: string): Promise<LessonQuizDto | null> {
+  async getLessonQuiz(lessonId: string, token?: string): Promise<LessonQuizDto | null> {
     try {
-      const raw = await requestJson<unknown>(`/lessons/${encodeURIComponent(lessonId)}/quiz`);
+      const raw = await requestJson<unknown>(`/lessons/${encodeURIComponent(lessonId)}/quiz`, {
+        headers: token ? authHeader(token) : undefined,
+      });
       return toLessonQuiz(raw);
     } catch (error) {
       const apiError = error as Partial<ApiErrorShape>;

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
-import { Loader2, Camera, XCircle, RefreshCw } from "lucide-react";
+import { Camera, XCircle, RefreshCw } from "lucide-react";
 import { useWebcam } from "@/hooks/useWebcam";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
 
 interface WebcamFeedProps {
   id?: string;
@@ -57,9 +58,8 @@ export default function WebcamFeed({ className = "", glowOnActive = true, onStat
       />
 
       {!isReady && (
-        <div className="w-full h-full flex flex-col items-center justify-center gap-3 bg-muted">
-          <Loader2 className="w-10 h-10 text-primary animate-spin" />
-          <p className="text-muted-foreground font-body text-sm">Đang kết nối camera...</p>
+        <div className="w-full h-full flex flex-col items-center justify-center bg-muted">
+          <LoadingSpinner size="lg" message="Đang kết nối camera..." />
         </div>
       )}
     </div>

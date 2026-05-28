@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { AlertCircle, Loader2, Mail, X } from "lucide-react";
+import { AlertCircle, Mail, X } from "lucide-react";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface LoginModalProps {
@@ -187,7 +188,7 @@ export function LoginModal({ open, onClose, defaultMode = "signup" }: LoginModal
               )}
 
               <button type="submit" disabled={loading} className="btn-primary-gradient w-full text-center flex items-center justify-center gap-2 disabled:opacity-60">
-                {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+                {loading && <LoadingSpinner size="sm" />}
                 {mode === "signup" ? "Đăng ký" : mode === "login" ? "Đăng nhập" : "Gửi hướng dẫn"}
               </button>
             </form>

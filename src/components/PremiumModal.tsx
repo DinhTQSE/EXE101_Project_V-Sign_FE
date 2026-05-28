@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Check, QrCode, Loader2, CheckCircle, AlertCircle, RefreshCcw } from "lucide-react";
+import { X, Check, QrCode, CheckCircle, AlertCircle, RefreshCcw } from "lucide-react";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { useAuth } from "@/contexts/AuthContext";
 import { paymentApi, PaymentOrderResponse, PaymentProvider, PaymentTransaction, PlanType, USE_BACKEND } from "@/services/vsignApi";
 
@@ -269,7 +270,7 @@ export default function PremiumModal({ open, onClose }: PremiumModalProps) {
 
                   {checkoutState === "processing" && (
                     <div className="rounded-2xl border border-border bg-card p-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                      <Loader2 className="w-4 h-4 animate-spin" /> Đang xác nhận trạng thái giao dịch...
+                      <LoadingSpinner size="sm" /> Đang xác nhận trạng thái giao dịch...
                     </div>
                   )}
 
@@ -297,7 +298,7 @@ export default function PremiumModal({ open, onClose }: PremiumModalProps) {
                   >
                     {loading && checkoutState === "selecting" ? (
                       <>
-                        <Loader2 className="w-5 h-5 animate-spin" /> Đang tạo mã...
+                        <LoadingSpinner size="sm" /> Đang tạo mã...
                       </>
                     ) : checkoutState === "qr" ? (
                       "Đang chờ thanh toán"

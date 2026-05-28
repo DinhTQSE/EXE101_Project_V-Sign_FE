@@ -36,8 +36,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         <AppTopbar onMenuClick={() => setMobileDrawerOpen(true)} />
 
         {/* Content */}
-        <main className="flex-1 overflow-y-auto pb-20 md:pb-6">
-          <div className="max-w-[1380px] mx-auto px-4 md:px-6 py-5 md:py-6">
+        <main className="flex-1 min-h-0 overflow-y-auto pb-20 md:pb-6 flex flex-col">
+          <div className="flex-1 min-h-0 max-w-[1380px] w-full mx-auto px-4 md:px-6 py-5 md:py-6 flex flex-col">
             {children}
           </div>
         </main>

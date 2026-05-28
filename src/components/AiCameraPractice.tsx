@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Camera, CheckCircle, Loader2, RefreshCw, Video, XCircle } from "lucide-react";
+import { Camera, CheckCircle, RefreshCw, Video, XCircle } from "lucide-react";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWebcam } from "@/hooks/useWebcam";
 import {
@@ -179,9 +180,9 @@ export default function AiCameraPractice({
               animate={{ rotate: 360 }}
               transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
             />
-            <div className="absolute flex flex-col items-center">
-              <Loader2 className="w-8 h-8 text-primary-foreground animate-spin" />
-              <span className="text-white font-display font-bold mt-2 text-sm">Đang phân tích...</span>
+            <div className="absolute flex flex-col items-center gap-2">
+              <LoadingSpinner size="sm" color="white" />
+              <span className="text-white font-display font-bold text-sm">Đang phân tích...</span>
             </div>
           </div>
         )}

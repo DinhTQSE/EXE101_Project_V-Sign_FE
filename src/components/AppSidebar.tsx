@@ -66,24 +66,26 @@ export function DesktopSidebar({ collapsed, onToggle }: DesktopSidebarProps) {
 
   return (
     <aside
-      className={`hidden md:flex flex-col fixed left-4 top-4 bottom-4 z-40 app-rail rounded-[32px] overflow-hidden transition-all duration-300 ease-in-out ${
+      className={`hidden md:flex flex-col fixed left-4 top-4 bottom-4 z-40 transition-all duration-300 ease-in-out ${
         collapsed ? "w-[72px]" : "w-[256px]"
       }`}
     >
-      {/* Logo */}
-      <div
-        className="flex items-center justify-center border-b border-border/70 cursor-pointer transition-all duration-300 shrink-0"
-        style={{ height: 76 }}
+      <button
+        type="button"
+        className="flex h-[78px] shrink-0 items-center justify-center rounded-[28px] transition-transform duration-300 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         onClick={() => navigate("/home")}
+        aria-label="V-Sign home"
       >
         <img
           src={logo}
           alt="V-Sign"
-          className={`shrink-0 object-contain transition-all duration-300 hover:scale-105 ${
-            collapsed ? "w-9 h-9" : "w-14 h-14"
+          className={`shrink-0 object-contain drop-shadow-[0_14px_26px_rgba(214,51,108,0.24)] transition-all duration-300 ${
+            collapsed ? "w-14 h-14" : "w-28 h-16"
           }`}
         />
-      </div>
+      </button>
+
+      <div className="app-rail flex min-h-0 flex-1 flex-col overflow-hidden rounded-[32px]">
 
       {/* Nav */}
       <nav className="flex-1 p-2.5 space-y-1.5 overflow-y-auto overflow-x-hidden">
@@ -207,6 +209,7 @@ export function DesktopSidebar({ collapsed, onToggle }: DesktopSidebarProps) {
             Thu gọn
           </span>
         </button>
+      </div>
       </div>
     </aside>
   );
