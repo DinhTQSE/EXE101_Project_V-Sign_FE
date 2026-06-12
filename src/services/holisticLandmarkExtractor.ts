@@ -24,6 +24,22 @@ export interface LandmarkCaptureResult {
   handsDetectedFrames: number;
 }
 
+export function getHolisticSupportError() {
+  if (typeof window === "undefined") {
+    return "Trinh duyet khong san sang chay AI camera.";
+  }
+  if (!window.isSecureContext && window.location.hostname !== "localhost") {
+    return "AI camera can ket noi HTTPS de truy cap camera an toan.";
+  }
+  if (!navigator.mediaDevices?.getUserMedia) {
+    return "Trinh duyet thiet bi nay chua ho tro camera API.";
+  }
+  if (!("WebAssembly" in window)) {
+    return "Trinh duyet khong ho tro WebAssembly de chay MediaPipe Holistic.";
+  }
+  return null;
+}
+
 function zeros(length: number) {
   return Array.from({ length }, () => 0);
 }
@@ -132,9 +148,8 @@ export async function captureHolisticLandmarkSequence(
   video: HTMLVideoElement,
   options: LandmarkCaptureOptions = {}
 ): Promise<LandmarkCaptureResult> {
-  if (!("WebAssembly" in window)) {
-    throw new Error("Trinh duyet khong ho tro WebAssembly de chay MediaPipe Holistic.");
-  }
+  const supportError = getHolisticSupportError();
+  if (supportError) throw new Error(supportError);
 
   const durationMs = options.durationMs ?? 3000;
   const fps = options.fps ?? 8;

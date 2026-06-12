@@ -7,7 +7,9 @@ export function useTheme() {
     try {
       const saved = localStorage.getItem("vsign_theme");
       if (saved === "dark" || saved === "light") return saved;
-    } catch {}
+    } catch {
+      return "light";
+    }
     return "light";
   });
 

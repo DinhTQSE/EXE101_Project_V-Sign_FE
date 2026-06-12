@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BookOpen, Trophy, Users, LogOut, Menu, X, User, GraduationCap, Cpu, Crown, Lock, Sun, Moon, Search, Clock } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -6,14 +6,14 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useTheme } from "@/hooks/useTheme";
 import logo from "@/assets/vsign-logo.png";
 import mascotImg from "@/assets/mascot.png";
-import VocabularyPack from "@/pages/VocabularyPack";
-import Profile from "@/pages/Profile";
-import AssessmentExam from "@/pages/AssessmentExam";
-import ReviewChallenge from "@/pages/ReviewChallenge"; // kept for potential future use
-import Dictionary from "@/pages/Dictionary";
-import Leaderboard from "@/pages/Leaderboard";
-import PremiumModal from "@/components/PremiumModal";
-import PracticeView from "@/components/PracticeView";
+
+const VocabularyPack = lazy(() => import("@/pages/VocabularyPack"));
+const Profile = lazy(() => import("@/pages/Profile"));
+const AssessmentExam = lazy(() => import("@/pages/AssessmentExam"));
+const Dictionary = lazy(() => import("@/pages/Dictionary"));
+const Leaderboard = lazy(() => import("@/pages/Leaderboard"));
+const PremiumModal = lazy(() => import("@/components/PremiumModal"));
+const PracticeView = lazy(() => import("@/components/PracticeView"));
 
 function DailyProgressWidget() {
   const { onboardingResponses, stats } = useAuth();
@@ -51,6 +51,10 @@ const tabs = [
 ] as const;
 
 type TabId = (typeof tabs)[number]["id"];
+type DashboardTab = (typeof tabs)[number] & { premium?: boolean; comingSoon?: boolean };
+
+const isPremiumTab = (tab?: (typeof tabs)[number]) => Boolean((tab as DashboardTab | undefined)?.premium);
+const isComingSoonTab = (tab?: (typeof tabs)[number]) => Boolean((tab as DashboardTab | undefined)?.comingSoon);
 
 // Bottom nav tabs for mobile
 const bottomNavTabs = ["courses", "dictionary", "leaderboard", "assessment", "profile"] as const;
@@ -87,11 +91,11 @@ export default function Dashboard({ defaultTab = "courses" }: DashboardProps) {
 
   const handleTabChange = (tabId: TabId) => {
     const tab = tabs.find(t => t.id === tabId);
-    if (tab && "premium" in tab && (tab as any).premium && !isPremium) {
+    if (isPremiumTab(tab) && !isPremium) {
       setPremiumOpen(true);
       return;
     }
-    if (tab && "comingSoon" in tab && tab.comingSoon) return;
+    if (isComingSoonTab(tab)) return;
     setActiveTab(tabId);
     setMobileDrawerOpen(false);
   };
@@ -121,8 +125,8 @@ export default function Dashboard({ defaultTab = "courses" }: DashboardProps) {
 
         <nav className="flex-1 p-2 space-y-1 overflow-y-auto overflow-x-hidden">
           {tabs.map((tab) => {
-            const isPro = "premium" in tab && (tab as any).premium;
-            const isComingSoon = "comingSoon" in tab && tab.comingSoon;
+            const isPro = isPremiumTab(tab);
+            const isComingSoon = isComingSoonTab(tab);
 
             return (
               <button
@@ -223,8 +227,8 @@ export default function Dashboard({ defaultTab = "courses" }: DashboardProps) {
               </div>
               <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
                 {tabs.map((tab) => {
-                  const isPro = "premium" in tab && (tab as any).premium;
-                  const isComingSoon = "comingSoon" in tab && tab.comingSoon;
+                  const isPro = isPremiumTab(tab);
+                  const isComingSoon = isComingSoonTab(tab);
                   return (
                     <button
                       key={tab.id}
@@ -318,6 +322,7 @@ export default function Dashboard({ defaultTab = "courses" }: DashboardProps) {
 
             <AnimatePresence mode="wait">
               <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.25 }}>
+                <Suspense fallback={<div className="py-12 text-center text-sm text-muted-foreground">Dang tai...</div>}>
                 {activeTab === "courses" && <VocabularyPack />}
                 {activeTab === "dictionary" && <Dictionary />}
                 {activeTab === "leaderboard" && <Leaderboard />}
@@ -334,6 +339,7 @@ export default function Dashboard({ defaultTab = "courses" }: DashboardProps) {
                     <p className="text-muted-foreground font-body">Tính năng đang phát triển. Sắp ra mắt!</p>
                   </div>
                 )}
+                </Suspense>
               </motion.div>
             </AnimatePresence>
           </div>
@@ -377,7 +383,9 @@ export default function Dashboard({ defaultTab = "courses" }: DashboardProps) {
         })}
       </nav>
 
-      <PremiumModal open={premiumOpen} onClose={() => setPremiumOpen(false)} />
+      <Suspense fallback={null}>
+        <PremiumModal open={premiumOpen} onClose={() => setPremiumOpen(false)} />
+      </Suspense>
       <AnimatePresence>
         {lastReward && (
           <motion.div

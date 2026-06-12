@@ -88,8 +88,9 @@ export default function Profile() {
       await changePassword(currentPassword, newPassword);
       setSecurityMessage("Đã đổi mật khẩu thành công.");
       setCurrentPassword(""); setNewPassword(""); setConfirmPassword("");
-    } catch (err: any) {
-      setSecurityError(err?.message || "Không thể đổi mật khẩu.");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Không thể đổi mật khẩu.";
+      setSecurityError(message);
     }
   };
 

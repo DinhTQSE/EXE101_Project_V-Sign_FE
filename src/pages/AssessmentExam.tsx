@@ -12,6 +12,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import VideoPlayer from "@/components/VideoPlayer";
 import mascotImg from "@/assets/mascot.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { dictionaryApi, DictionaryEntryDto } from "@/services/vsignApi";
@@ -571,14 +572,17 @@ export default function AssessmentExam() {
             {/* Video card — full width, prominent */}
             {current.videoUrl && (
               <div className="card-pastel overflow-hidden mb-3 shrink-0 rounded-2xl">
-                <video
+                <VideoPlayer
                   src={current.videoUrl}
                   autoPlay
                   loop
                   muted
-                  playsInline
-                  className="w-full object-cover"
-                  style={{ maxHeight: "340px" }}
+                  controls={false}
+                  preload="auto"
+                  className="w-full bg-black"
+                  videoClassName="w-full object-cover"
+                  maxHeight="340px"
+                  label={current.prompt}
                 />
               </div>
             )}

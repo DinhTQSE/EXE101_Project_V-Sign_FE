@@ -1,3 +1,5 @@
+import { getApiBaseUrl } from "@/services/apiConfig";
+
 export type AccountType = "BASIC" | "PREMIUM" | "ADMIN";
 export type PaymentProvider = "MOMO" | "ZALOPAY";
 export type PaymentStatus = "PENDING" | "SUCCESS" | "FAILED" | "TIMEOUT";
@@ -148,6 +150,8 @@ export interface SignatureAttemptRequest {
   framesProcessed?: number;
   handsDetectedFrames?: number;
   inferenceMs?: number;
+  modelVersion?: string;
+  labelVersion?: string;
 }
 
 export interface SignatureAttemptResponse {
@@ -286,7 +290,7 @@ export interface AssessmentSubmitResultDto {
   awardedXp: number;
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api/v1";
+const API_BASE_URL = getApiBaseUrl();
 export const USE_BACKEND = true;
 
 

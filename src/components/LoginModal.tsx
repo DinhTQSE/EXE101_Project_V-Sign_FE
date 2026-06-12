@@ -85,8 +85,9 @@ export function LoginModal({ open, onClose, defaultMode = "signup" }: LoginModal
         await requestPasswordReset(email);
         setSuccessMessage("Nếu email tồn tại, hướng dẫn đặt lại mật khẩu sẽ được gửi đến hộp thư.");
       }
-    } catch (err: any) {
-      setError(err?.message || "Không thể xử lý yêu cầu. Vui lòng thử lại.");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Không thể xử lý yêu cầu. Vui lòng thử lại.";
+      setError(message);
     } finally {
       setLoading(false);
     }

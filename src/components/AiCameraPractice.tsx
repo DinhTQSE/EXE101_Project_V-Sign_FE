@@ -4,6 +4,7 @@ import { Camera, CheckCircle, RefreshCw, Video, XCircle } from "lucide-react";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWebcam } from "@/hooks/useWebcam";
+import { getHolisticSupportError } from "@/services/holisticLandmarkExtractor";
 import {
   AI_PRACTICE_TARGETS,
   AiPredictionResponse,
@@ -65,7 +66,8 @@ export default function AiCameraPractice({
   onSuccess,
 }: AiCameraPracticeProps) {
   const { accessToken } = useAuth();
-  const { videoRef, isReady, error, restart } = useWebcam(true);
+  const supportError = useMemo(() => getHolisticSupportError(), []);
+  const { videoRef, isReady, error, restart } = useWebcam(!supportError);
   const [scanState, setScanState] = useState<ScanState>("idle");
   const [prediction, setPrediction] = useState<AiPredictionResponse | null>(null);
   const [message, setMessage] = useState("");
@@ -76,7 +78,8 @@ export default function AiCameraPractice({
   );
   const targetText = targetDisplay || requestedTarget?.display || "một ký hiệu trong 3 unit MVP";
   const confidence = predictionConfidence(prediction);
-  const canScan = isReady && !error && scanState !== "scanning";
+  const cameraError = supportError || error;
+  const canScan = isReady && !cameraError && scanState !== "scanning";
 
   const handleScan = async () => {
     if (!videoRef.current || !canScan) return;
@@ -89,6 +92,7 @@ export default function AiCameraPractice({
         durationMs: captureMs,
         fps: 8,
         targetLabel: requestedTarget?.label || targetLabel,
+        accessToken: accessToken || undefined,
       });
       const nextPrediction = result.prediction;
       const predictedTarget = resolveAiPracticeTarget(nextPrediction.label);
@@ -110,6 +114,8 @@ export default function AiCameraPractice({
           framesProcessed: nextPrediction.frames_processed ?? undefined,
           handsDetectedFrames: nextPrediction.hands_detected_frames ?? undefined,
           inferenceMs: nextPrediction.inference_ms ?? undefined,
+          modelVersion: nextPrediction.model_version ?? undefined,
+          labelVersion: nextPrediction.label_version ?? undefined,
         },
         accessToken || undefined
       );
@@ -148,11 +154,11 @@ export default function AiCameraPractice({
       )}
 
       <div className="aspect-video rounded-[22px] overflow-hidden relative shadow-lg mb-4 bg-muted ring-1 ring-border/80">
-        {error ? (
+        {cameraError ? (
           <div className="w-full h-full flex flex-col items-center justify-center gap-3 p-6 bg-destructive/10">
             <XCircle className="w-12 h-12 text-destructive" />
-            <p className="text-destructive font-body text-sm font-semibold text-center">{error}</p>
-            <button onClick={restart} className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold">
+            <p className="text-destructive font-body text-sm font-semibold text-center">{cameraError}</p>
+            <button disabled={Boolean(supportError)} onClick={restart} className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold disabled:hidden">
               <RefreshCw className="w-4 h-4" /> Thử lại camera
             </button>
           </div>

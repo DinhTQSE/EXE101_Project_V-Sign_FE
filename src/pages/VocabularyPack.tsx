@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   AlertTriangle,
@@ -26,9 +26,8 @@ import {
   XCircle,
 } from "lucide-react";
 import mascotImg from "@/assets/mascot.png";
-import AiCameraPractice from "@/components/AiCameraPractice";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
-import PremiumModal from "@/components/PremiumModal";
+import VideoPlayer from "@/components/VideoPlayer";
 import { useAuth } from "@/contexts/AuthContext";
 import { resolveAiPracticeTarget } from "@/services/aiRecognition";
 import {
@@ -42,6 +41,9 @@ import {
   QuizSubmitResultDto,
   UnitSummaryDto,
 } from "@/services/vsignApi";
+
+const AiCameraPractice = lazy(() => import("@/components/AiCameraPractice"));
+const PremiumModal = lazy(() => import("@/components/PremiumModal"));
 
 type CourseChapter = ChapterSummaryDto;
 
@@ -275,12 +277,11 @@ function DynamicQuizPanel({
               Xem video → chọn từ đúng
             </span>
           </div>
-          <video
-            key={question.videoUrl}
+          <VideoPlayer
             src={question.videoUrl}
-            className="w-full aspect-video rounded-xl mb-3 object-contain bg-black"
-            controls
-            playsInline
+            className="w-full aspect-video rounded-xl mb-3 overflow-hidden bg-black"
+            preload="metadata"
+            label={question.id}
           />
           <div className="flex items-start gap-3 mb-4">
             <span className="w-7 h-7 rounded-full bg-primary/10 text-primary font-display font-bold text-sm flex items-center justify-center shrink-0">
@@ -421,12 +422,11 @@ function QuizPanel({
             </div>
 
             {showPromptVideo && (
-              <video
-                key={lessonVideoUrl}
+              <VideoPlayer
                 src={lessonVideoUrl}
-                className="w-full aspect-video rounded-xl mb-3 object-contain bg-black"
-                controls
-                playsInline
+                className="w-full aspect-video rounded-xl mb-3 overflow-hidden bg-black"
+                preload={questionIndex === 0 ? "auto" : "metadata"}
+                label={question.prompt}
               />
             )}
 
@@ -454,11 +454,11 @@ function QuizPanel({
                   >
                     {option.videoUrl ? (
                       <div className="space-y-2">
-                        <video
+                        <VideoPlayer
                           src={option.videoUrl}
-                          className="w-full aspect-video rounded-xl object-contain bg-black"
-                          controls
-                          playsInline
+                          className="w-full aspect-video rounded-xl overflow-hidden bg-black"
+                          preload="metadata"
+                          label={option.text}
                         />
                         <span className="block text-center">{option.text}</span>
                       </div>
@@ -628,7 +628,12 @@ function LessonStudyModal({
 
                   {detail?.videoUrl ? (
                     <div className="aspect-video bg-black rounded-[28px] overflow-hidden w-full shadow-2xl">
-                      <video key={detail.videoUrl} src={detail.videoUrl} className="w-full h-full object-contain" controls playsInline />
+                      <VideoPlayer
+                        src={detail.videoUrl}
+                        className="w-full h-full"
+                        preload="auto"
+                        label={detail.title}
+                      />
                     </div>
                   ) : (
                     <MissingVideoPanel title={lesson.title} />
@@ -726,15 +731,17 @@ function LessonStudyModal({
                         )}
 
                         {aiTarget && (
-                          <AiCameraPractice
+                          <Suspense fallback={<div className="card-pop p-6 text-center text-sm text-muted-foreground">Dang tai AI camera...</div>}>
+                            <AiCameraPractice
                             key={lesson.lessonId}
                             question={`Thực hiện ký hiệu '${aiTarget.display}' trước camera`}
                             targetLabel={aiTarget.label}
                             targetDisplay={aiTarget.display}
                             practiceItemId={aiTarget.practiceItemId}
                             minConfidence={0.7}
-                            onSuccess={() => void markCompleted()}
-                          />
+                              onSuccess={() => void markCompleted()}
+                            />
+                          </Suspense>
                         )}
                       </div>
                     );
@@ -913,7 +920,9 @@ function LessonsTimeline({
           />
         )}
       </AnimatePresence>
-      <PremiumModal open={premiumOpen} onClose={() => setPremiumOpen(false)} />
+      <Suspense fallback={null}>
+        <PremiumModal open={premiumOpen} onClose={() => setPremiumOpen(false)} />
+      </Suspense>
     </div>
   );
 }
@@ -1073,7 +1082,9 @@ function ChaptersList({
         </div>
       )}
 
-      <PremiumModal open={premiumOpen} onClose={() => setPremiumOpen(false)} />
+      <Suspense fallback={null}>
+        <PremiumModal open={premiumOpen} onClose={() => setPremiumOpen(false)} />
+      </Suspense>
     </div>
   );
 }

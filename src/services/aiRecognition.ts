@@ -1,4 +1,5 @@
 import { captureHolisticLandmarkSequence } from "@/services/holisticLandmarkExtractor";
+import { getApiBaseUrl } from "@/services/apiConfig";
 
 export type AiStatus = "ok" | "no_hands" | "error";
 
@@ -60,7 +61,7 @@ export const AI_PRACTICE_TARGETS: AiPracticeTarget[] = [
   { label: "pho", display: "Phở (Bắc)", gloss: "PHO", practiceItemId: "practice-mvp-pho", aliases: ["phở bắc", "pho bac", "phở", "pho"] },
 ];
 
-const AI_BASE_URL = import.meta.env.VITE_AI_BASE_URL || "/ai";
+const AI_PREDICT_URL = `${getApiBaseUrl()}/signature-workflows/predict-landmarks`;
 
 export function normalizeAiLabel(value?: string | null) {
   if (!value) return "";
@@ -93,11 +94,15 @@ export function resolveAiPracticeTarget(text?: string | null) {
 
 export async function predictGestureLandmarks(
   sequence: number[][],
-  options: { targetLabel?: string | null; handsDetectedFrames?: number } = {}
+  options: { targetLabel?: string | null; handsDetectedFrames?: number; accessToken?: string } = {}
 ) {
-  const response = await fetch(`${AI_BASE_URL}/predict-landmarks`, {
+  const response = await fetch(AI_PREDICT_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      ...(options.accessToken ? { Authorization: `Bearer ${options.accessToken}` } : {}),
+    },
     body: JSON.stringify({
       sequence,
       target_label: options.targetLabel ? normalizeAiLabel(options.targetLabel) : undefined,
@@ -108,12 +113,12 @@ export async function predictGestureLandmarks(
   if (!response.ok) {
     throw new Error(payload?.detail || payload?.message || "AI service khong xu ly duoc gesture.");
   }
-  return payload as AiPredictionResponse;
+  return (payload?.data ?? payload) as AiPredictionResponse;
 }
 
 export async function recognizeGestureFromVideo(
   video: HTMLVideoElement,
-  options: { durationMs?: number; fps?: number; targetLabel?: string | null } = {}
+  options: { durationMs?: number; fps?: number; targetLabel?: string | null; accessToken?: string } = {}
 ) {
   const startedAt = performance.now();
   const capture = await captureHolisticLandmarkSequence(video, {
@@ -123,6 +128,7 @@ export async function recognizeGestureFromVideo(
   const prediction = await predictGestureLandmarks(capture.sequence, {
     targetLabel: options.targetLabel,
     handsDetectedFrames: capture.handsDetectedFrames,
+    accessToken: options.accessToken,
   });
   const durationMs = Math.round(performance.now() - startedAt);
   return { sequence: capture.sequence, prediction, durationMs };

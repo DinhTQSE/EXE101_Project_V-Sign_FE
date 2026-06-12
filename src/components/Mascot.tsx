@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import mascotImg from "@/assets/mascot.png";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ComponentProps } from "react";
 
 export type MascotState = "idle" | "wave" | "correct" | "incorrect" | "complete";
 
@@ -11,7 +11,9 @@ interface MascotProps {
   state?: MascotState;
 }
 
-const stateAnimations: Record<MascotState, { animate: object; transition: object }> = {
+type MotionImageProps = ComponentProps<typeof motion.img>;
+
+const stateAnimations: Record<MascotState, { animate: MotionImageProps["animate"]; transition: MotionImageProps["transition"] }> = {
   idle: {
     animate: { y: [0, -6, 0] },
     transition: { duration: 3, repeat: Infinity, ease: "easeInOut" },
@@ -77,8 +79,8 @@ export function Mascot({ message, className = "", size = "md", state = "idle" }:
         src={mascotImg}
         alt="V-Sign Mascot"
         className={`${sizeClass} object-contain drop-shadow-lg cursor-pointer`}
-        animate={anim.animate as any}
-        transition={anim.transition as any}
+        animate={anim.animate}
+        transition={anim.transition}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
       />

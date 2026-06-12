@@ -1,24 +1,36 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { lazy, Suspense, type ReactNode } from "react";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import AppErrorBoundary from "@/components/AppErrorBoundary";
 import DashboardLayout from "@/components/DashboardLayout";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
 import Landing from "./pages/Landing";
 import Onboarding from "./pages/Onboarding";
 import Home from "./pages/Home";
-import VocabularyPack from "./pages/VocabularyPack";
-import Dictionary from "./pages/Dictionary";
-import Leaderboard from "./pages/Leaderboard";
-import Profile from "./pages/Profile";
-import AssessmentExam from "./pages/AssessmentExam";
-import PracticeView from "./components/PracticeView";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-function AuthenticatedRoute({ children }: { children: React.ReactNode }) {
+const VocabularyPack = lazy(() => import("./pages/VocabularyPack"));
+const Dictionary = lazy(() => import("./pages/Dictionary"));
+const Leaderboard = lazy(() => import("./pages/Leaderboard"));
+const Profile = lazy(() => import("./pages/Profile"));
+const AssessmentExam = lazy(() => import("./pages/AssessmentExam"));
+const PracticeView = lazy(() => import("./components/PracticeView"));
+
+function RouteFallback() {
+  return (
+    <div className="min-h-[50vh] flex items-center justify-center">
+      <LoadingSpinner size="md" message="Dang tai..." />
+    </div>
+  );
+}
+
+function AuthenticatedRoute({ children }: { children: ReactNode }) {
   const { isLoggedIn } = useAuth();
   if (!isLoggedIn) return <Navigate to="/" />;
   return <DashboardLayout>{children}</DashboardLayout>;
@@ -76,7 +88,11 @@ const App = () => (
       <Sonner />
       <AuthProvider>
         <BrowserRouter>
-          <AppRoutes />
+          <AppErrorBoundary>
+            <Suspense fallback={<RouteFallback />}>
+              <AppRoutes />
+            </Suspense>
+          </AppErrorBoundary>
         </BrowserRouter>
       </AuthProvider>
     </TooltipProvider>

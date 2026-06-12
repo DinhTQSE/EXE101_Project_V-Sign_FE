@@ -16,6 +16,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { dictionaryApi, DictionaryEntryDto } from "@/services/vsignApi";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import VideoPlayer from "@/components/VideoPlayer";
 
 const PAGE_SIZE = 20;
 
@@ -393,16 +394,13 @@ export default function Dictionary({ publicMode = false }: { publicMode?: boolea
               {/* Modal body — video only loaded when modal opens */}
               <div className="p-4 md:p-6 overflow-y-auto">
                 {activeEntry.videoUrl ? (
-                  <div className="aspect-video w-full rounded-[20px] bg-black overflow-hidden shadow-xl">
-                    <video
-                      key={activeEntry.videoUrl}
-                      src={activeEntry.videoUrl}
-                      controls
-                      autoPlay
-                      playsInline
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
+                  <VideoPlayer
+                    src={activeEntry.videoUrl}
+                    className="aspect-video w-full rounded-[20px] bg-black overflow-hidden shadow-xl"
+                    autoPlay
+                    preload="auto"
+                    label={activeEntry.word}
+                  />
                 ) : (
                   <div className="aspect-video w-full rounded-[20px] bg-muted flex flex-col items-center justify-center text-muted-foreground gap-2">
                     <Play className="w-10 h-10 opacity-30" />

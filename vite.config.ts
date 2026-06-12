@@ -20,11 +20,6 @@ export default defineConfig(({ mode }) => ({
           return servletPrefix ? requestPath.replace(/^\/api\/v1/, `${servletPrefix}/api/v1`) : requestPath;
         },
       },
-      "/ai": {
-        target: process.env.VITE_AI_PROXY_TARGET || "http://localhost:8000",
-        changeOrigin: true,
-        rewrite: (requestPath) => requestPath.replace(/^\/ai/, ""),
-      },
     },
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
@@ -37,6 +32,19 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       input: {
         app: path.resolve(__dirname, "index.html"),
+      },
+      output: {
+        manualChunks(id) {
+          if (!id.includes("node_modules")) return undefined;
+          if (id.includes("@mediapipe")) return "mediapipe";
+          if (id.includes("recharts") || id.includes("d3-")) return "charts";
+          if (id.includes("@radix-ui") || id.includes("cmdk") || id.includes("vaul") || id.includes("embla-carousel") || id.includes("input-otp") || id.includes("react-day-picker")) return "ui-vendor";
+          if (id.includes("framer-motion")) return "motion";
+          if (id.includes("lucide-react")) return "icons";
+          if (id.includes("@tanstack")) return "query";
+          if (id.includes("date-fns")) return "date-vendor";
+          return "vendor";
+        },
       },
     },
   },
