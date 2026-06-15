@@ -50,7 +50,25 @@ function buildSignatureVector(prediction: AiPredictionResponse, durationMs: numb
 function errorMessage(error: unknown, fallback: string) {
   if (error && typeof error === "object" && "message" in error) {
     const message = (error as { message?: unknown }).message;
-    if (typeof message === "string" && message) return message;
+    if (typeof message === "string" && message) {
+      const lower = message.toLowerCase();
+      const technicalMarkers = [
+        "constructor",
+        "mediapipe",
+        "webassembly",
+        "wasm",
+        "module",
+        "undefined",
+        "null",
+        "failed to fetch",
+        "networkerror",
+        "syntaxerror",
+        "backend",
+        "service",
+      ];
+      if (technicalMarkers.some((marker) => lower.includes(marker))) return fallback;
+      return message;
+    }
   }
   return fallback;
 }
@@ -76,7 +94,7 @@ export default function AiCameraPractice({
     () => resolveAiPracticeTarget(targetLabel) || resolveAiPracticeTarget(question),
     [question, targetLabel]
   );
-  const targetText = targetDisplay || requestedTarget?.display || "một ký hiệu trong 3 unit MVP";
+  const targetText = targetDisplay || requestedTarget?.display || "một ký hiệu";
   const confidence = predictionConfidence(prediction);
   const cameraError = supportError || error;
   const canScan = isReady && !cameraError && scanState !== "scanning";
@@ -130,12 +148,12 @@ export default function AiCameraPractice({
         setMessage(
           nextPrediction.status === "no_hands"
             ? "AI chưa phát hiện tay trong khung hình. Hãy đưa tay rõ hơn và thử lại."
-            : `AI nhận diện ${aiLabelToDisplay(nextPrediction.label)} (${Math.round((nextPrediction.confidence ?? 0) * 100)}%). Hãy thử lại chậm hơn và đúng target.`
+            : `AI nhận diện ${aiLabelToDisplay(nextPrediction.label)} (${Math.round((nextPrediction.confidence ?? 0) * 100)}%). Hãy thử lại chậm hơn và đúng ký hiệu yêu cầu.`
         );
       }
     } catch (err: unknown) {
       setScanState("error");
-      setMessage(errorMessage(err, "Không thể kết nối AI service hoặc backend log attempt."));
+      setMessage(errorMessage(err, "Không thể hoàn tất nhận diện. Vui lòng thử lại sau."));
     }
   };
 
@@ -144,12 +162,12 @@ export default function AiCameraPractice({
       <h3 className="font-display font-extrabold text-xl text-foreground mb-4">{question}</h3>
       <div className="rounded-[18px] bg-primary/10 border border-primary/20 px-4 py-3 mb-4 text-left">
         <p className="text-xs font-body text-foreground">
-          AI service dang nhan dien {AI_PRACTICE_TARGETS.length} nhan thuoc 3 unit MVP. MediaPipe Holistic chay trong trinh duyet; FE chi gui chuoi landmark 258 gia tri/frame den AI service va BE chi luu metadata ket qua.
+          Đưa tay vào khung hình, thực hiện ký hiệu trong vài giây rồi bấm bắt đầu nhận diện.
         </p>
       </div>
       {previewMode && (
         <div className="rounded-[18px] bg-amber-100/70 border border-amber-200 px-4 py-3 mb-4 text-left">
-          <p className="text-xs font-body text-amber-800">Đây là lượt thử AI preview trước khi nâng cấp Premium.</p>
+          <p className="text-xs font-body text-amber-800">Đây là lượt luyện tập thử trước khi nâng cấp Premium.</p>
         </div>
       )}
 
@@ -198,7 +216,7 @@ export default function AiCameraPractice({
 
       <div className="mb-4 text-left">
         <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-          <span>Confidence</span>
+          <span>Độ tin cậy</span>
           <span>{Math.round(confidence * 100)}%</span>
         </div>
         <div className="h-2 rounded-full bg-muted overflow-hidden">

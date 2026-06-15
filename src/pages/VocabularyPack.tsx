@@ -47,7 +47,7 @@ const PremiumModal = lazy(() => import("@/components/PremiumModal"));
 
 type CourseChapter = ChapterSummaryDto;
 
-const MVP_UNIT_IDS = new Set(["unit-mvp-family", "unit-mvp-emotions", "unit-mvp-food"]);
+const FEATURED_UNIT_IDS = new Set(["unit-mvp-family", "unit-mvp-emotions", "unit-mvp-food"]);
 
 type ViewState =
   | { view: "units" }
@@ -92,6 +92,37 @@ const FILTER_CHIPS = [
 ] as const;
 
 type FilterId = (typeof FILTER_CHIPS)[number]["id"];
+
+const INTERNAL_TEXT_PATTERNS = [
+  "backend",
+  "spring boot",
+  "flyway",
+  "mvp",
+  "train ai",
+  "đã train",
+  "model",
+  "mapping",
+  "video_url",
+  "metadata",
+  "landmark",
+  "ai label",
+];
+
+function hasInternalText(value?: string | null) {
+  if (!value) return false;
+  const normalized = value.toLowerCase();
+  return INTERNAL_TEXT_PATTERNS.some((pattern) => normalized.includes(pattern));
+}
+
+function productionDescription(value: string | undefined | null, fallback: string) {
+  if (!value || hasInternalText(value)) return fallback;
+  return value;
+}
+
+function unitFallbackDescription(unit: UnitSummaryDto) {
+  const title = unit.title?.trim();
+  return title ? `Học các ký hiệu về ${title.toLowerCase()}.` : "Khám phá các bài học ký hiệu theo chủ đề.";
+}
 
 function getUnitFilterId(unit: UnitSummaryDto, index: number): FilterId {
   const titleLower = (unit.title || "").toLowerCase();
@@ -150,7 +181,7 @@ function MissingVideoPanel({ title }: { title: string }) {
       <Video className="w-12 h-12 text-muted-foreground mb-3" />
       <p className="font-display font-bold text-foreground">{title}</p>
       <p className="font-body text-sm text-muted-foreground mt-2 max-w-md">
-        Video URL chưa được gắn từ backend. Khi upload video xong, chỉ cần cập nhật `video_url` trong DB, FE sẽ tự hiển thị.
+        Video bài học đang được cập nhật. Vui lòng quay lại sau.
       </p>
     </div>
   );
@@ -368,7 +399,7 @@ function QuizPanel({
         onPassed(submitResult);
       }
     } catch {
-      setError("Không thể nộp bài kiểm tra. Kiểm tra backend rồi thử lại.");
+      setError("Không thể nộp bài kiểm tra. Vui lòng thử lại.");
     } finally {
       setSubmitting(false);
     }
@@ -546,7 +577,7 @@ function LessonStudyModal({
         ).catch(() => undefined);
       })
       .catch(() => {
-        if (!cancelled) setError("Không thể tải bài học từ backend.");
+        if (!cancelled) setError("Không thể tải bài học. Vui lòng thử lại.");
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -623,7 +654,9 @@ function LessonStudyModal({
                       Video mẫu
                     </span>
                     <h2 className="font-display font-bold text-2xl text-foreground">{detail?.title || lesson.title}</h2>
-                    <p className="font-body text-sm text-muted-foreground mt-2">{lesson.description}</p>
+                    <p className="font-body text-sm text-muted-foreground mt-2">
+                      {productionDescription(lesson.description, "Luyện tập ký hiệu qua video và bài kiểm tra.")}
+                    </p>
                   </div>
 
                   {detail?.videoUrl ? (
@@ -726,12 +759,12 @@ function LessonStudyModal({
                       <div className="max-w-xl mx-auto space-y-4">
                         {!aiTarget && (
                           <div className="rounded-2xl bg-muted/60 border border-border px-4 py-3 text-sm font-body text-muted-foreground text-center">
-                            AI chưa hỗ trợ ký hiệu <strong>"{lesson.title}"</strong> trong model MVP hiện tại. Kiểm tra lại mapping lesson với AI label trước khi cho người dùng học bài này.
+                            Bài luyện tập này đang được cập nhật. Vui lòng chọn bài học khác hoặc quay lại sau.
                           </div>
                         )}
 
                         {aiTarget && (
-                          <Suspense fallback={<div className="card-pop p-6 text-center text-sm text-muted-foreground">Dang tai AI camera...</div>}>
+                          <Suspense fallback={<div className="card-pop p-6 text-center text-sm text-muted-foreground">Đang tải camera AI...</div>}>
                             <AiCameraPractice
                             key={lesson.lessonId}
                             question={`Thực hiện ký hiệu '${aiTarget.display}' trước camera`}
@@ -759,7 +792,7 @@ function LessonStudyModal({
                 >
                   <CheckCircle className="w-16 h-16 text-[hsl(var(--success))] mx-auto mb-4" />
                   <h2 className="font-display font-bold text-2xl text-foreground mb-2">Đã lưu tiến độ</h2>
-                  <p className="font-body text-muted-foreground mb-6">Bài học "{lesson.title}" đã được đánh dấu hoàn thành từ backend.</p>
+                  <p className="font-body text-muted-foreground mb-6">Bài học "{lesson.title}" đã được lưu hoàn thành.</p>
                   <button onClick={onClose} className="btn-primary-gradient">Quay lại danh sách</button>
                 </motion.div>
               )}
@@ -803,7 +836,7 @@ function LessonsTimeline({
       lessonsCache.set(chapter.chapterId, data);
       setLessons(data);
     } catch {
-      setError("Không thể tải danh sách bài học từ backend.");
+      setError("Không thể tải danh sách bài học. Vui lòng thử lại.");
     } finally {
       setLoading(false);
     }
@@ -821,7 +854,11 @@ function LessonsTimeline({
 
       <div className="text-center mb-8">
         <h2 className="font-display font-bold text-2xl text-foreground">{chapter.title}</h2>
-        {chapter.description && <p className="text-muted-foreground font-body text-sm mt-1">{chapter.description}</p>}
+        {chapter.description && (
+          <p className="text-muted-foreground font-body text-sm mt-1">
+            {productionDescription(chapter.description, "Hoàn thành các bài học trong chương này.")}
+          </p>
+        )}
         <p className="text-muted-foreground font-body text-sm mt-2">
           {progress.completed} / {progress.total} bài học hoàn thành
         </p>
@@ -888,7 +925,7 @@ function LessonsTimeline({
                         <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-body">PRO</span>
                       )}
                     </h4>
-                    <p className="text-xs text-muted-foreground font-body truncate">{lesson.description || "Bài học từ backend catalog"}</p>
+                    <p className="text-xs text-muted-foreground font-body truncate">{productionDescription(lesson.description, "Nội dung bài học đang được cập nhật.")}</p>
                     <p className="text-[11px] text-muted-foreground font-body mt-1 flex items-center gap-2">
                       <Clock className="w-3 h-3" /> {lessonDuration(lesson.durationSeconds)} · {statusText(lesson.status)}
                     </p>
@@ -957,7 +994,7 @@ function ChaptersList({
       chaptersCache.set(unit.unitId, data);
       setChapters(data);
     } catch {
-      setError("Không thể tải danh sách chương từ backend.");
+      setError("Không thể tải danh sách chương. Vui lòng thử lại.");
     } finally {
       setLoading(false);
     }
@@ -994,7 +1031,9 @@ function ChaptersList({
         </div>
         <div>
           <h2 className="font-display font-bold text-2xl text-foreground">{unit.title}</h2>
-          <p className="text-muted-foreground font-body text-sm">{unit.description}</p>
+          <p className="text-muted-foreground font-body text-sm">
+            {productionDescription(unit.description, unitFallbackDescription(unit))}
+          </p>
         </div>
       </div>
 
@@ -1057,7 +1096,11 @@ function ChaptersList({
                           </span>
                         )}
                       </div>
-                      {chapter.description && <p className="text-xs text-muted-foreground font-body mb-1">{chapter.description}</p>}
+                      {chapter.description && (
+                        <p className="text-xs text-muted-foreground font-body mb-1">
+                          {productionDescription(chapter.description, "Hoàn thành các bài học trong chương này.")}
+                        </p>
+                      )}
                       <p className="text-xs text-muted-foreground font-body">
                         {progress.completed} / {progress.total} bài học hoàn thành
                       </p>
@@ -1110,9 +1153,9 @@ export default function VocabularyPack() {
     setError("");
     try {
       const nextUnits = await learningApi.listUnits();
-      setUnits(nextUnits.filter((unit) => MVP_UNIT_IDS.has(unit.unitId)));
+      setUnits(nextUnits.filter((unit) => FEATURED_UNIT_IDS.has(unit.unitId)));
     } catch {
-      setError("Không thể tải learning catalog từ backend. Hãy kiểm tra Spring Boot đang chạy và Flyway đã migrate thành công.");
+      setError("Không thể tải khóa học. Vui lòng thử lại sau.");
     } finally {
       setLoading(false);
     }
@@ -1151,7 +1194,7 @@ export default function VocabularyPack() {
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto py-12 flex justify-center">
-        <LoadingSpinner size="lg" message="Đang tải khóa học từ backend..." />
+        <LoadingSpinner size="lg" message="Đang tải khóa học..." />
       </div>
     );
   }
@@ -1195,8 +1238,8 @@ export default function VocabularyPack() {
         <div className="speech-bubble flex-1">
           <p className={`font-display text-foreground ${isChildMode ? "text-xl font-extrabold" : "text-lg font-extrabold"}`}>
             {isChildMode
-              ? `Chào bạn nhỏ ${userName || "ơi"}! Chọn một unit từ backend để bắt đầu học nhé.`
-              : `Chào ${userName || "bạn"}! Chọn một unit từ backend để bắt đầu học nhé.`}
+              ? `Chào bạn nhỏ ${userName || "ơi"}! Chọn một chủ đề để bắt đầu học nhé.`
+              : `Chào ${userName || "bạn"}! Chọn một chủ đề để bắt đầu học nhé.`}
           </p>
         </div>
       </div>
@@ -1253,7 +1296,9 @@ export default function VocabularyPack() {
                     </span>
                   </div>
                   <h3 className={`font-display font-extrabold text-foreground ${isChildMode ? "text-xl" : "text-lg"}`}>{unit.title}</h3>
-                  {unit.description && <p className="text-xs text-muted-foreground font-body mt-0.5">{unit.description}</p>}
+                  <p className="text-xs text-muted-foreground font-body mt-0.5">
+                    {productionDescription(unit.description, unitFallbackDescription(unit))}
+                  </p>
                   <div className="flex items-center gap-3 mt-2">
                     <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden max-w-xs">
                       <div className="h-full rounded-full transition-all duration-500" style={{ width: `${progress.percent}%`, background: "var(--gradient-primary)" }} />

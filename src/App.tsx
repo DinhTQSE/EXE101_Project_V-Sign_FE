@@ -25,7 +25,7 @@ const PracticeView = lazy(() => import("./components/PracticeView"));
 function RouteFallback() {
   return (
     <div className="min-h-[50vh] flex items-center justify-center">
-      <LoadingSpinner size="md" message="Dang tai..." />
+      <LoadingSpinner size="md" message="Đang tải..." />
     </div>
   );
 }

@@ -45,7 +45,7 @@ export default function Dictionary({ publicMode = false }: { publicMode?: boolea
     try {
       setEntries(await dictionaryApi.listEntries({ size: 100 }));
     } catch {
-      setError("Không thể tải từ điển từ backend. Hãy kiểm tra Spring Boot đang chạy.");
+      setError("Không thể tải từ điển. Vui lòng thử lại sau.");
     } finally {
       setLoading(false);
     }

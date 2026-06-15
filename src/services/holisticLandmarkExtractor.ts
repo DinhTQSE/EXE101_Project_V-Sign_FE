@@ -9,8 +9,21 @@ type Landmark = {
   visibility?: number;
 };
 
-type HolisticModule = typeof import("@mediapipe/holistic");
-type HolisticInstance = InstanceType<HolisticModule["Holistic"]>;
+type HolisticInstance = {
+  close(): Promise<void>;
+  onResults(listener: (results: Results) => void): void;
+  send(inputs: { image: HTMLVideoElement }): Promise<void>;
+  setOptions(options: {
+    modelComplexity: number;
+    smoothLandmarks: boolean;
+    minDetectionConfidence: number;
+    minTrackingConfidence: number;
+  }): void;
+};
+
+type HolisticConstructor = new (config?: {
+  locateFile?: (path: string, prefix?: string) => string;
+}) => HolisticInstance;
 
 export interface LandmarkCaptureOptions {
   durationMs?: number;
@@ -26,16 +39,16 @@ export interface LandmarkCaptureResult {
 
 export function getHolisticSupportError() {
   if (typeof window === "undefined") {
-    return "Trinh duyet khong san sang chay AI camera.";
+    return "Trình duyệt chưa sẵn sàng chạy camera AI.";
   }
   if (!window.isSecureContext && window.location.hostname !== "localhost") {
-    return "AI camera can ket noi HTTPS de truy cap camera an toan.";
+    return "Camera AI cần kết nối HTTPS để truy cập camera an toàn.";
   }
   if (!navigator.mediaDevices?.getUserMedia) {
-    return "Trinh duyet thiet bi nay chua ho tro camera API.";
+    return "Trình duyệt hoặc thiết bị này chưa hỗ trợ camera.";
   }
   if (!("WebAssembly" in window)) {
-    return "Trinh duyet khong ho tro WebAssembly de chay MediaPipe Holistic.";
+    return "Trình duyệt này chưa hỗ trợ tính năng nhận diện camera.";
   }
   return null;
 }
@@ -119,9 +132,32 @@ export function normalizeHolisticFeatures(rawFeatures: number[], roundDecimals =
   return landmarks.map((value) => Math.round(value * factor) / factor);
 }
 
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" ? (value as Record<string, unknown>) : {};
+}
+
+function resolveHolisticConstructor(moduleValue: unknown): HolisticConstructor {
+  const moduleRecord = asRecord(moduleValue);
+  const defaultRecord = asRecord(moduleRecord.default);
+  const moduleExportsRecord = asRecord(moduleRecord["module.exports"]);
+  const windowRecord = typeof window === "undefined" ? {} : asRecord(window);
+  const constructor =
+    moduleRecord.Holistic ||
+    defaultRecord.Holistic ||
+    moduleExportsRecord.Holistic ||
+    windowRecord.Holistic;
+
+  if (typeof constructor !== "function") {
+    throw new Error("Không thể khởi tạo camera AI. Vui lòng tải lại trang và thử lại.");
+  }
+
+  return constructor as HolisticConstructor;
+}
+
 async function createHolistic(): Promise<HolisticInstance> {
   const holisticModule = await import("@mediapipe/holistic");
-  const holistic = new holisticModule.Holistic({
+  const Holistic = resolveHolisticConstructor(holisticModule);
+  const holistic = new Holistic({
     locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/holistic/${file}`,
   });
   holistic.setOptions({

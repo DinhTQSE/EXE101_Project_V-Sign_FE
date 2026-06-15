@@ -208,16 +208,6 @@ export function LoginModal({ open, onClose, defaultMode = "signup" }: LoginModal
               </button>
             )}
 
-            <div className="mt-4 rounded-2xl border border-dashed border-border p-3 text-center">
-              <button
-                type="button"
-                onClick={() => setError("Google OAuth đã có vị trí UI, sẽ kích hoạt khi backend cung cấp callback contract.")}
-                className="text-sm font-body font-semibold text-foreground"
-              >
-                Tiếp tục với Google
-              </button>
-            </div>
-
             <p className="text-center text-sm text-muted-foreground mt-4">
               {mode === "signup" ? "Đã có tài khoản?" : "Chưa có tài khoản?"}{" "}
               <button

@@ -172,7 +172,7 @@ export default function PremiumModal({ open, onClose }: PremiumModalProps) {
                   <CheckCircle className="w-10 h-10 text-primary-foreground" />
                 </motion.div>
                 <h2 className="text-2xl font-display font-bold text-foreground mb-2">Thanh toán thành công!</h2>
-                <p className="text-muted-foreground font-body mb-2">Premium đã được kích hoạt trên phiên hiện tại.</p>
+                <p className="text-muted-foreground font-body mb-2">Premium đã được kích hoạt cho tài khoản của bạn.</p>
                 {order && <p className="text-xs text-muted-foreground font-body mb-8">Mã giao dịch: {order.providerTransactionId}</p>}
                 <button onClick={handleClose} className="btn-primary-gradient w-full text-center min-h-[48px]">
                   Bắt đầu học ngay
@@ -183,7 +183,7 @@ export default function PremiumModal({ open, onClose }: PremiumModalProps) {
                 <div className="p-6 border-b border-border flex items-center justify-between">
                   <div>
                     <h2 className="text-xl font-display font-bold text-foreground">Nâng cấp V-Sign Premium</h2>
-                    <p className="text-xs text-muted-foreground mt-1">QR payment contract-ready cho MoMo/ZaloPay</p>
+                    <p className="text-xs text-muted-foreground mt-1">Mở khóa toàn bộ lộ trình học và luyện tập nâng cao.</p>
                   </div>
                   <button onClick={handleClose} className="p-2 rounded-full hover:bg-muted transition-colors">
                     <X className="w-5 h-5 text-muted-foreground" />
@@ -230,7 +230,7 @@ export default function PremiumModal({ open, onClose }: PremiumModalProps) {
                           }`}
                         >
                           <span className={`text-xs font-bold px-2 py-1 rounded-full border ${providerMeta[p].color}`}>{providerMeta[p].label}</span>
-                          <span className="text-xs text-muted-foreground">QR/deep link</span>
+                          <span className="text-xs text-muted-foreground">Thanh toán nhanh</span>
                         </button>
                       ))}
                     </div>
@@ -261,7 +261,7 @@ export default function PremiumModal({ open, onClose }: PremiumModalProps) {
                             disabled={loading}
                             className="rounded-2xl border border-border px-4 py-2 text-sm font-body font-semibold text-foreground hover:bg-muted"
                           >
-                            Mô phỏng lỗi
+                            Báo giao dịch thất bại
                           </button>
                         )}
                       </div>

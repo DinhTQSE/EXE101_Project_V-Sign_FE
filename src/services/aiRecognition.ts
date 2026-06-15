@@ -111,7 +111,7 @@ export async function predictGestureLandmarks(
   });
   const payload = await response.json().catch(() => null);
   if (!response.ok) {
-    throw new Error(payload?.detail || payload?.message || "AI service khong xu ly duoc gesture.");
+    throw new Error(payload?.detail || payload?.message || "Không thể xử lý ký hiệu. Vui lòng thử lại.");
   }
   return (payload?.data ?? payload) as AiPredictionResponse;
 }

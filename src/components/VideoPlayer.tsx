@@ -42,7 +42,7 @@ export default function VideoPlayer({
     <div className={`relative ${className}`}>
       {loading && !failed && (
         <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/65">
-          <LoadingSpinner size="sm" color="white" message="Dang tai video..." />
+          <LoadingSpinner size="sm" color="white" message="Đang tải video..." />
         </div>
       )}
 
@@ -50,7 +50,7 @@ export default function VideoPlayer({
         <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-muted text-center p-5">
           <XCircle className="w-10 h-10 text-destructive" />
           <div>
-            <p className="font-display font-bold text-foreground">Khong tai duoc video</p>
+            <p className="font-display font-bold text-foreground">Không tải được video</p>
             <p className="text-xs text-muted-foreground font-body mt-1">{label}</p>
           </div>
           <button
@@ -58,7 +58,7 @@ export default function VideoPlayer({
             onClick={() => setVersion((current) => current + 1)}
             className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
           >
-            <RotateCcw className="w-4 h-4" /> Thu lai
+            <RotateCcw className="w-4 h-4" /> Thử lại
           </button>
         </div>
       ) : (

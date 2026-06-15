@@ -108,7 +108,7 @@ export default function Dashboard({ defaultTab = "courses" }: DashboardProps) {
     leaderboard: "Cùng thi đua với bạn bè nào! 🏆🔥",
     assessment: "Bình tĩnh và tự tin nhé! 📝",
     community: "Kết nối với cộng đồng! 🤝",
-    "ai-camera": "Tính năng AI đang phát triển! 🤖",
+    "ai-camera": "Luyện tập ký hiệu với camera AI.",
     profile: `Xem tiến trình của bạn nào! 📊`,
   };
 
@@ -322,7 +322,7 @@ export default function Dashboard({ defaultTab = "courses" }: DashboardProps) {
 
             <AnimatePresence mode="wait">
               <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.25 }}>
-                <Suspense fallback={<div className="py-12 text-center text-sm text-muted-foreground">Dang tai...</div>}>
+                <Suspense fallback={<div className="py-12 text-center text-sm text-muted-foreground">Đang tải...</div>}>
                 {activeTab === "courses" && <VocabularyPack />}
                 {activeTab === "dictionary" && <Dictionary />}
                 {activeTab === "leaderboard" && <Leaderboard />}
@@ -336,7 +336,7 @@ export default function Dashboard({ defaultTab = "courses" }: DashboardProps) {
                     <h2 className="text-2xl font-display font-bold text-foreground mb-2">
                       Cộng đồng
                     </h2>
-                    <p className="text-muted-foreground font-body">Tính năng đang phát triển. Sắp ra mắt!</p>
+                    <p className="text-muted-foreground font-body">Cộng đồng học tập sẽ sớm được mở cho người dùng.</p>
                   </div>
                 )}
                 </Suspense>
