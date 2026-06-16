@@ -21,6 +21,7 @@ const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const Profile = lazy(() => import("./pages/Profile"));
 const AssessmentExam = lazy(() => import("./pages/AssessmentExam"));
 const PracticeView = lazy(() => import("./components/PracticeView"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 
 function RouteFallback() {
   return (
@@ -33,6 +34,13 @@ function RouteFallback() {
 function AuthenticatedRoute({ children }: { children: ReactNode }) {
   const { isLoggedIn } = useAuth();
   if (!isLoggedIn) return <Navigate to="/" />;
+  return <DashboardLayout>{children}</DashboardLayout>;
+}
+
+function AdminRoute({ children }: { children: ReactNode }) {
+  const { isLoggedIn, profile } = useAuth();
+  if (!isLoggedIn) return <Navigate to="/" />;
+  if (profile.role !== "ADMIN" && profile.role !== "SUPER_ADMIN") return <Navigate to="/home" replace />;
   return <DashboardLayout>{children}</DashboardLayout>;
 }
 
@@ -70,6 +78,7 @@ function AppRoutes() {
       <Route path="/assessment" element={<AuthenticatedRoute><AssessmentExam /></AuthenticatedRoute>} />
       <Route path="/leaderboard" element={<AuthenticatedRoute><Leaderboard /></AuthenticatedRoute>} />
       <Route path="/profile" element={<AuthenticatedRoute><Profile /></AuthenticatedRoute>} />
+      <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
 
       {/* Legacy redirects */}
       <Route path="/dashboard" element={<Navigate to="/home" replace />} />

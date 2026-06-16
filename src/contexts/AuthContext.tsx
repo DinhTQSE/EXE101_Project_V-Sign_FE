@@ -11,6 +11,7 @@ import {
   AuthUserDto,
   PaymentTransaction,
   SubscriptionSummary,
+  UserRole,
 } from "@/services/vsignApi";
 
 interface UserProfile {
@@ -19,6 +20,7 @@ interface UserProfile {
   bio: string;
   email: string;
   accountType: AccountType;
+  role: UserRole;
 }
 
 interface OnboardingResponses {
@@ -110,6 +112,7 @@ const DEFAULT_PROFILE: UserProfile = {
   bio: "",
   email: "",
   accountType: "BASIC",
+  role: "USER",
 };
 
 const DEFAULT_ONBOARDING: OnboardingResponses = {
@@ -183,6 +186,7 @@ function userToProfile(user: AuthUserDto): UserProfile {
     bio: user.bio || "",
     email: user.email,
     accountType: user.accountType,
+    role: user.role || "USER",
   };
 }
 
@@ -257,6 +261,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       void hydrateBackendState(accessToken);
     }
   }, [accessToken, hydrateBackendState, isLoggedIn]);
+
+  useEffect(() => {
+    if (!USE_BACKEND || !isLoggedIn || !accessToken) return;
+    const sendHeartbeat = () => {
+      if (document.visibilityState === "visible") {
+        void authApi.recordHeartbeat(accessToken, 60).catch(() => undefined);
+      }
+    };
+    const timer = window.setInterval(sendHeartbeat, 60000);
+    return () => window.clearInterval(timer);
+  }, [accessToken, isLoggedIn]);
 
   const applySession = (session: AuthSessionDto, isNew: boolean) => {
     const nextProfile = sessionToProfile(session);
@@ -341,6 +356,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           bio: updated.bio || "",
           email: updated.email,
           accountType: updated.accountType,
+          role: updated.role || "USER",
         } : p),
       };
       if (next.displayName) setUserName(next.displayName);

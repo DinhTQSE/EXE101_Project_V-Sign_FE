@@ -11,6 +11,7 @@ import {
   LogOut,
   Moon,
   Search,
+  ShieldCheck,
   Sun,
   Trophy,
   User,
@@ -27,6 +28,7 @@ export interface SidebarNavItem {
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   comingSoon?: boolean;
+  adminOnly?: boolean;
 }
 
 const navItems: SidebarNavItem[] = [
@@ -37,12 +39,21 @@ const navItems: SidebarNavItem[] = [
   { path: "/assessment", label: "Thi thử", icon: GraduationCap },
   { path: "/leaderboard", label: "Bảng xếp hạng", icon: Trophy },
   { path: "/community", label: "Cộng đồng", icon: Users, comingSoon: true },
+  { path: "/admin", label: "Quản trị", icon: ShieldCheck, adminOnly: true },
   { path: "/profile", label: "Hồ sơ", icon: User },
 ];
 
 function isActive(currentPath: string, itemPath: string) {
   if (itemPath === "/home") return currentPath === "/home" || currentPath === "/";
   return currentPath.startsWith(itemPath);
+}
+
+function isAdminRole(role?: string) {
+  return role === "ADMIN" || role === "SUPER_ADMIN";
+}
+
+function visibleNavItems(role?: string) {
+  return navItems.filter((item) => !item.adminOnly || isAdminRole(role));
 }
 
 interface DesktopSidebarProps {
@@ -89,7 +100,7 @@ export function DesktopSidebar({ collapsed, onToggle }: DesktopSidebarProps) {
 
       {/* Nav */}
       <nav className="flex-1 p-2.5 space-y-1.5 overflow-y-auto overflow-x-hidden">
-        {navItems.map((item) => {
+        {visibleNavItems(profile.role).map((item) => {
           const active = isActive(location.pathname, item.path);
           return (
             <button
@@ -261,7 +272,7 @@ export function MobileDrawer({ open, onClose }: MobileDrawerProps) {
             </div>
 
             <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-              {navItems.map((item) => {
+              {visibleNavItems(profile.role).map((item) => {
                 const active = isActive(location.pathname, item.path);
                 return (
                   <button

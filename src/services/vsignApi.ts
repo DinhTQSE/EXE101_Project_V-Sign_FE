@@ -4,6 +4,7 @@ export type AccountType = "BASIC" | "PREMIUM" | "ADMIN";
 export type PaymentProvider = "MOMO" | "ZALOPAY";
 export type PaymentStatus = "PENDING" | "SUCCESS" | "FAILED" | "TIMEOUT";
 export type PlanType = "MONTHLY" | "YEARLY";
+export type UserRole = "USER" | "ADMIN" | "SUPER_ADMIN" | "CONTENT_REVIEWER";
 
 export interface ApiErrorShape {
   code: string;
@@ -18,7 +19,7 @@ export interface AuthUserDto {
   fullName?: string;
   avatarUrl?: string;
   bio?: string;
-  role?: string;
+  role?: UserRole;
   accountType: AccountType;
 }
 
@@ -89,6 +90,113 @@ export interface PaymentTransaction {
   status: PaymentStatus;
   createdAt: string;
   retryable?: boolean;
+}
+
+export interface AdminUserDto {
+  id: string;
+  email: string;
+  displayName: string;
+  role: UserRole;
+  status: "ACTIVE" | "DISABLED";
+  accountType: AccountType;
+  createdAt: string;
+  updatedAt?: string;
+  lastSeenAt?: string | null;
+  totalXp: number;
+  currentStreak: number;
+}
+
+export interface AdminUserActivityDto {
+  activeSeconds: number;
+  completedLessons: number;
+  quizAttempts: number;
+  aiAttempts: number;
+  aiPassedAttempts: number;
+  lastSeenAt?: string | null;
+}
+
+export interface AdminUserDetailDto {
+  user: AdminUserDto;
+  activity: AdminUserActivityDto;
+}
+
+export interface AdminUserListDto {
+  users: AdminUserDto[];
+  page: number;
+  size: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface AdminUserUpdateInput {
+  displayName?: string;
+  active?: boolean;
+  accountType?: AccountType;
+  role?: UserRole;
+  reason?: string;
+}
+
+export interface AdminMetricsOverviewDto {
+  totalUsers: number;
+  newUsers: number;
+  activeUsers: number;
+  activeUsersInRange: number;
+  premiumUsers: number;
+  totalRevenueVnd: number;
+  successfulPayments: number;
+  pendingReviews: number;
+  lessonCompletions: number;
+  quizAttempts: number;
+  aiAttempts: number;
+  aiSuccessRate: number;
+  averageActiveSeconds: number;
+  topActiveUsers: Array<{
+    email: string;
+    displayName: string;
+    activeSeconds: number;
+  }>;
+}
+
+export interface AdminUsageMetricsDto {
+  granularity: string;
+  points: Array<{
+    date: string;
+    activeSeconds: number;
+    lessonCompletions: number;
+    quizAttempts: number;
+    aiAttempts: number;
+  }>;
+}
+
+export interface AdminPaymentRecordDto {
+  transactionId: string;
+  userEmail: string;
+  planId: string;
+  amount: number;
+  currency: "VND";
+  status: string;
+  provider: string;
+  createdAt: string;
+  updatedAt: string;
+  overrideReason?: string;
+}
+
+export interface AdminPaymentPageDto {
+  payments: AdminPaymentRecordDto[];
+  page: number;
+  size: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface AdminAuditLogDto {
+  id: string;
+  actorEmail: string;
+  action: string;
+  targetType: string;
+  targetId: string;
+  reason?: string;
+  createdAt: string;
 }
 
 export type LeaderboardPeriod = "WEEKLY" | "MONTHLY";
@@ -344,6 +452,11 @@ function normalizeAccountType(value?: string): AccountType {
   return "BASIC";
 }
 
+function normalizeRole(value?: string): UserRole {
+  if (value === "ADMIN" || value === "SUPER_ADMIN" || value === "CONTENT_REVIEWER") return value;
+  return "USER";
+}
+
 function normalizePaymentStatus(value?: string): PaymentStatus {
   switch (value) {
     case "PAID":
@@ -398,7 +511,7 @@ function toAuthUser(raw: unknown): AuthUserDto {
     fullName: asString(record.fullName, displayName),
     avatarUrl: asString(record.avatarUrl),
     bio: asString(record.bio),
-    role: asString(record.role, "USER"),
+    role: normalizeRole(asString(record.role, "USER")),
     accountType: normalizeAccountType(asString(record.accountType)),
   };
 }
@@ -448,6 +561,144 @@ function toPaymentTransaction(raw: unknown): PaymentTransaction {
     ...toPaymentOrder(raw),
     createdAt: asString(record.createdAt, new Date().toISOString()),
     retryable: asBoolean(record.retryable),
+  };
+}
+
+function normalizeAdminUserStatus(value: unknown): AdminUserDto["status"] {
+  return value === "DISABLED" ? "DISABLED" : "ACTIVE";
+}
+
+function toAdminUser(raw: unknown): AdminUserDto {
+  const record = asRecord(raw);
+  return {
+    id: asString(record.id),
+    email: asString(record.email),
+    displayName: asString(record.displayName, asString(record.fullName, asString(record.email))),
+    role: normalizeRole(asString(record.role)),
+    status: normalizeAdminUserStatus(record.status),
+    accountType: normalizeAccountType(asString(record.accountType)),
+    createdAt: asString(record.createdAt),
+    updatedAt: asString(record.updatedAt) || undefined,
+    lastSeenAt: asString(record.lastSeenAt) || null,
+    totalXp: asNumber(record.totalXp),
+    currentStreak: asNumber(record.currentStreak),
+  };
+}
+
+function toAdminUserActivity(raw: unknown): AdminUserActivityDto {
+  const record = asRecord(raw);
+  return {
+    activeSeconds: asNumber(record.activeSeconds),
+    completedLessons: asNumber(record.completedLessons),
+    quizAttempts: asNumber(record.quizAttempts),
+    aiAttempts: asNumber(record.aiAttempts),
+    aiPassedAttempts: asNumber(record.aiPassedAttempts),
+    lastSeenAt: asString(record.lastSeenAt) || null,
+  };
+}
+
+function toAdminUserDetail(raw: unknown): AdminUserDetailDto {
+  const record = asRecord(raw);
+  return {
+    user: toAdminUser(record.user),
+    activity: toAdminUserActivity(record.activity),
+  };
+}
+
+function toAdminUserList(raw: unknown): AdminUserListDto {
+  const record = asRecord(raw);
+  const users = asArray(record.users).map(toAdminUser);
+  return {
+    users,
+    page: asNumber(record.page),
+    size: asNumber(record.size, users.length),
+    total: asNumber(record.total, users.length),
+    totalPages: asNumber(record.totalPages, 1),
+  };
+}
+
+function toAdminMetricsOverview(raw: unknown): AdminMetricsOverviewDto {
+  const record = asRecord(raw);
+  return {
+    totalUsers: asNumber(record.totalUsers),
+    newUsers: asNumber(record.newUsers),
+    activeUsers: asNumber(record.activeUsers),
+    activeUsersInRange: asNumber(record.activeUsersInRange),
+    premiumUsers: asNumber(record.premiumUsers),
+    totalRevenueVnd: asNumber(record.totalRevenueVnd),
+    successfulPayments: asNumber(record.successfulPayments),
+    pendingReviews: asNumber(record.pendingReviews),
+    lessonCompletions: asNumber(record.lessonCompletions),
+    quizAttempts: asNumber(record.quizAttempts),
+    aiAttempts: asNumber(record.aiAttempts),
+    aiSuccessRate: asNumber(record.aiSuccessRate),
+    averageActiveSeconds: asNumber(record.averageActiveSeconds),
+    topActiveUsers: asArray(record.topActiveUsers).map((item) => {
+      const top = asRecord(item);
+      return {
+        email: asString(top.email),
+        displayName: asString(top.displayName, asString(top.email)),
+        activeSeconds: asNumber(top.activeSeconds),
+      };
+    }),
+  };
+}
+
+function toAdminUsageMetrics(raw: unknown): AdminUsageMetricsDto {
+  const record = asRecord(raw);
+  return {
+    granularity: asString(record.granularity, "daily"),
+    points: asArray(record.points).map((item) => {
+      const point = asRecord(item);
+      return {
+        date: asString(point.date),
+        activeSeconds: asNumber(point.activeSeconds),
+        lessonCompletions: asNumber(point.lessonCompletions),
+        quizAttempts: asNumber(point.quizAttempts),
+        aiAttempts: asNumber(point.aiAttempts),
+      };
+    }),
+  };
+}
+
+function toAdminPaymentRecord(raw: unknown): AdminPaymentRecordDto {
+  const record = asRecord(raw);
+  return {
+    transactionId: asString(record.transactionId),
+    userEmail: asString(record.userEmail),
+    planId: asString(record.planId),
+    amount: asNumber(record.amount),
+    currency: "VND",
+    status: asString(record.status),
+    provider: asString(record.provider),
+    createdAt: asString(record.createdAt),
+    updatedAt: asString(record.updatedAt),
+    overrideReason: asString(record.overrideReason) || undefined,
+  };
+}
+
+function toAdminPaymentPage(raw: unknown): AdminPaymentPageDto {
+  const record = asRecord(raw);
+  const payments = asArray(record.payments).map(toAdminPaymentRecord);
+  return {
+    payments,
+    page: asNumber(record.page),
+    size: asNumber(record.size, payments.length),
+    total: asNumber(record.total, payments.length),
+    totalPages: asNumber(record.totalPages, 1),
+  };
+}
+
+function toAdminAuditLog(raw: unknown): AdminAuditLogDto {
+  const record = asRecord(raw);
+  return {
+    id: asString(record.id),
+    actorEmail: asString(record.actorEmail),
+    action: asString(record.action),
+    targetType: asString(record.targetType),
+    targetId: asString(record.targetId),
+    reason: asString(record.reason) || undefined,
+    createdAt: asString(record.createdAt),
   };
 }
 
@@ -643,6 +894,14 @@ export const authApi = {
     });
   },
 
+  async recordHeartbeat(token: string, activeSeconds = 60): Promise<void> {
+    await requestJson<void>("/me/activity/heartbeat", {
+      method: "POST",
+      headers: authHeader(token),
+      body: JSON.stringify({ activeSeconds }),
+    });
+  },
+
   async getMe(token: string): Promise<AuthUserDto> {
     const raw = await requestJson<unknown>("/me", {
       headers: authHeader(token),
@@ -688,6 +947,84 @@ export const paymentApi = {
 
   async recordPayment(_transaction: PaymentTransaction): Promise<void> {
     return;
+  },
+};
+
+export const adminApi = {
+  async getMetricsOverview(token: string, input: { fromDate?: string; toDate?: string } = {}): Promise<AdminMetricsOverviewDto> {
+    const params = new URLSearchParams();
+    if (input.fromDate) params.set("fromDate", input.fromDate);
+    if (input.toDate) params.set("toDate", input.toDate);
+    const query = params.toString();
+    const raw = await requestJson<unknown>(`/admin/metrics/overview${query ? `?${query}` : ""}`, {
+      headers: authHeader(token),
+    });
+    return toAdminMetricsOverview(raw);
+  },
+
+  async getUsageMetrics(token: string, input: { fromDate?: string; toDate?: string; granularity?: string } = {}): Promise<AdminUsageMetricsDto> {
+    const params = new URLSearchParams();
+    if (input.fromDate) params.set("fromDate", input.fromDate);
+    if (input.toDate) params.set("toDate", input.toDate);
+    if (input.granularity) params.set("granularity", input.granularity);
+    const query = params.toString();
+    const raw = await requestJson<unknown>(`/admin/metrics/usage${query ? `?${query}` : ""}`, {
+      headers: authHeader(token),
+    });
+    return toAdminUsageMetrics(raw);
+  },
+
+  async listUsers(token: string, input: { search?: string; role?: string; status?: string; page?: number; size?: number } = {}): Promise<AdminUserListDto> {
+    const params = new URLSearchParams();
+    if (input.search) params.set("search", input.search);
+    if (input.role) params.set("role", input.role);
+    if (input.status) params.set("status", input.status);
+    params.set("page", String(input.page ?? 0));
+    params.set("size", String(input.size ?? 20));
+    const raw = await requestJson<unknown>(`/admin/users?${params.toString()}`, {
+      headers: authHeader(token),
+    });
+    return toAdminUserList(raw);
+  },
+
+  async getUser(token: string, userId: string): Promise<AdminUserDetailDto> {
+    const raw = await requestJson<unknown>(`/admin/users/${encodeURIComponent(userId)}`, {
+      headers: authHeader(token),
+    });
+    return toAdminUserDetail(raw);
+  },
+
+  async updateUser(token: string, userId: string, input: AdminUserUpdateInput): Promise<AdminUserDetailDto> {
+    const raw = await requestJson<unknown>(`/admin/users/${encodeURIComponent(userId)}`, {
+      method: "PATCH",
+      headers: authHeader(token),
+      body: JSON.stringify(input),
+    });
+    return toAdminUserDetail(raw);
+  },
+
+  async deactivateUser(token: string, userId: string, reason: string): Promise<AdminUserDetailDto> {
+    const params = new URLSearchParams();
+    if (reason) params.set("reason", reason);
+    const raw = await requestJson<unknown>(`/admin/users/${encodeURIComponent(userId)}?${params.toString()}`, {
+      method: "DELETE",
+      headers: authHeader(token),
+    });
+    return toAdminUserDetail(raw);
+  },
+
+  async listPayments(token: string, page = 0, size = 10): Promise<AdminPaymentPageDto> {
+    const raw = await requestJson<unknown>(`/admin/payments?page=${page}&size=${size}`, {
+      headers: authHeader(token),
+    });
+    return toAdminPaymentPage(raw);
+  },
+
+  async listAuditLogs(token: string): Promise<AdminAuditLogDto[]> {
+    const raw = await requestJson<unknown[]>("/admin/audit-logs", {
+      headers: authHeader(token),
+    });
+    return raw.map(toAdminAuditLog);
   },
 };
 
