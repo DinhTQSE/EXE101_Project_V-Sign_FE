@@ -105,7 +105,7 @@ export default function Profile() {
     <div className="flex-1 min-h-0 w-full flex flex-col gap-3">
 
       {/* ── 3-column bento grid that fills all remaining height ── */}
-      <div className="flex-1 min-h-0 grid grid-cols-3 gap-3">
+      <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-3 gap-3">
 
         {/* ═══ LEFT COLUMN ═══ */}
         <div className="flex flex-col gap-3 min-h-0">
@@ -206,7 +206,7 @@ export default function Profile() {
         <div className="flex flex-col gap-3 min-h-0">
 
           {/* 4 stat cards — 2×2 */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-3">
             {[
               { icon: <Flame className="w-6 h-6 text-primary" />, bg: "bg-primary/10", value: `🔥 ${streak}`, label: "Ngày liên tiếp" },
               { icon: <BookOpen className="w-6 h-6 text-secondary" />, bg: "bg-secondary/10", value: completedLessons.length, label: "Bài hoàn thành" },

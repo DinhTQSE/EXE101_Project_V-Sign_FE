@@ -433,17 +433,17 @@ export default function ReviewChallenge() {
 
       {/* Stats summary */}
       <div className="grid grid-cols-3 gap-3 mb-8">
-        <div className="card-pastel p-4 text-center">
+        <div className="card-pastel p-2.5 sm:p-4 text-center">
           <Trophy className="w-6 h-6 text-amber-500 mx-auto mb-1" />
           <p className="font-display font-bold text-foreground text-lg">3</p>
           <p className="text-[11px] text-muted-foreground font-body">Chế độ</p>
         </div>
-        <div className="card-pastel p-4 text-center">
+        <div className="card-pastel p-2.5 sm:p-4 text-center">
           <Star className="w-6 h-6 text-amber-500 mx-auto mb-1" />
           <p className="font-display font-bold text-foreground text-lg">{reviewWords.length}</p>
           <p className="text-[11px] text-muted-foreground font-body">Từ vựng</p>
         </div>
-        <div className="card-pastel p-4 text-center">
+        <div className="card-pastel p-2.5 sm:p-4 text-center">
           <Zap className="w-6 h-6 text-amber-500 mx-auto mb-1" />
           <p className="font-display font-bold text-foreground text-lg">∞</p>
           <p className="text-[11px] text-muted-foreground font-body">Luyện tập</p>

@@ -56,10 +56,10 @@ export default function Home() {
 
   return (
     /* flex-1 + min-h-0 fill the height DashboardLayout propagates */
-    <div className="flex-1 min-h-0 w-full grid grid-cols-5 gap-4">
+    <div className="flex-1 min-h-0 w-full grid grid-cols-1 lg:grid-cols-5 gap-4">
 
       {/* ═══ LEFT COLUMN (3/5) — hero · stats · daily progress ═══ */}
-      <div className="col-span-3 flex flex-col gap-3 min-h-0">
+      <div className="col-span-1 lg:col-span-3 flex flex-col gap-3 min-h-0">
 
         {/* Hero banner */}
         <div className="hero-panel p-4 md:p-5 flex items-center gap-4 overflow-hidden">
@@ -83,7 +83,7 @@ export default function Home() {
         </div>
 
         {/* Streak + XP — side by side */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {/* Streak */}
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
             className="card-pop p-4 relative overflow-hidden">
@@ -156,12 +156,12 @@ export default function Home() {
       </div>
 
       {/* ═══ RIGHT COLUMN (2/5) — quick actions · continue learning ═══ */}
-      <div className="col-span-2 flex flex-col gap-3 min-h-0">
+      <div className="col-span-1 lg:col-span-2 flex flex-col gap-3 min-h-0">
 
         {/* Quick actions */}
         <div>
           <h2 className="font-display font-extrabold text-lg text-foreground mb-2">Bắt đầu nhanh</h2>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-3">
             {quickActions.map((action, i) => (
               <motion.button
                 key={action.path}

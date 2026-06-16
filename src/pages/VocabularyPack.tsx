@@ -1231,7 +1231,7 @@ export default function VocabularyPack() {
         <motion.img
           src={mascotImg}
           alt="Mascot"
-          className={`object-contain drop-shadow-lg shrink-0 ${isChildMode ? "w-24 h-24" : "w-20 h-20"}`}
+          className={`object-contain drop-shadow-lg shrink-0 hidden sm:block ${isChildMode ? "w-24 h-24" : "w-20 h-20"}`}
           animate={{ y: [0, -5, 0] }}
           transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
         />
