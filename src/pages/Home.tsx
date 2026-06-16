@@ -118,7 +118,7 @@ export default function Home() {
                 </div>
               </div>
               <span className="inline-flex items-center gap-1 text-xs font-body font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full shrink-0">
-                <Sparkles className="w-3 h-3" /> Level {level}
+                <Sparkles className="w-3 h-3" /> Cấp {level}
               </span>
             </div>
             <div>
@@ -207,7 +207,7 @@ export default function Home() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <span className="inline-block text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/15 text-primary mb-0.5">
-                    UNIT {unit.orderIndex || index + 1}
+                    Chương {unit.orderIndex || index + 1}
                   </span>
                   <h3 className="font-display font-extrabold text-foreground text-sm truncate">{unit.title}</h3>
                   {unit.description && (

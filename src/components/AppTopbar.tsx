@@ -69,7 +69,7 @@ export default function AppTopbar({ onMenuClick }: AppTopbarProps) {
         {/* Premium badge */}
         {isPremium && (
           <span className="hidden sm:inline-flex text-[10px] font-body font-bold bg-amber-100 text-amber-700 px-2.5 py-1 rounded-full dark:bg-amber-900/40 dark:text-amber-400">
-            Premium
+            Cao cấp
           </span>
         )}
       </div>

@@ -167,7 +167,7 @@ export default function AiCameraPractice({
       </div>
       {previewMode && (
         <div className="rounded-[18px] bg-amber-100/70 border border-amber-200 px-4 py-3 mb-4 text-left">
-          <p className="text-xs font-body text-amber-800">Đây là lượt luyện tập thử trước khi nâng cấp Premium.</p>
+          <p className="text-xs font-body text-amber-800">Đây là lượt luyện tập thử trước khi nâng cấp gói Cao cấp.</p>
         </div>
       )}
 

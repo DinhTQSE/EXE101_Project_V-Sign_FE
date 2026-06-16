@@ -922,7 +922,7 @@ function LessonsTimeline({
                     <h4 className="font-display font-bold text-foreground text-sm flex items-center gap-2">
                       {lesson.title}
                       {lesson.requiresPremium && (
-                        <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-body">PRO</span>
+                        <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-body">Cao cấp</span>
                       )}
                     </h4>
                     <p className="text-xs text-muted-foreground font-body truncate">{productionDescription(lesson.description, "Nội dung bài học đang được cập nhật.")}</p>
@@ -933,7 +933,7 @@ function LessonsTimeline({
                   {isDone ? (
                     <span className="text-xs text-[hsl(var(--success))] font-body font-semibold shrink-0">Hoàn thành</span>
                   ) : isLocked ? (
-                    <span className="text-xs text-amber-700 font-body font-semibold shrink-0">Premium</span>
+                    <span className="text-xs text-amber-700 font-body font-semibold shrink-0">Cao cấp</span>
                   ) : (
                     <Play className="w-4 h-4 text-primary shrink-0" />
                   )}
@@ -1092,7 +1092,7 @@ function ChaptersList({
                         <h3 className="font-display font-bold text-foreground text-base">{chapter.title}</h3>
                         {chapter.requiresPremium && (
                           <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-body font-bold flex items-center gap-1">
-                            <Lock className="w-3 h-3" /> PRO
+                            <Lock className="w-3 h-3" /> Cao cấp
                           </span>
                         )}
                       </div>
@@ -1289,7 +1289,7 @@ export default function VocabularyPack() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <span className="inline-block text-[10px] font-bold px-2.5 py-1 rounded-full bg-primary/15 text-primary">
-                      UNIT {unit.orderIndex || globalIndex + 1}
+                      Chương {unit.orderIndex || globalIndex + 1}
                     </span>
                     <span className="text-[10px] font-body font-semibold px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
                       {progress.chaptersTotal || unit.chapterCount} chương

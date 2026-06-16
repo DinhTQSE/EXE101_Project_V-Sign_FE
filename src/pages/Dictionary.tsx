@@ -20,7 +20,35 @@ import VideoPlayer from "@/components/VideoPlayer";
 
 const PAGE_SIZE = 20;
 
+const CATEGORY_LABELS: Record<string, string> = {
+  family: "Gia đình",
+  emotion: "Cảm xúc",
+  emotions: "Cảm xúc",
+  food: "Món ăn",
+};
+
+const DIFFICULTY_LABELS: Record<string, string> = {
+  CO_BAN: "Cơ bản",
+  BASIC: "Cơ bản",
+  BEGINNER: "Cơ bản",
+  TRUNG_BINH: "Trung bình",
+  INTERMEDIATE: "Trung bình",
+  NANG_CAO: "Nâng cao",
+  ADVANCED: "Nâng cao",
+};
+
+function normalizeDictionaryToken(value?: string | null) {
+  return (value || "").trim().replace(/[\s-]+/g, "_").toUpperCase();
+}
+
+function categoryLabel(category?: string | null) {
+  const raw = (category || "").trim();
+  return CATEGORY_LABELS[raw.toLowerCase()] || raw || "Chưa phân loại";
+}
+
 function difficultyLabel(entry: DictionaryEntryDto) {
+  const normalized = normalizeDictionaryToken(entry.difficulty);
+  if (DIFFICULTY_LABELS[normalized]) return DIFFICULTY_LABELS[normalized];
   if (entry.difficulty) return entry.difficulty;
   if (entry.difficultyLevel >= 3) return "Nâng cao";
   if (entry.difficultyLevel === 2) return "Trung bình";
@@ -61,7 +89,8 @@ export default function Dictionary({ publicMode = false }: { publicMode?: boolea
   }, [query, selectedCategory, selectedDifficulty]);
 
   const categories = useMemo(
-    () => Array.from(new Set(entries.map((e) => e.category).filter(Boolean))).sort(),
+    () => Array.from(new Set(entries.map((e) => e.category).filter(Boolean)))
+      .sort((a, b) => categoryLabel(a).localeCompare(categoryLabel(b), "vi")),
     [entries]
   );
 
@@ -80,7 +109,9 @@ export default function Dictionary({ publicMode = false }: { publicMode?: boolea
         (e) =>
           e.word.toLowerCase().includes(q) ||
           e.description.toLowerCase().includes(q) ||
-          e.category.toLowerCase().includes(q)
+          e.category.toLowerCase().includes(q) ||
+          categoryLabel(e.category).toLowerCase().includes(q) ||
+          difficultyLabel(e).toLowerCase().includes(q)
       );
     }
     return filtered;
@@ -182,7 +213,7 @@ export default function Dictionary({ publicMode = false }: { publicMode?: boolea
                 : "chip-soft text-muted-foreground hover:text-foreground"
             }`}
           >
-            {cat}
+            {categoryLabel(cat)}
           </button>
         ))}
       </div>
@@ -273,7 +304,7 @@ export default function Dictionary({ publicMode = false }: { publicMode?: boolea
                     </p>
                     <div className="flex flex-wrap gap-1">
                       <span className="text-[10px] bg-secondary/10 text-secondary px-2 py-0.5 rounded-full font-body">
-                        {entry.category}
+                        {categoryLabel(entry.category)}
                       </span>
                       <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-body">
                         {difficultyLabel(entry)}
@@ -375,7 +406,7 @@ export default function Dictionary({ publicMode = false }: { publicMode?: boolea
                     </p>
                     <div className="flex gap-1 mt-1 flex-wrap">
                       <span className="text-[10px] bg-secondary/10 text-secondary px-2 py-0.5 rounded-full font-body">
-                        {activeEntry.category}
+                        {categoryLabel(activeEntry.category)}
                       </span>
                       <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-body">
                         {difficultyLabel(activeEntry)}

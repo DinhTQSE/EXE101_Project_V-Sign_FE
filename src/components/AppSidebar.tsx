@@ -325,7 +325,7 @@ export function MobileDrawer({ open, onClose }: MobileDrawerProps) {
                   <p className="font-body font-semibold text-sm text-foreground truncate">{displayName}</p>
                   {isPremium && (
                     <span className="text-[10px] text-amber-600 font-bold flex items-center gap-0.5">
-                      <Crown className="w-3 h-3" /> Premium
+                      <Crown className="w-3 h-3" /> Cao cấp
                     </span>
                   )}
                 </div>

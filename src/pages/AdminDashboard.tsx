@@ -35,7 +35,7 @@ const tabs: Array<{ id: AdminTab; label: string; icon: typeof Activity }> = [
   { id: "overview", label: "Tổng quan", icon: Activity },
   { id: "users", label: "Người dùng", icon: Users },
   { id: "payments", label: "Thanh toán", icon: CreditCard },
-  { id: "audit", label: "Audit", icon: FileText },
+  { id: "audit", label: "Nhật ký", icon: FileText },
 ];
 
 const emptyOverview: AdminMetricsOverviewDto = {
@@ -98,6 +98,36 @@ function statusBadge(status: string) {
   if (status === "ACTIVE" || status === "PAID") return "border-emerald-200 bg-emerald-50 text-emerald-700";
   if (status === "PENDING") return "border-amber-200 bg-amber-50 text-amber-700";
   return "border-slate-200 bg-slate-50 text-slate-600";
+}
+
+function roleLabel(role: string) {
+  const labels: Record<string, string> = {
+    USER: "Học viên",
+    ADMIN: "Quản trị viên",
+    SUPER_ADMIN: "Quản trị cấp cao",
+    CONTENT_REVIEWER: "Duyệt nội dung",
+  };
+  return labels[role] || role;
+}
+
+function userStatusLabel(status: string) {
+  const labels: Record<string, string> = {
+    ACTIVE: "Đang hoạt động",
+    DISABLED: "Đã vô hiệu hóa",
+    PENDING: "Đang chờ",
+    PAID: "Đã thanh toán",
+    FAILED: "Thất bại",
+  };
+  return labels[status] || status;
+}
+
+function accountTypeLabel(type: string) {
+  const labels: Record<string, string> = {
+    BASIC: "Cơ bản",
+    PREMIUM: "Cao cấp",
+    ADMIN: "Quản trị",
+  };
+  return labels[type] || type;
 }
 
 function Kpi({
@@ -306,19 +336,19 @@ export default function AdminDashboard() {
             <section className="space-y-4">
               <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
                 <Kpi label="Tổng người dùng" value={overview.totalUsers} icon={Users} />
-                <Kpi label="Active trong kỳ" value={overview.activeUsersInRange} icon={Activity} />
-                <Kpi label="Premium" value={overview.premiumUsers} icon={ShieldCheck} />
+                <Kpi label="Hoạt động trong kỳ" value={overview.activeUsersInRange} icon={Activity} />
+                <Kpi label="Người dùng cao cấp" value={overview.premiumUsers} icon={ShieldCheck} />
                 <Kpi label="Doanh thu" value={formatMoney(overview.totalRevenueVnd)} icon={BadgeDollarSign} />
                 <Kpi label="Hoàn thành bài" value={overview.lessonCompletions} icon={FileText} />
-                <Kpi label="Quiz attempts" value={overview.quizAttempts} icon={UserCog} />
-                <Kpi label="AI attempts" value={overview.aiAttempts} icon={Activity} />
+                <Kpi label="Lượt làm bài" value={overview.quizAttempts} icon={UserCog} />
+                <Kpi label="Lượt luyện AI" value={overview.aiAttempts} icon={Activity} />
                 <Kpi label="Thời gian TB" value={formatDuration(overview.averageActiveSeconds)} icon={Clock3} />
               </div>
 
               <div className="grid gap-4 xl:grid-cols-[1.4fr_1fr]">
                 <div className="rounded-lg border border-border bg-card p-4">
                   <div className="mb-4 flex items-center justify-between gap-3">
-                    <h2 className="text-base font-display font-bold text-foreground">Usage theo ngày</h2>
+                    <h2 className="text-base font-display font-bold text-foreground">Thời lượng theo ngày</h2>
                     <span className="text-xs text-muted-foreground">{usage.points.length} ngày</span>
                   </div>
                   <div className="space-y-3">
@@ -345,7 +375,7 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="rounded-lg border border-border bg-card p-4">
-                  <h2 className="mb-4 text-base font-display font-bold text-foreground">Top active users</h2>
+                  <h2 className="mb-4 text-base font-display font-bold text-foreground">Người dùng hoạt động nhiều</h2>
                   <div className="space-y-3">
                     {overview.topActiveUsers.length === 0 ? (
                       <p className="text-sm text-muted-foreground">Chưa có dữ liệu.</p>
@@ -381,16 +411,16 @@ export default function AdminDashboard() {
                     />
                   </div>
                   <select value={roleFilter} onChange={(event) => setRoleFilter(event.target.value)} className="h-10 rounded-lg border border-input bg-background px-3 text-sm">
-                    <option value="">Tất cả role</option>
-                    <option value="USER">USER</option>
-                    <option value="ADMIN">ADMIN</option>
-                    <option value="SUPER_ADMIN">SUPER_ADMIN</option>
-                    <option value="CONTENT_REVIEWER">CONTENT_REVIEWER</option>
+                    <option value="">Tất cả vai trò</option>
+                    <option value="USER">Học viên</option>
+                    <option value="ADMIN">Quản trị viên</option>
+                    <option value="SUPER_ADMIN">Quản trị cấp cao</option>
+                    <option value="CONTENT_REVIEWER">Duyệt nội dung</option>
                   </select>
                   <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} className="h-10 rounded-lg border border-input bg-background px-3 text-sm">
-                    <option value="">Tất cả status</option>
-                    <option value="ACTIVE">ACTIVE</option>
-                    <option value="DISABLED">DISABLED</option>
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="ACTIVE">Đang hoạt động</option>
+                    <option value="DISABLED">Đã vô hiệu hóa</option>
                   </select>
                   <button onClick={refreshUsers} className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-foreground px-3 text-sm font-bold text-background">
                     <Search className="h-4 w-4" />
@@ -403,10 +433,10 @@ export default function AdminDashboard() {
                     <thead className="bg-muted/60 text-xs uppercase text-muted-foreground">
                       <tr>
                         <th className="px-4 py-3">Người dùng</th>
-                        <th className="px-4 py-3">Role</th>
-                        <th className="px-4 py-3">Status</th>
+                        <th className="px-4 py-3">Vai trò</th>
+                        <th className="px-4 py-3">Trạng thái</th>
                         <th className="px-4 py-3">Gói</th>
-                        <th className="px-4 py-3">Last seen</th>
+                        <th className="px-4 py-3">Lần cuối</th>
                         <th className="px-4 py-3 text-right">XP</th>
                       </tr>
                     </thead>
@@ -419,11 +449,11 @@ export default function AdminDashboard() {
                               <span className="block text-xs text-muted-foreground">{user.email}</span>
                             </button>
                           </td>
-                          <td className="px-4 py-3 font-semibold">{user.role}</td>
+                          <td className="px-4 py-3 font-semibold">{roleLabel(user.role)}</td>
                           <td className="px-4 py-3">
-                            <span className={`rounded-full border px-2 py-1 text-xs font-bold ${statusBadge(user.status)}`}>{user.status}</span>
+                            <span className={`rounded-full border px-2 py-1 text-xs font-bold ${statusBadge(user.status)}`}>{userStatusLabel(user.status)}</span>
                           </td>
-                          <td className="px-4 py-3">{user.accountType}</td>
+                          <td className="px-4 py-3">{accountTypeLabel(user.accountType)}</td>
                           <td className="px-4 py-3 text-muted-foreground">{formatDate(user.lastSeenAt)}</td>
                           <td className="px-4 py-3 text-right font-semibold">{user.totalXp}</td>
                         </tr>
@@ -437,18 +467,18 @@ export default function AdminDashboard() {
                 {selectedUser ? (
                   <div className="space-y-4">
                     <div>
-                      <p className="text-xs font-semibold uppercase text-muted-foreground">Chi tiết user</p>
+                      <p className="text-xs font-semibold uppercase text-muted-foreground">Chi tiết người dùng</p>
                       <h2 className="mt-1 text-lg font-display font-bold text-foreground">{selectedUser.user.displayName}</h2>
                       <p className="text-sm text-muted-foreground">{selectedUser.user.email}</p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-2">
                       <div className="rounded-md bg-muted/60 px-3 py-2">
-                        <p className="text-xs font-semibold text-muted-foreground">Active</p>
+                        <p className="text-xs font-semibold text-muted-foreground">Thời lượng</p>
                         <p className="mt-1 text-sm font-bold text-foreground">{formatDuration(selectedUser.activity.activeSeconds)}</p>
                       </div>
                       <div className="rounded-md bg-muted/60 px-3 py-2">
-                        <p className="text-xs font-semibold text-muted-foreground">AI passed</p>
+                        <p className="text-xs font-semibold text-muted-foreground">AI đạt</p>
                         <p className="mt-1 text-sm font-bold text-foreground">{selectedUser.activity.aiPassedAttempts}/{selectedUser.activity.aiAttempts}</p>
                       </div>
                     </div>
@@ -462,33 +492,33 @@ export default function AdminDashboard() {
                       />
                     </label>
                     <label className="block text-sm font-semibold text-foreground">
-                      Account type
+                      Loại tài khoản
                       <select
                         value={editForm.accountType}
                         onChange={(event) => setEditForm((prev) => ({ ...prev, accountType: event.target.value as AccountType }))}
                         className="mt-1 h-10 w-full rounded-lg border border-input bg-background px-3 text-sm"
                       >
-                        <option value="BASIC">BASIC</option>
-                        <option value="PREMIUM">PREMIUM</option>
+                        <option value="BASIC">Cơ bản</option>
+                        <option value="PREMIUM">Cao cấp</option>
                       </select>
                     </label>
                     {canEditRoles && (
                       <label className="block text-sm font-semibold text-foreground">
-                        Role
+                        Vai trò
                         <select
                           value={editForm.role}
                           onChange={(event) => setEditForm((prev) => ({ ...prev, role: event.target.value as UserRole }))}
                           className="mt-1 h-10 w-full rounded-lg border border-input bg-background px-3 text-sm"
                         >
-                          <option value="USER">USER</option>
-                          <option value="ADMIN">ADMIN</option>
-                          <option value="SUPER_ADMIN">SUPER_ADMIN</option>
-                          <option value="CONTENT_REVIEWER">CONTENT_REVIEWER</option>
+                          <option value="USER">Học viên</option>
+                          <option value="ADMIN">Quản trị viên</option>
+                          <option value="SUPER_ADMIN">Quản trị cấp cao</option>
+                          <option value="CONTENT_REVIEWER">Duyệt nội dung</option>
                         </select>
                       </label>
                     )}
                     <label className="flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2 text-sm font-semibold text-foreground">
-                      Active
+                      Đang hoạt động
                       <input
                         type="checkbox"
                         checked={editForm.active}
@@ -497,7 +527,7 @@ export default function AdminDashboard() {
                       />
                     </label>
                     <label className="block text-sm font-semibold text-foreground">
-                      Lý do audit
+                      Lý do ghi nhật ký
                       <textarea
                         value={editForm.reason}
                         onChange={(event) => setEditForm((prev) => ({ ...prev, reason: event.target.value }))}
@@ -525,7 +555,7 @@ export default function AdminDashboard() {
                   </div>
                 ) : (
                   <div className="flex min-h-[280px] items-center justify-center text-center text-sm text-muted-foreground">
-                    Chọn một user để xem chi tiết.
+                    Chọn một người dùng để xem chi tiết.
                   </div>
                 )}
               </div>
@@ -537,13 +567,13 @@ export default function AdminDashboard() {
               <table className="min-w-[860px] w-full text-left text-sm">
                 <thead className="bg-muted/60 text-xs uppercase text-muted-foreground">
                   <tr>
-                    <th className="px-4 py-3">Transaction</th>
-                    <th className="px-4 py-3">User</th>
-                    <th className="px-4 py-3">Plan</th>
-                    <th className="px-4 py-3">Provider</th>
-                    <th className="px-4 py-3">Status</th>
-                    <th className="px-4 py-3 text-right">Amount</th>
-                    <th className="px-4 py-3">Created</th>
+                    <th className="px-4 py-3">Mã giao dịch</th>
+                    <th className="px-4 py-3">Người dùng</th>
+                    <th className="px-4 py-3">Gói</th>
+                    <th className="px-4 py-3">Nhà cung cấp</th>
+                    <th className="px-4 py-3">Trạng thái</th>
+                    <th className="px-4 py-3 text-right">Số tiền</th>
+                    <th className="px-4 py-3">Ngày tạo</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -554,7 +584,7 @@ export default function AdminDashboard() {
                       <td className="px-4 py-3">{payment.planId}</td>
                       <td className="px-4 py-3">{payment.provider}</td>
                       <td className="px-4 py-3">
-                        <span className={`rounded-full border px-2 py-1 text-xs font-bold ${statusBadge(payment.status)}`}>{payment.status}</span>
+                        <span className={`rounded-full border px-2 py-1 text-xs font-bold ${statusBadge(payment.status)}`}>{userStatusLabel(payment.status)}</span>
                       </td>
                       <td className="px-4 py-3 text-right font-semibold">{formatMoney(payment.amount)}</td>
                       <td className="px-4 py-3 text-muted-foreground">{formatDate(payment.createdAt)}</td>
@@ -570,11 +600,11 @@ export default function AdminDashboard() {
               <table className="min-w-[760px] w-full text-left text-sm">
                 <thead className="bg-muted/60 text-xs uppercase text-muted-foreground">
                   <tr>
-                    <th className="px-4 py-3">Time</th>
-                    <th className="px-4 py-3">Actor</th>
-                    <th className="px-4 py-3">Action</th>
-                    <th className="px-4 py-3">Target</th>
-                    <th className="px-4 py-3">Reason</th>
+                    <th className="px-4 py-3">Thời gian</th>
+                    <th className="px-4 py-3">Người thao tác</th>
+                    <th className="px-4 py-3">Hành động</th>
+                    <th className="px-4 py-3">Đối tượng</th>
+                    <th className="px-4 py-3">Lý do</th>
                   </tr>
                 </thead>
                 <tbody>
