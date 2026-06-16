@@ -62,6 +62,25 @@ export const AI_PRACTICE_TARGETS: AiPracticeTarget[] = [
 ];
 
 const AI_PREDICT_URL = `${getApiBaseUrl()}/signature-workflows/predict-landmarks`;
+const AI_FEATURE_BOUND = 10;
+
+function sanitizeFeature(value: number) {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+  return Math.max(-AI_FEATURE_BOUND, Math.min(AI_FEATURE_BOUND, value));
+}
+
+function sanitizeLandmarkSequence(sequence: number[][]) {
+  return sequence.map((frame) => frame.map(sanitizeFeature));
+}
+
+function sanitizeHandsDetectedFrames(value: number | undefined, sequenceLength: number) {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return undefined;
+  }
+  return Math.max(0, Math.min(sequenceLength, Math.trunc(value)));
+}
 
 export function normalizeAiLabel(value?: string | null) {
   if (!value) return "";
@@ -96,6 +115,9 @@ export async function predictGestureLandmarks(
   sequence: number[][],
   options: { targetLabel?: string | null; handsDetectedFrames?: number; accessToken?: string } = {}
 ) {
+  const safeSequence = sanitizeLandmarkSequence(sequence);
+  const safeHandsDetectedFrames = sanitizeHandsDetectedFrames(options.handsDetectedFrames, safeSequence.length);
+
   const response = await fetch(AI_PREDICT_URL, {
     method: "POST",
     headers: {
@@ -104,9 +126,9 @@ export async function predictGestureLandmarks(
       ...(options.accessToken ? { Authorization: `Bearer ${options.accessToken}` } : {}),
     },
     body: JSON.stringify({
-      sequence,
+      sequence: safeSequence,
       target_label: options.targetLabel ? normalizeAiLabel(options.targetLabel) : undefined,
-      hands_detected_frames: options.handsDetectedFrames,
+      hands_detected_frames: safeHandsDetectedFrames,
     }),
   });
   const payload = await response.json().catch(() => null);
