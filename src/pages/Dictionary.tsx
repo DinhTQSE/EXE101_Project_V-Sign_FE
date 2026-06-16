@@ -99,7 +99,7 @@ export default function Dictionary({ publicMode = false }: { publicMode?: boolea
   };
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="w-full max-w-5xl mx-auto">
       {/* Hero header */}
       <div className="hero-panel p-5 md:p-7 mb-6">
         {publicMode && (

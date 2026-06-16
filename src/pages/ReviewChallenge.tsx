@@ -416,13 +416,13 @@ export default function ReviewChallenge() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto py-2">
+    <div className="w-full max-w-2xl mx-auto py-2">
       {/* Mascot */}
       <div className="flex items-start gap-4 mb-8">
         <motion.img src={mascotImg} alt="Mascot"
-          className={`object-contain drop-shadow-lg shrink-0 ${isChildMode ? "w-24 h-24" : "w-20 h-20"}`}
+          className={`object-contain drop-shadow-lg shrink-0 hidden sm:block ${isChildMode ? "w-24 h-24" : "w-20 h-20"}`}
           animate={{ y: [0, -5, 0] }} transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }} />
-        <div className="speech-bubble flex-1">
+        <div className="speech-bubble flex-1 min-w-0">
           <p className={`font-body text-foreground ${isChildMode ? "text-base font-semibold" : "text-sm"}`}>
             {isChildMode
               ? `Luyện tập mỗi ngày để giỏi hơn nè bạn nhỏ! 🌟💪`

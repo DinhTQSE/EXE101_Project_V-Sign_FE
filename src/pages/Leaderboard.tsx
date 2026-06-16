@@ -99,7 +99,7 @@ export default function Leaderboard() {
   const podium = topTen.slice(0, 3);
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="w-full max-w-4xl mx-auto">
       <div className="hero-panel p-5 md:p-7 mb-6">
         <div className="flex items-center gap-3 mb-1">
           <div className="icon-tile !w-12 !h-12">

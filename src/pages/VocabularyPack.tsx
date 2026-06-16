@@ -1225,7 +1225,7 @@ export default function VocabularyPack() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="w-full max-w-5xl mx-auto">
       {/* Header with mascot */}
       <div className="hero-panel p-5 md:p-7 flex items-center gap-5 mb-6 overflow-hidden">
         <motion.img
@@ -1235,7 +1235,7 @@ export default function VocabularyPack() {
           animate={{ y: [0, -5, 0] }}
           transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
         />
-        <div className="speech-bubble flex-1">
+        <div className="speech-bubble flex-1 min-w-0">
           <p className={`font-display text-foreground ${isChildMode ? "text-xl font-extrabold" : "text-lg font-extrabold"}`}>
             {isChildMode
               ? `Chào bạn nhỏ ${userName || "ơi"}! Chọn một chủ đề để bắt đầu học nhé.`
