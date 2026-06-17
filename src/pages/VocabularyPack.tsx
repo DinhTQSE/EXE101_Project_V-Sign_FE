@@ -856,7 +856,7 @@ function LessonsTimeline({
         <h2 className="font-display font-bold text-2xl text-foreground">{chapter.title}</h2>
         {chapter.description && (
           <p className="text-muted-foreground font-body text-sm mt-1">
-            {productionDescription(chapter.description, "Hoàn thành các bài học trong chương này.")}
+            {productionDescription(chapter.description, "Hoàn thành các bài học trong phần học này.")}
           </p>
         )}
         <p className="text-muted-foreground font-body text-sm mt-2">
@@ -996,7 +996,7 @@ function ChaptersList({
       chaptersCache.set(unit.unitId, data);
       setChapters(data);
     } catch {
-      setError("Không thể tải danh sách chương. Vui lòng thử lại.");
+      setError("Không thể tải danh sách phần học. Vui lòng thử lại.");
     } finally {
       setLoading(false);
     }
@@ -1041,7 +1041,7 @@ function ChaptersList({
 
       {loading ? (
         <div className="py-12 text-center [&>p]:hidden">
-          <LoadingSpinner size="md" message="Đang tải danh sách chương..." />
+          <LoadingSpinner size="md" message="Đang tải danh sách phần học..." />
         </div>
       ) : error ? (
         <div className="card-pastel p-6 text-center">
@@ -1100,7 +1100,7 @@ function ChaptersList({
                       </div>
                       {chapter.description && (
                         <p className="text-xs text-muted-foreground font-body mb-1">
-                          {productionDescription(chapter.description, "Hoàn thành các bài học trong chương này.")}
+                          {productionDescription(chapter.description, "Hoàn thành các bài học trong phần học này.")}
                         </p>
                       )}
                       <p className="text-xs text-muted-foreground font-body">
@@ -1291,10 +1291,10 @@ export default function VocabularyPack() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <span className="inline-block text-[10px] font-bold px-2.5 py-1 rounded-full bg-primary/15 text-primary">
-                      Chương {unit.orderIndex || globalIndex + 1}
+                      Chủ đề {globalIndex + 1}
                     </span>
                     <span className="text-[10px] font-body font-semibold px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-                      {progress.chaptersTotal || unit.chapterCount} chương
+                      {progress.chaptersTotal || unit.chapterCount} phần học
                     </span>
                   </div>
                   <h3 className={`font-display font-extrabold text-foreground leading-tight ${isChildMode ? "text-xl" : "text-lg"}`}>{unit.title}</h3>
@@ -1306,7 +1306,7 @@ export default function VocabularyPack() {
                       <div className="h-full rounded-full transition-all duration-500" style={{ width: `${progress.percent}%`, background: "var(--gradient-primary)" }} />
                     </div>
                     <span className="text-[11px] text-muted-foreground font-body font-semibold shrink-0">
-                      {progress.total > 0 ? `${progress.completed}/${progress.total} bài` : `${progress.chaptersTotal} chương`}
+                      {progress.total > 0 ? `${progress.completed}/${progress.total} bài` : `${progress.chaptersTotal} phần học`}
                     </span>
                   </div>
                 </div>
