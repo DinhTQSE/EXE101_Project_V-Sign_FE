@@ -50,6 +50,12 @@ export interface ChangePasswordRequest {
   newPassword: string;
 }
 
+export interface CompleteResetPasswordRequest {
+  token: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
 export interface SubscriptionSummary {
   planType: PlanType | null;
   status: "FREE" | "ACTIVE" | "EXPIRED" | "CANCELLED";
@@ -949,6 +955,13 @@ export const authApi = {
     await requestJson<void>("/auth/password-reset/request", {
       method: "POST",
       body: JSON.stringify({ email: email.trim().toLowerCase() }),
+    });
+  },
+
+  async completePasswordReset(input: CompleteResetPasswordRequest): Promise<void> {
+    await requestJson<void>("/auth/password-reset/complete", {
+      method: "POST",
+      body: JSON.stringify(input),
     });
   },
 

@@ -24,6 +24,7 @@ const AssessmentExam = lazy(() => import("./pages/AssessmentExam"));
 const PracticeView = lazy(() => import("./components/PracticeView"));
 const PaymentResult = lazy(() => import("./pages/PaymentResult"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 
 function RouteFallback() {
   return (
@@ -57,6 +58,10 @@ function AppRoutes() {
         element={
           !isLoggedIn ? <Landing /> : (isNewUser && !hasOnboarded) ? <Navigate to="/onboarding" /> : <Navigate to="/home" />
         }
+      />
+      <Route
+        path="/reset-password"
+        element={<ResetPassword />}
       />
       <Route
         path="/onboarding"
