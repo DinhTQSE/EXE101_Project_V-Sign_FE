@@ -553,7 +553,7 @@ function LessonStudyModal({
   onClose: () => void;
   onLessonCompleted: (lessonId: string) => void;
 }) {
-  const { accessToken } = useAuth();
+  const { accessToken, refreshGamification } = useAuth();
   const [detail, setDetail] = useState<LessonDetailDto | null>(null);
   const [quiz, setQuiz] = useState<LessonQuizDto | null>(null);
   const [dictPool, setDictPool] = useState<DictionaryEntryDto[]>([]);
@@ -631,6 +631,7 @@ function LessonStudyModal({
         accessToken || undefined
       );
       await learningApi.completeLesson(lesson.lessonId, accessToken || undefined);
+      await refreshGamification().catch(() => undefined);
       onLessonCompleted(lesson.lessonId);
       setStep("done");
     } catch (err) {
@@ -638,7 +639,7 @@ function LessonStudyModal({
     } finally {
       setSaving(false);
     }
-  }, [accessToken, detail?.durationSeconds, detail?.progress?.lastPositionSeconds, lesson.lessonId, onLessonCompleted]);
+  }, [accessToken, detail?.durationSeconds, detail?.progress?.lastPositionSeconds, lesson.lessonId, onLessonCompleted, refreshGamification]);
 
   const saveStageProgress = useCallback(
     async (

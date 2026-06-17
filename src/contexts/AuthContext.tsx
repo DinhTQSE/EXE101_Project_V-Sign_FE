@@ -78,6 +78,7 @@ interface AuthContextType {
   stats: LearningStats;
   completeLesson: (lessonId: string | number, xpReward?: number) => RewardEvent | null;
   awardQuizXp: (eventId: string, xpReward?: number, isPerfect?: boolean) => RewardEvent | null;
+  refreshGamification: () => Promise<void>;
   onboardingResponses: OnboardingResponses;
   setOnboardingResponses: (r: OnboardingResponses) => void;
   isPremium: boolean;
@@ -228,6 +229,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const layoutMode = useMemo(() => getLayoutMode(onboardingResponses.ageGroup), [onboardingResponses.ageGroup]);
 
+  const applyGamificationSummary = useCallback((gamification: Awaited<ReturnType<typeof gamificationApi.getSummary>>, markActivity = false) => {
+    setStats((prev) => {
+      const today = vietnamDateKey();
+      const streakChanged = markActivity && gamification.currentStreak > prev.streak;
+      const streakReset = markActivity
+        && !!prev.lastActivityDate
+        && dateDiffDays(prev.lastActivityDate, today) > 1
+        && gamification.currentStreak === 1;
+
+      return {
+        ...prev,
+        xp: gamification.totalXp,
+        streak: gamification.currentStreak,
+        longestStreak: Math.max(prev.longestStreak, gamification.longestStreak),
+        lastActivityDate: markActivity ? today : prev.lastActivityDate,
+        streakChangedToday: streakChanged,
+        streakResetNotified: streakReset,
+      };
+    });
+  }, []);
+
+  const refreshGamification = useCallback(async () => {
+    if (!USE_BACKEND || !accessToken) return;
+    const gamification = await gamificationApi.getSummary(accessToken);
+    applyGamificationSummary(gamification, true);
+  }, [accessToken, applyGamificationSummary]);
+
   const hydrateBackendState = useCallback(async (token: string) => {
     if (!USE_BACKEND || !token) return;
 
@@ -245,16 +273,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsPremiumState(isActiveSubscription(subscriptionSummary));
       setSubscription(subscriptionSummary);
       setPaymentHistory(payments);
-      setStats((prev) => ({
-        ...prev,
-        xp: gamification.totalXp,
-        streak: gamification.currentStreak,
-        longestStreak: Math.max(prev.longestStreak, gamification.longestStreak),
-      }));
+      applyGamificationSummary(gamification);
     } catch {
       // Keep cached/local state when the backend is temporarily unavailable.
     }
-  }, []);
+  }, [applyGamificationSummary]);
 
   useEffect(() => {
     if (USE_BACKEND && isLoggedIn && accessToken) {
@@ -447,7 +470,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       accessToken,
       isLoggedIn, isNewUser, userName, profile, updateProfile, login, register, logout,
       changePassword, requestPasswordReset,
-      hasOnboarded, setHasOnboarded, stats, completeLesson, awardQuizXp,
+      hasOnboarded, setHasOnboarded, stats, completeLesson, awardQuizXp, refreshGamification,
       onboardingResponses, setOnboardingResponses,
       isPremium, setPremium, subscription, paymentHistory, layoutMode,
       reminderEnabled, setReminderEnabled, reminderTime, setReminderTime,
