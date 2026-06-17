@@ -78,7 +78,7 @@ Deployment notes:
 - Do not send emails, names, phone numbers, or other personal data in analytics events.
 - For local DebugView checks only, set `VITE_GA_DEBUG=true`.
 
-The implementation disables the automatic GA page view and sends page views from React Router route changes, so SPA navigation is counted correctly.
+The initial GA page view is sent from `index.html` as soon as the app loads. React Router then sends additional page views after in-app route changes, so SPA navigation is counted correctly. After changing the Vercel environment variable, redeploy and check GA4 Realtime first; standard reports can lag behind.
 
 ## How can I deploy this project?
 

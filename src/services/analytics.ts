@@ -5,6 +5,8 @@ declare global {
   interface Window {
     dataLayer?: unknown[];
     gtag?: GtagFunction;
+    __VSIGN_GA_BOOTSTRAPPED__?: boolean;
+    __VSIGN_GA_MEASUREMENT_ID__?: string;
   }
 }
 
@@ -15,7 +17,7 @@ const GA_MEASUREMENT_ID_PATTERN = /^G-[A-Z0-9]+$/i;
 let initialized = false;
 
 function getMeasurementId() {
-  const measurementId = import.meta.env.VITE_GA_MEASUREMENT_ID?.trim();
+  const measurementId = window.__VSIGN_GA_MEASUREMENT_ID__ || import.meta.env.VITE_GA_MEASUREMENT_ID?.trim();
 
   if (!measurementId || measurementId === GA_PLACEHOLDER_ID) return "";
 
@@ -66,16 +68,19 @@ export function initAnalytics() {
 
   const measurementId = getMeasurementId();
   ensureGtag();
-  loadAnalyticsScript(measurementId);
 
+  if (window.__VSIGN_GA_BOOTSTRAPPED__) {
+    initialized = true;
+    return initialized;
+  }
+
+  loadAnalyticsScript(measurementId);
   window.gtag?.("js", new Date());
-  window.gtag?.(
-    "config",
-    measurementId,
-    withDebugMode({
-      send_page_view: false,
-    }),
-  );
+  window.gtag?.("config", measurementId, withDebugMode({
+    page_title: document.title,
+    page_location: window.location.href,
+    page_path: window.location.pathname + window.location.search + window.location.hash,
+  }));
 
   initialized = true;
   return initialized;
@@ -84,20 +89,19 @@ export function initAnalytics() {
 export function trackPageView(pagePath: string) {
   if (!initAnalytics()) return;
 
-  window.gtag?.(
-    "event",
-    "page_view",
-    withDebugMode({
-      page_title: document.title,
-      page_location: window.location.href,
-      page_path: pagePath,
-    }),
-  );
+  window.gtag?.("config", getMeasurementId(), withDebugMode({
+    page_title: document.title,
+    page_location: window.location.href,
+    page_path: pagePath,
+  }));
 }
 
 export function trackAnalyticsEvent(eventName: string, params: AnalyticsEventParams = {}) {
   if (!eventName || !initAnalytics()) return;
 
   const cleanedParams = Object.fromEntries(Object.entries(params).filter(([, value]) => value !== null && value !== undefined));
-  window.gtag?.("event", eventName, withDebugMode(cleanedParams));
+  window.gtag?.("event", eventName, withDebugMode({
+    send_to: getMeasurementId(),
+    ...cleanedParams,
+  }));
 }
