@@ -36,8 +36,10 @@ import {
   DictionaryEntryDto,
   learningApi,
   LessonDetailDto,
+  LessonProgressRequest,
   LessonQuizDto,
   LessonSummaryDto,
+  PracticeItemSummaryDto,
   QuizSubmitResultDto,
   UnitSummaryDto,
 } from "@/services/vsignApi";
@@ -68,6 +70,26 @@ const UNIT_ICON_KEYWORDS: Array<{ keywords: string[]; icon: LucideIcon }> = [
 const FALLBACK_ICONS: LucideIcon[] = [
   MessageCircle, BookOpen, Users, Smile, GraduationCap, Briefcase, HeartPulse, Hash, Sparkles,
 ];
+
+function getApiMessage(error: unknown, fallback: string) {
+  if (error && typeof error === "object" && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === "string" && message.trim()) {
+      const lower = message.toLowerCase();
+      if (lower.includes("lesson video progress") || lower.includes("lesson video stage")) {
+        return "Tiến độ video chưa được backend ghi nhận. Vui lòng bấm Tiếp theo lại hoặc mở lại bài học.";
+      }
+      if (lower.includes("passed quiz")) {
+        return "Quiz chưa được backend xác nhận là đạt. Vui lòng làm lại quiz.";
+      }
+      if (lower.includes("ai practice")) {
+        return "Lượt luyện AI chưa được backend xác nhận là đạt. Vui lòng luyện lại ký hiệu bằng camera.";
+      }
+      return message;
+    }
+  }
+  return fallback;
+}
 
 function getUnitIcon(unit: UnitSummaryDto, index: number): LucideIcon {
   const titleLower = (unit.title || "").toLowerCase();
@@ -531,10 +553,11 @@ function LessonStudyModal({
   onClose: () => void;
   onLessonCompleted: (lessonId: string) => void;
 }) {
-  const { accessToken } = useAuth();
+  const { accessToken, refreshGamification } = useAuth();
   const [detail, setDetail] = useState<LessonDetailDto | null>(null);
   const [quiz, setQuiz] = useState<LessonQuizDto | null>(null);
   const [dictPool, setDictPool] = useState<DictionaryEntryDto[]>([]);
+  const [lessonPracticeItem, setLessonPracticeItem] = useState<PracticeItemSummaryDto | null>(null);
   const [quizResult, setQuizResult] = useState<QuizSubmitResultDto | null>(null);
   const [step, setStep] = useState<"video" | "quiz" | "ai-practice" | "done">("video");
   const [loading, setLoading] = useState(true);
@@ -548,17 +571,21 @@ function LessonStudyModal({
     setDetail(null);
     setQuiz(null);
     setDictPool([]);
+    setLessonPracticeItem(null);
     setQuizResult(null);
     setStep("video");
 
     Promise.all([
       learningApi.getLesson(lesson.lessonId, accessToken || undefined),
       learningApi.getLessonQuiz(lesson.lessonId, accessToken || undefined),
+      learningApi.listPracticeItems({ size: 100 }, accessToken || undefined).catch(() => null),
     ])
-      .then(([nextDetail, nextQuiz]) => {
+      .then(([nextDetail, nextQuiz, practiceItemsPage]) => {
         if (cancelled) return;
         setDetail(nextDetail);
         setQuiz(nextQuiz);
+        const matchingPracticeItem = practiceItemsPage?.content.find((item) => item.lessonId === lesson.lessonId) ?? null;
+        setLessonPracticeItem(matchingPracticeItem);
         if (!nextQuiz) {
           dictionaryApi.listEntries({ size: 30 })
             .then((entries) => { if (!cancelled) setDictPool(entries.filter((e) => !!e.videoUrl)); })
@@ -592,15 +619,57 @@ function LessonStudyModal({
     setSaving(true);
     setError("");
     try {
+      await learningApi.updateProgress(
+        lesson.lessonId,
+        {
+          completionPct: 90,
+          lastPositionSeconds: Math.max(detail?.durationSeconds ?? 0, detail?.progress?.lastPositionSeconds ?? 0),
+          phase: "PRACTICE",
+          currentQuestionIndex: null,
+          status: "IN_PROGRESS",
+        },
+        accessToken || undefined
+      );
       await learningApi.completeLesson(lesson.lessonId, accessToken || undefined);
+      await refreshGamification().catch(() => undefined);
       onLessonCompleted(lesson.lessonId);
       setStep("done");
-    } catch {
-      setError("Backend chua xac thuc du video, quiz va AI practice de hoan thanh bai hoc.");
+    } catch (err) {
+      setError(getApiMessage(err, "Backend chưa xác thực đủ video, quiz và luyện AI để hoàn thành bài học."));
     } finally {
       setSaving(false);
     }
-  }, [accessToken, lesson.lessonId, onLessonCompleted]);
+  }, [accessToken, detail?.durationSeconds, detail?.progress?.lastPositionSeconds, lesson.lessonId, onLessonCompleted, refreshGamification]);
+
+  const saveStageProgress = useCallback(
+    async (
+      completionPct: number,
+      phase: LessonProgressRequest["phase"],
+      currentQuestionIndex: number | null = null
+    ) => {
+      await learningApi.updateProgress(
+        lesson.lessonId,
+        {
+          completionPct,
+          lastPositionSeconds: phase === "VIDEO" ? detail?.progress?.lastPositionSeconds ?? 0 : detail?.durationSeconds ?? 0,
+          phase,
+          currentQuestionIndex,
+          status: "IN_PROGRESS",
+        },
+        accessToken || undefined
+      );
+    },
+    [accessToken, detail?.durationSeconds, detail?.progress?.lastPositionSeconds, lesson.lessonId]
+  );
+
+  const handleQuizPassed = useCallback(
+    (result: QuizSubmitResultDto) => {
+      setQuizResult(result);
+      setStep("ai-practice");
+      void saveStageProgress(65, "PRACTICE").catch(() => undefined);
+    },
+    [saveStageProgress]
+  );
   const progressWidth = step === "video" ? 25 : step === "quiz" ? 50 : step === "ai-practice" ? 75 : 100;
 
   return (
@@ -674,17 +743,7 @@ function LessonStudyModal({
 
                   <button
                     onClick={async () => {
-                      await learningApi.updateProgress(
-                        lesson.lessonId,
-                        {
-                          completionPct: 25,
-                          lastPositionSeconds: 0,
-                          phase: "QUIZ",
-                          currentQuestionIndex: quiz ? 0 : null,
-                          status: "IN_PROGRESS",
-                        },
-                        accessToken || undefined
-                      ).catch(() => undefined);
+                      await saveStageProgress(35, "QUIZ", quiz ? 0 : null).catch(() => undefined);
                       setStep("quiz");
                     }}
                     disabled={saving}
@@ -714,18 +773,12 @@ function LessonStudyModal({
                       quiz={quiz}
                       lessonVideoUrl={detail?.videoUrl}
                       accessToken={accessToken || undefined}
-                      onPassed={(result) => {
-                        setQuizResult(result);
-                        setStep("ai-practice");
-                      }}
+                      onPassed={handleQuizPassed}
                     />
                   ) : import.meta.env.DEV ? (
                     <DynamicQuizPanel
                       entries={dictPool}
-                      onPassed={(result) => {
-                        setQuizResult(result);
-                        setStep("ai-practice");
-                      }}
+                      onPassed={handleQuizPassed}
                     />
                   ) : (
                     <div className="rounded-2xl bg-destructive/10 border border-destructive/30 px-4 py-3 text-sm text-destructive text-center">
@@ -754,24 +807,27 @@ function LessonStudyModal({
                   </div>
 
                   {(() => {
-                    const aiTarget = resolveAiPracticeTarget(detail?.title || lesson.title);
+                    const practiceSource = lessonPracticeItem?.expectedGloss || lessonPracticeItem?.label || detail?.title || lesson.title;
+                    const aiTarget = resolveAiPracticeTarget(practiceSource);
+                    const targetDisplay = lessonPracticeItem?.label || aiTarget?.display || practiceSource;
+                    const practiceItemId = lessonPracticeItem?.itemId || aiTarget?.practiceItemId;
                     return (
                       <div className="max-w-xl mx-auto space-y-4">
-                        {!aiTarget && (
+                        {(!aiTarget || !practiceItemId) && (
                           <div className="rounded-2xl bg-muted/60 border border-border px-4 py-3 text-sm font-body text-muted-foreground text-center">
                             Bài luyện tập này đang được cập nhật. Vui lòng chọn bài học khác hoặc quay lại sau.
                           </div>
                         )}
 
-                        {aiTarget && (
+                        {aiTarget && practiceItemId && (
                           <Suspense fallback={<div className="card-pop p-6 text-center text-sm text-muted-foreground">Đang tải camera AI...</div>}>
                             <AiCameraPractice
-                            key={lesson.lessonId}
-                            question={`Thực hiện ký hiệu '${aiTarget.display}' trước camera`}
-                            targetLabel={aiTarget.label}
-                            targetDisplay={aiTarget.display}
-                            practiceItemId={aiTarget.practiceItemId}
-                            minConfidence={0.7}
+                              key={lesson.lessonId}
+                              question={`Thực hiện ký hiệu '${targetDisplay}' trước camera`}
+                              targetLabel={aiTarget.label}
+                              targetDisplay={targetDisplay}
+                              practiceItemId={practiceItemId}
+                              minConfidence={0.7}
                               onSuccess={() => void markCompleted()}
                             />
                           </Suspense>
@@ -847,7 +903,7 @@ function LessonsTimeline({
   }, [loadLessons]);
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="w-full max-w-3xl mx-auto">
       <button onClick={onBack} className="flex items-center gap-1 text-sm text-muted-foreground font-body hover:text-foreground transition-colors mb-6">
         <ChevronLeft className="w-4 h-4" /> {unitTitle}
       </button>
@@ -856,7 +912,7 @@ function LessonsTimeline({
         <h2 className="font-display font-bold text-2xl text-foreground">{chapter.title}</h2>
         {chapter.description && (
           <p className="text-muted-foreground font-body text-sm mt-1">
-            {productionDescription(chapter.description, "Hoàn thành các bài học trong chương này.")}
+            {productionDescription(chapter.description, "Hoàn thành các bài học trong phần học này.")}
           </p>
         )}
         <p className="text-muted-foreground font-body text-sm mt-2">
@@ -873,7 +929,7 @@ function LessonsTimeline({
           <XCircle className="w-10 h-10 text-destructive mx-auto mb-3" />
           <p className="font-body text-sm text-muted-foreground mb-5">{error}</p>
           <button onClick={() => void loadLessons()} className="btn-primary-gradient inline-flex items-center gap-2">
-            <RotateCcw className="w-4 h-4" /> Táº£i láº¡i
+            <RotateCcw className="w-4 h-4" /> Tải lại
           </button>
         </div>
       ) : (
@@ -889,9 +945,9 @@ function LessonsTimeline({
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: idx * 0.04 }}
-                className="relative pl-14"
+                className="relative pl-10 sm:pl-14"
               >
-                <div className={`absolute left-4 top-4 w-5 h-5 rounded-full border-2 flex items-center justify-center z-10 ${
+                <div className={`absolute left-2 top-4 w-5 h-5 rounded-full border-2 flex items-center justify-center z-10 sm:left-4 ${
                   isDone ? "bg-[hsl(var(--success))] border-[hsl(var(--success))]"
                     : isLocked ? "bg-muted border-muted-foreground/30"
                     : "bg-primary border-primary"
@@ -909,7 +965,7 @@ function LessonsTimeline({
                     }
                     setActiveLesson(lesson);
                   }}
-                  className={`w-full card-pastel p-4 flex items-center gap-4 text-left transition-all ${
+                  className={`w-full card-pastel p-4 flex flex-col gap-3 text-left transition-all min-[430px]:flex-row min-[430px]:items-center ${
                     isLocked ? "opacity-60 hover:ring-2 hover:ring-amber-300" : "hover:shadow-md hover:ring-2 hover:ring-primary/20"
                   }`}
                 >
@@ -919,10 +975,10 @@ function LessonsTimeline({
                     {isLocked ? <Lock className="w-5 h-5 text-muted-foreground" /> : <BookOpen className="w-5 h-5 text-primary" />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-display font-bold text-foreground text-sm flex items-center gap-2">
+                    <h4 className="font-display font-bold text-foreground text-sm flex flex-wrap items-center gap-2">
                       {lesson.title}
                       {lesson.requiresPremium && (
-                        <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-body">PRO</span>
+                        <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-body">Cao cấp</span>
                       )}
                     </h4>
                     <p className="text-xs text-muted-foreground font-body truncate">{productionDescription(lesson.description, "Nội dung bài học đang được cập nhật.")}</p>
@@ -930,13 +986,15 @@ function LessonsTimeline({
                       <Clock className="w-3 h-3" /> {lessonDuration(lesson.durationSeconds)} · {statusText(lesson.status)}
                     </p>
                   </div>
-                  {isDone ? (
-                    <span className="text-xs text-[hsl(var(--success))] font-body font-semibold shrink-0">Hoàn thành</span>
-                  ) : isLocked ? (
-                    <span className="text-xs text-amber-700 font-body font-semibold shrink-0">Premium</span>
-                  ) : (
-                    <Play className="w-4 h-4 text-primary shrink-0" />
-                  )}
+                  <div className="self-start min-[430px]:self-center">
+                    {isDone ? (
+                      <span className="text-xs text-[hsl(var(--success))] font-body font-semibold shrink-0">Hoàn thành</span>
+                    ) : isLocked ? (
+                      <span className="text-xs text-amber-700 font-body font-semibold shrink-0">Cao cấp</span>
+                    ) : (
+                      <Play className="w-4 h-4 text-primary shrink-0" />
+                    )}
+                  </div>
                 </button>
               </motion.div>
             );
@@ -994,7 +1052,7 @@ function ChaptersList({
       chaptersCache.set(unit.unitId, data);
       setChapters(data);
     } catch {
-      setError("Không thể tải danh sách chương. Vui lòng thử lại.");
+      setError("Không thể tải danh sách phần học. Vui lòng thử lại.");
     } finally {
       setLoading(false);
     }
@@ -1020,17 +1078,17 @@ function ChaptersList({
   }
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="w-full max-w-3xl mx-auto">
       <button onClick={onBack} className="flex items-center gap-1 text-sm text-muted-foreground font-body hover:text-foreground transition-colors mb-6">
         <ChevronLeft className="w-4 h-4" /> Tất cả khóa học
       </button>
 
-      <div className="flex items-center gap-4 mb-8">
+      <div className="flex items-start gap-4 mb-8">
         <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0" style={{ background: "var(--gradient-primary)" }}>
           <BookOpen className="w-7 h-7 text-primary-foreground" />
         </div>
         <div>
-          <h2 className="font-display font-bold text-2xl text-foreground">{unit.title}</h2>
+          <h2 className="font-display font-bold text-2xl text-foreground leading-tight">{unit.title}</h2>
           <p className="text-muted-foreground font-body text-sm">
             {productionDescription(unit.description, unitFallbackDescription(unit))}
           </p>
@@ -1039,14 +1097,14 @@ function ChaptersList({
 
       {loading ? (
         <div className="py-12 text-center [&>p]:hidden">
-          <LoadingSpinner size="md" message="Đang tải danh sách chương..." />
+          <LoadingSpinner size="md" message="Đang tải danh sách phần học..." />
         </div>
       ) : error ? (
         <div className="card-pastel p-6 text-center">
           <XCircle className="w-10 h-10 text-destructive mx-auto mb-3" />
           <p className="font-body text-sm text-muted-foreground mb-5">{error}</p>
           <button onClick={() => void loadChapters()} className="btn-primary-gradient inline-flex items-center gap-2">
-            <RotateCcw className="w-4 h-4" /> Táº£i láº¡i
+            <RotateCcw className="w-4 h-4" /> Tải lại
           </button>
         </div>
       ) : (
@@ -1062,9 +1120,9 @@ function ChaptersList({
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.05 }}
-                className="relative pl-14"
+                className="relative pl-10 sm:pl-14"
               >
-                <div className={`absolute left-4 top-5 w-5 h-5 rounded-full border-2 z-10 flex items-center justify-center ${
+                <div className={`absolute left-2 top-5 w-5 h-5 rounded-full border-2 z-10 flex items-center justify-center sm:left-4 ${
                   progress.percent === 100 ? "bg-[hsl(var(--success))] border-[hsl(var(--success))]"
                     : isLocked ? "bg-muted border-muted-foreground/30"
                     : "bg-primary border-primary"
@@ -1086,19 +1144,19 @@ function ChaptersList({
                     isLocked ? "opacity-60 hover:ring-2 hover:ring-amber-300" : "hover:shadow-md hover:ring-2 hover:ring-primary/20"
                   }`}
                 >
-                  <div className="flex items-center justify-between mb-3 gap-4">
+                  <div className="flex items-start justify-between mb-3 gap-3">
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex flex-wrap items-center gap-2 mb-1">
                         <h3 className="font-display font-bold text-foreground text-base">{chapter.title}</h3>
                         {chapter.requiresPremium && (
                           <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-body font-bold flex items-center gap-1">
-                            <Lock className="w-3 h-3" /> PRO
+                            <Lock className="w-3 h-3" /> Cao cấp
                           </span>
                         )}
                       </div>
                       {chapter.description && (
                         <p className="text-xs text-muted-foreground font-body mb-1">
-                          {productionDescription(chapter.description, "Hoàn thành các bài học trong chương này.")}
+                          {productionDescription(chapter.description, "Hoàn thành các bài học trong phần học này.")}
                         </p>
                       )}
                       <p className="text-xs text-muted-foreground font-body">
@@ -1225,17 +1283,17 @@ export default function VocabularyPack() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="w-full max-w-5xl mx-auto">
       {/* Header with mascot */}
-      <div className="hero-panel p-5 md:p-7 flex items-center gap-5 mb-6 overflow-hidden">
+      <div className="hero-panel p-4 md:p-7 flex items-center gap-4 md:gap-5 mb-5 md:mb-6 overflow-hidden">
         <motion.img
           src={mascotImg}
           alt="Mascot"
-          className={`object-contain drop-shadow-lg shrink-0 ${isChildMode ? "w-24 h-24" : "w-20 h-20"}`}
+          className={`object-contain drop-shadow-lg shrink-0 hidden sm:block ${isChildMode ? "w-24 h-24" : "w-20 h-20"}`}
           animate={{ y: [0, -5, 0] }}
           transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
         />
-        <div className="speech-bubble flex-1">
+        <div className="speech-bubble flex-1 min-w-0 p-4 md:p-5">
           <p className={`font-display text-foreground ${isChildMode ? "text-xl font-extrabold" : "text-lg font-extrabold"}`}>
             {isChildMode
               ? `Chào bạn nhỏ ${userName || "ơi"}! Chọn một chủ đề để bắt đầu học nhé.`
@@ -1280,35 +1338,35 @@ export default function VocabularyPack() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.04 }}
               onClick={() => setState({ view: "unit", unitId: unit.unitId })}
-              className="w-full card-pop p-5 md:p-6 text-left cursor-pointer hover:-translate-y-0.5 hover:ring-2 hover:ring-primary/20 transition-all"
+              className="w-full card-pop p-4 md:p-6 text-left cursor-pointer hover:-translate-y-0.5 hover:ring-2 hover:ring-primary/20 transition-all"
             >
-              <div className="flex items-center gap-4">
-                <div className="icon-tile shrink-0" style={{ background: "var(--gradient-primary)" }}>
-                  <UnitIcon className="w-7 h-7 text-primary-foreground" />
+              <div className="flex items-start gap-3 md:gap-4">
+                <div className="icon-tile !h-12 !w-12 shrink-0 md:!h-14 md:!w-14" style={{ background: "var(--gradient-primary)" }}>
+                  <UnitIcon className="w-6 h-6 md:w-7 md:h-7 text-primary-foreground" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <span className="inline-block text-[10px] font-bold px-2.5 py-1 rounded-full bg-primary/15 text-primary">
-                      UNIT {unit.orderIndex || globalIndex + 1}
+                      Chủ đề {globalIndex + 1}
                     </span>
                     <span className="text-[10px] font-body font-semibold px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-                      {progress.chaptersTotal || unit.chapterCount} chương
+                      {progress.chaptersTotal || unit.chapterCount} phần học
                     </span>
                   </div>
-                  <h3 className={`font-display font-extrabold text-foreground ${isChildMode ? "text-xl" : "text-lg"}`}>{unit.title}</h3>
+                  <h3 className={`font-display font-extrabold text-foreground leading-tight ${isChildMode ? "text-xl" : "text-lg"}`}>{unit.title}</h3>
                   <p className="text-xs text-muted-foreground font-body mt-0.5">
                     {productionDescription(unit.description, unitFallbackDescription(unit))}
                   </p>
-                  <div className="flex items-center gap-3 mt-2">
+                  <div className="flex flex-col gap-2 mt-2 min-[430px]:flex-row min-[430px]:items-center min-[430px]:gap-3">
                     <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden max-w-xs">
                       <div className="h-full rounded-full transition-all duration-500" style={{ width: `${progress.percent}%`, background: "var(--gradient-primary)" }} />
                     </div>
                     <span className="text-[11px] text-muted-foreground font-body font-semibold shrink-0">
-                      {progress.total > 0 ? `${progress.completed}/${progress.total} bài` : `${progress.chaptersTotal} chương`}
+                      {progress.total > 0 ? `${progress.completed}/${progress.total} bài` : `${progress.chaptersTotal} phần học`}
                     </span>
                   </div>
                 </div>
-                <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
+                <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0 mt-3" />
               </div>
             </motion.button>
           );
@@ -1317,7 +1375,7 @@ export default function VocabularyPack() {
 
       {/* Pagination controls */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-3 mt-6">
+        <div className="flex flex-wrap items-center justify-center gap-3 mt-6">
           <button
             disabled={currentPage === 1}
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}

@@ -158,8 +158,8 @@ export default function AiCameraPractice({
   };
 
   return (
-    <div className="card-pop p-5 text-center">
-      <h3 className="font-display font-extrabold text-xl text-foreground mb-4">{question}</h3>
+    <div className="card-pop p-4 text-center md:p-5">
+      <h3 className="font-display font-extrabold text-lg leading-tight text-foreground mb-4 md:text-xl">{question}</h3>
       <div className="rounded-[18px] bg-primary/10 border border-primary/20 px-4 py-3 mb-4 text-left">
         <p className="text-xs font-body text-foreground">
           Đưa tay vào khung hình, thực hiện ký hiệu trong vài giây rồi bấm bắt đầu nhận diện.
@@ -167,11 +167,11 @@ export default function AiCameraPractice({
       </div>
       {previewMode && (
         <div className="rounded-[18px] bg-amber-100/70 border border-amber-200 px-4 py-3 mb-4 text-left">
-          <p className="text-xs font-body text-amber-800">Đây là lượt luyện tập thử trước khi nâng cấp Premium.</p>
+          <p className="text-xs font-body text-amber-800">Đây là lượt luyện tập thử trước khi nâng cấp gói Cao cấp.</p>
         </div>
       )}
 
-      <div className="aspect-video rounded-[22px] overflow-hidden relative shadow-lg mb-4 bg-muted ring-1 ring-border/80">
+      <div className="aspect-video rounded-[20px] md:rounded-[22px] overflow-hidden relative shadow-lg mb-4 bg-muted ring-1 ring-border/80">
         {cameraError ? (
           <div className="w-full h-full flex flex-col items-center justify-center gap-3 p-6 bg-destructive/10">
             <XCircle className="w-12 h-12 text-destructive" />

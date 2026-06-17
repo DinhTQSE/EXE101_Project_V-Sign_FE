@@ -11,6 +11,7 @@ import {
   LogOut,
   Moon,
   Search,
+  ShieldCheck,
   Sun,
   Trophy,
   User,
@@ -27,6 +28,7 @@ export interface SidebarNavItem {
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   comingSoon?: boolean;
+  adminOnly?: boolean;
 }
 
 const navItems: SidebarNavItem[] = [
@@ -37,12 +39,21 @@ const navItems: SidebarNavItem[] = [
   { path: "/assessment", label: "Thi thử", icon: GraduationCap },
   { path: "/leaderboard", label: "Bảng xếp hạng", icon: Trophy },
   { path: "/community", label: "Cộng đồng", icon: Users, comingSoon: true },
+  { path: "/admin", label: "Quản trị", icon: ShieldCheck, adminOnly: true },
   { path: "/profile", label: "Hồ sơ", icon: User },
 ];
 
 function isActive(currentPath: string, itemPath: string) {
   if (itemPath === "/home") return currentPath === "/home" || currentPath === "/";
   return currentPath.startsWith(itemPath);
+}
+
+function isAdminRole(role?: string) {
+  return role === "ADMIN" || role === "SUPER_ADMIN";
+}
+
+function visibleNavItems(role?: string) {
+  return navItems.filter((item) => !item.adminOnly || isAdminRole(role));
 }
 
 interface DesktopSidebarProps {
@@ -89,7 +100,7 @@ export function DesktopSidebar({ collapsed, onToggle }: DesktopSidebarProps) {
 
       {/* Nav */}
       <nav className="flex-1 p-2.5 space-y-1.5 overflow-y-auto overflow-x-hidden">
-        {navItems.map((item) => {
+        {visibleNavItems(profile.role).map((item) => {
           const active = isActive(location.pathname, item.path);
           return (
             <button
@@ -261,7 +272,7 @@ export function MobileDrawer({ open, onClose }: MobileDrawerProps) {
             </div>
 
             <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-              {navItems.map((item) => {
+              {visibleNavItems(profile.role).map((item) => {
                 const active = isActive(location.pathname, item.path);
                 return (
                   <button
@@ -314,7 +325,7 @@ export function MobileDrawer({ open, onClose }: MobileDrawerProps) {
                   <p className="font-body font-semibold text-sm text-foreground truncate">{displayName}</p>
                   {isPremium && (
                     <span className="text-[10px] text-amber-600 font-bold flex items-center gap-0.5">
-                      <Crown className="w-3 h-3" /> Premium
+                      <Crown className="w-3 h-3" /> Cao cấp
                     </span>
                   )}
                 </div>
@@ -345,19 +356,19 @@ export function MobileBottomNav() {
   const navigate = useNavigate();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-xl border-t border-border flex md:hidden z-40 safe-area-bottom shadow-[0_-10px_30px_rgba(79,51,42,0.08)]">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 flex border-t border-border bg-card/95 shadow-[0_-10px_30px_rgba(79,51,42,0.08)] backdrop-blur-xl md:hidden safe-area-bottom">
       {bottomNavItems.map((item) => {
         const active = isActive(location.pathname, item.path);
         return (
           <button
             key={item.path}
             onClick={() => navigate(item.path)}
-            className={`flex-1 flex flex-col items-center gap-1 py-2.5 min-h-[58px] transition-colors relative font-semibold ${
+            className={`relative flex min-h-[60px] min-w-0 flex-1 flex-col items-center justify-center gap-1 px-1 py-2 transition-colors font-semibold ${
               active ? "text-primary" : "text-muted-foreground"
             }`}
           >
             <item.icon className="w-5 h-5" />
-            <span className="text-[10px] font-body font-medium">{item.label}</span>
+            <span className="w-full truncate text-center text-[10px] leading-none font-body font-medium">{item.label}</span>
             {active && (
               <motion.div
                 layoutId="bottomNavIndicator"

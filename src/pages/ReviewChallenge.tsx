@@ -416,13 +416,13 @@ export default function ReviewChallenge() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto py-2">
+    <div className="w-full max-w-2xl mx-auto py-2">
       {/* Mascot */}
       <div className="flex items-start gap-4 mb-8">
         <motion.img src={mascotImg} alt="Mascot"
-          className={`object-contain drop-shadow-lg shrink-0 ${isChildMode ? "w-24 h-24" : "w-20 h-20"}`}
+          className={`object-contain drop-shadow-lg shrink-0 hidden sm:block ${isChildMode ? "w-24 h-24" : "w-20 h-20"}`}
           animate={{ y: [0, -5, 0] }} transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }} />
-        <div className="speech-bubble flex-1">
+        <div className="speech-bubble flex-1 min-w-0">
           <p className={`font-body text-foreground ${isChildMode ? "text-base font-semibold" : "text-sm"}`}>
             {isChildMode
               ? `Luyện tập mỗi ngày để giỏi hơn nè bạn nhỏ! 🌟💪`
@@ -433,17 +433,17 @@ export default function ReviewChallenge() {
 
       {/* Stats summary */}
       <div className="grid grid-cols-3 gap-3 mb-8">
-        <div className="card-pastel p-4 text-center">
+        <div className="card-pastel p-2.5 sm:p-4 text-center">
           <Trophy className="w-6 h-6 text-amber-500 mx-auto mb-1" />
           <p className="font-display font-bold text-foreground text-lg">3</p>
           <p className="text-[11px] text-muted-foreground font-body">Chế độ</p>
         </div>
-        <div className="card-pastel p-4 text-center">
+        <div className="card-pastel p-2.5 sm:p-4 text-center">
           <Star className="w-6 h-6 text-amber-500 mx-auto mb-1" />
           <p className="font-display font-bold text-foreground text-lg">{reviewWords.length}</p>
           <p className="text-[11px] text-muted-foreground font-body">Từ vựng</p>
         </div>
-        <div className="card-pastel p-4 text-center">
+        <div className="card-pastel p-2.5 sm:p-4 text-center">
           <Zap className="w-6 h-6 text-amber-500 mx-auto mb-1" />
           <p className="font-display font-bold text-foreground text-lg">∞</p>
           <p className="text-[11px] text-muted-foreground font-body">Luyện tập</p>

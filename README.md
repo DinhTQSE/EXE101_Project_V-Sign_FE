@@ -1,6 +1,6 @@
 # Welcome to your Lovable project
 
-## Project info
+## Project infomations
 
 **URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
 
@@ -59,6 +59,26 @@ This project is built with:
 - React
 - shadcn-ui
 - Tailwind CSS
+
+## Google Analytics 4
+
+The app supports GA4 page-view tracking for the deployed React single-page app.
+
+Configuration:
+
+```sh
+VITE_GA_MEASUREMENT_ID=G-XXXXXXXXXX
+```
+
+Deployment notes:
+
+- Create a GA4 Web data stream for the production domain.
+- Add `VITE_GA_MEASUREMENT_ID` in Vercel Project Settings > Environment Variables.
+- Redeploy Vercel after changing the environment variable.
+- Do not send emails, names, phone numbers, or other personal data in analytics events.
+- For local DebugView checks only, set `VITE_GA_DEBUG=true`.
+
+The initial GA page view is sent from `index.html` as soon as the app loads. React Router then sends additional page views after in-app route changes, so SPA navigation is counted correctly. After changing the Vercel environment variable, redeploy and check GA4 Realtime first; standard reports can lag behind.
 
 ## How can I deploy this project?
 

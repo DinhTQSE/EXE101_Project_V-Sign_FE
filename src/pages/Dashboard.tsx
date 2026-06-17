@@ -156,7 +156,7 @@ export default function Dashboard({ defaultTab = "courses" }: DashboardProps) {
                   {tab.label}
                   {isPro && !isPremium && (
                     <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-bold flex items-center gap-0.5 dark:bg-amber-900/40 dark:text-amber-400">
-                      <Lock className="w-2.5 h-2.5 shrink-0" /> PRO
+                      <Lock className="w-2.5 h-2.5 shrink-0" /> Cao cấp
                     </span>
                   )}
                   {isComingSoon && (
@@ -246,7 +246,7 @@ export default function Dashboard({ defaultTab = "courses" }: DashboardProps) {
                         {tab.label}
                         {isPro && !isPremium && (
                           <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-bold flex items-center gap-0.5 dark:bg-amber-900/40 dark:text-amber-400">
-                            <Lock className="w-2.5 h-2.5" /> PRO
+                            <Lock className="w-2.5 h-2.5" /> Cao cấp
                           </span>
                         )}
                         {isComingSoon && (
@@ -298,7 +298,7 @@ export default function Dashboard({ defaultTab = "courses" }: DashboardProps) {
             </button>
             {isPremium && (
               <span className="text-xs font-body font-semibold bg-amber-100 text-amber-700 px-3 py-1 rounded-full flex items-center gap-1 dark:bg-amber-900/40 dark:text-amber-400">
-                <Crown className="w-3.5 h-3.5" /> Premium
+                <Crown className="w-3.5 h-3.5" /> Cao cấp
               </span>
             )}
           </div>

@@ -5,6 +5,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import AnalyticsTracker from "@/components/AnalyticsTracker";
 import AppErrorBoundary from "@/components/AppErrorBoundary";
 import DashboardLayout from "@/components/DashboardLayout";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
@@ -22,7 +23,7 @@ const Profile = lazy(() => import("./pages/Profile"));
 const AssessmentExam = lazy(() => import("./pages/AssessmentExam"));
 const PracticeView = lazy(() => import("./components/PracticeView"));
 const PaymentResult = lazy(() => import("./pages/PaymentResult"));
-
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 
 function RouteFallback() {
   return (
@@ -35,6 +36,13 @@ function RouteFallback() {
 function AuthenticatedRoute({ children }: { children: ReactNode }) {
   const { isLoggedIn } = useAuth();
   if (!isLoggedIn) return <Navigate to="/" />;
+  return <DashboardLayout>{children}</DashboardLayout>;
+}
+
+function AdminRoute({ children }: { children: ReactNode }) {
+  const { isLoggedIn, profile } = useAuth();
+  if (!isLoggedIn) return <Navigate to="/" />;
+  if (profile.role !== "ADMIN" && profile.role !== "SUPER_ADMIN") return <Navigate to="/home" replace />;
   return <DashboardLayout>{children}</DashboardLayout>;
 }
 
@@ -74,7 +82,7 @@ function AppRoutes() {
       <Route path="/profile" element={<AuthenticatedRoute><Profile /></AuthenticatedRoute>} />
       <Route path="/payment/result" element={<AuthenticatedRoute><PaymentResult /></AuthenticatedRoute>} />
       <Route path="/payment/cancel" element={<AuthenticatedRoute><PaymentResult /></AuthenticatedRoute>} />
-
+      <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
 
       {/* Legacy redirects */}
       <Route path="/dashboard" element={<Navigate to="/home" replace />} />
@@ -93,6 +101,7 @@ const App = () => (
       <Sonner />
       <AuthProvider>
         <BrowserRouter>
+          <AnalyticsTracker />
           <AppErrorBoundary>
             <Suspense fallback={<RouteFallback />}>
               <AppRoutes />

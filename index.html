@@ -15,7 +15,34 @@
     <meta name="twitter:title" content="V-Sign">
     <meta property="og:description" content="Nền tảng học và luyện tập Ngôn ngữ ký hiệu Việt Nam.">
     <meta name="twitter:description" content="Nền tảng học và luyện tập Ngôn ngữ ký hiệu Việt Nam.">
-</head>
+    <script>
+      (function () {
+        var measurementId = "%VITE_GA_MEASUREMENT_ID%";
+        var isValidMeasurementId = /^G-[A-Z0-9]+$/i.test(measurementId) && measurementId !== "G-XXXXXXXXXX";
+
+        window.__VSIGN_GA_MEASUREMENT_ID__ = isValidMeasurementId ? measurementId.toUpperCase() : "";
+        if (!isValidMeasurementId) return;
+
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = window.gtag || function gtag() {
+          window.dataLayer.push(arguments);
+        };
+
+        window.gtag("js", new Date());
+        window.gtag("config", window.__VSIGN_GA_MEASUREMENT_ID__, {
+          page_title: document.title,
+          page_location: window.location.href,
+          page_path: window.location.pathname + window.location.search + window.location.hash
+        });
+        window.__VSIGN_GA_BOOTSTRAPPED__ = true;
+
+        var script = document.createElement("script");
+        script.async = true;
+        script.src = "https://www.googletagmanager.com/gtag/js?id=" + encodeURIComponent(window.__VSIGN_GA_MEASUREMENT_ID__);
+        document.head.appendChild(script);
+      })();
+    </script>
+  </head>
 
   <body>
     <div id="root"></div>

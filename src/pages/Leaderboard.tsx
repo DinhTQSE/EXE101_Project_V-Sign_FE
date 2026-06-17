@@ -99,7 +99,7 @@ export default function Leaderboard() {
   const podium = topTen.slice(0, 3);
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="w-full max-w-4xl mx-auto">
       <div className="hero-panel p-5 md:p-7 mb-6">
         <div className="flex items-center gap-3 mb-1">
           <div className="icon-tile !w-12 !h-12">
@@ -132,20 +132,20 @@ export default function Leaderboard() {
               key={`${period}-${entry.rank}-${entry.name}`}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className={`card-pop p-4 md:p-5 flex flex-col items-center text-center ${isFirst ? "sm:-mt-4" : ""} ${
+              className={`card-pop p-2 sm:p-4 md:p-5 flex flex-col items-center text-center ${isFirst ? "sm:-mt-4" : ""} ${
                 entry.isCurrentUser ? "ring-2 ring-primary" : ""
               }`}
             >
-              <div className={`w-14 h-14 rounded-full flex items-center justify-center font-display font-extrabold text-lg text-primary-foreground mb-2 shadow-lg ${
+              <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-full flex items-center justify-center font-display font-extrabold text-sm sm:text-lg text-primary-foreground mb-2 shadow-lg ${
                 isFirst ? "ring-2 ring-amber-400 ring-offset-2 ring-offset-card" : ""
               }`} style={{ background: "var(--gradient-primary)" }}>
                 {entry.avatar}
               </div>
               {rankColors[entry.rank]?.icon}
-              <span className="font-display font-extrabold text-foreground text-base mt-1 truncate w-full">{entry.name}</span>
-              <span className="text-xs text-primary font-body font-bold mt-0.5">{entry.xp} XP</span>
-              <span className="text-[10px] text-muted-foreground font-body flex items-center gap-0.5 mt-1">
-                <Flame className="w-3 h-3 text-primary" /> {entry.streak} ngày
+              <span className="font-display font-extrabold text-foreground text-xs sm:text-base mt-1 truncate w-full">{entry.name}</span>
+              <span className="text-[10px] sm:text-xs text-primary font-body font-bold mt-0.5">{entry.xp} XP</span>
+              <span className="text-[9px] sm:text-[10px] text-muted-foreground font-body flex items-center gap-0.5 mt-1">
+                <Flame className="w-3 h-3 text-primary shrink-0" /> {entry.streak} ngày
               </span>
             </motion.div>
           );

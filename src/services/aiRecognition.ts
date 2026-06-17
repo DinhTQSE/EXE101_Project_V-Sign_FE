@@ -21,47 +21,85 @@ export interface AiPredictionResponse {
   message?: string | null;
 }
 
+export type AiPracticeCategory = "family" | "emotion" | "food";
+export type AiPracticeFilter = "recommended" | AiPracticeCategory;
+
+export interface AiPracticeCategoryInfo {
+  id: AiPracticeFilter;
+  label: string;
+  description: string;
+}
+
 export interface AiPracticeTarget {
   label: string;
   display: string;
   gloss: string;
   practiceItemId: string;
+  category: AiPracticeCategory;
+  region?: string;
+  featured?: boolean;
   aliases?: string[];
 }
 
+export const AI_PRACTICE_CATEGORIES: AiPracticeCategoryInfo[] = [
+  { id: "recommended", label: "Gợi ý hôm nay", description: "Các ký hiệu dễ bắt đầu và thường gặp." },
+  { id: "family", label: "Gia đình", description: "Người thân và quan hệ trong gia đình." },
+  { id: "emotion", label: "Cảm xúc", description: "Biểu đạt cảm xúc trong giao tiếp." },
+  { id: "food", label: "Món ăn", description: "Các món ăn quen thuộc hằng ngày." },
+];
+
 export const AI_PRACTICE_TARGETS: AiPracticeTarget[] = [
-  { label: "anhhai_bt", display: "Anh hai (Bắc/Trung)", gloss: "ANHHAI_BT", practiceItemId: "practice-mvp-anhhai-bt", aliases: ["anh hai bac trung", "anh hai mien bac mien trung"] },
-  { label: "anhhai", display: "Anh hai (Nam)", gloss: "ANHHAI", practiceItemId: "practice-mvp-anhhai", aliases: ["anh hai nam", "anh hai"] },
-  { label: "bo", display: "Bố", gloss: "BO", practiceItemId: "practice-mvp-bo", aliases: ["bố"] },
-  { label: "chi_bt", display: "Chị (Bắc/Trung)", gloss: "CHI_BT", practiceItemId: "practice-mvp-chi-bt", aliases: ["chi bac trung", "chị bắc trung", "chi mien bac mien trung"] },
-  { label: "chi", display: "Chị (Nam)", gloss: "CHI", practiceItemId: "practice-mvp-chi", aliases: ["chị nam", "chi nam", "chị"] },
-  { label: "congai", display: "Con gái", gloss: "CONGAI", practiceItemId: "practice-mvp-congai", aliases: ["con gái", "con gai"] },
-  { label: "contrai", display: "Con trai", gloss: "CONTRAI", practiceItemId: "practice-mvp-contrai", aliases: ["con trai"] },
-  { label: "emgai", display: "Em gái", gloss: "EMGAI", practiceItemId: "practice-mvp-emgai", aliases: ["em gái", "em gai"] },
-  { label: "emtrai", display: "Em trai (Bắc)", gloss: "EMTRAI", practiceItemId: "practice-mvp-emtrai", aliases: ["em trai bac", "em trai mien bac"] },
-  { label: "emtrai_nt", display: "Em trai (Nam/Trung)", gloss: "EMTRAI_NT", practiceItemId: "practice-mvp-emtrai-nt", aliases: ["em trai nam trung", "em trai mien nam mien trung"] },
-  { label: "me", display: "Mẹ", gloss: "ME", practiceItemId: "practice-mvp-me", aliases: ["mẹ", "má", "ma"] },
-  { label: "buon", display: "Buồn thảm", gloss: "BUON", practiceItemId: "practice-mvp-buon", aliases: ["buồn", "buồn thảm", "buon tham"] },
-  { label: "hoangso", display: "Hoảng sợ", gloss: "HOANGSO", practiceItemId: "practice-mvp-hoangso", aliases: ["hoảng sợ", "hoang so"] },
-  { label: "noigian", display: "Nổi giận", gloss: "NOIGIAN", practiceItemId: "practice-mvp-noigian", aliases: ["nổi giận", "noi gian"] },
-  { label: "thuongyeu_bt", display: "Thương yêu (Bắc/Trung)", gloss: "THUONGYEU_BT", practiceItemId: "practice-mvp-thuongyeu-bt", aliases: ["thuong yeu bac trung", "thương yêu bắc trung"] },
-  { label: "thuongyeu", display: "Thương yêu (Nam)", gloss: "THUONGYEU", practiceItemId: "practice-mvp-thuongyeu", aliases: ["thương yêu nam", "thuong yeu nam", "thương yêu"] },
-  { label: "vuive_bt", display: "Vui sướng (Bắc/Trung)", gloss: "VUIVE_BT", practiceItemId: "practice-mvp-vuive-bt", aliases: ["vui suong bac trung", "vui ve bac trung"] },
-  { label: "vuive", display: "Vui sướng (Nam)", gloss: "VUIVE", practiceItemId: "practice-mvp-vuive", aliases: ["vui sướng nam", "vui suong nam", "vui sướng", "vui ve"] },
-  { label: "banhmi_nt", display: "Bánh mì (Nam/Trung)", gloss: "BANHMI_NT", practiceItemId: "practice-mvp-banhmi-nt", aliases: ["banh mi nam trung", "bánh mì nam trung"] },
-  { label: "banhmi", display: "Bánh mì (Bắc)", gloss: "BANHMI", practiceItemId: "practice-mvp-banhmi", aliases: ["bánh mì bắc", "banh mi bac", "bánh mì", "banh mi"] },
-  { label: "buncha", display: "Bún chả", gloss: "BUNCHA", practiceItemId: "practice-mvp-buncha", aliases: ["bún chả", "bun cha"] },
-  { label: "bundau", display: "Bún đậu", gloss: "BUNDAU", practiceItemId: "practice-mvp-bundau", aliases: ["bún đậu", "bun dau"] },
-  { label: "bunmam", display: "Bún mắm", gloss: "BUNMAM", practiceItemId: "practice-mvp-bunmam", aliases: ["bún mắm", "bun mam"] },
-  { label: "bunngang", display: "Bún ngan", gloss: "BUNNGANG", practiceItemId: "practice-mvp-bunngang", aliases: ["bún ngan", "bun ngan", "bún ngang"] },
-  { label: "bunoc", display: "Bún ốc", gloss: "BUNOC", practiceItemId: "practice-mvp-bunoc", aliases: ["bún ốc", "bun oc"] },
-  { label: "chao", display: "Cháo", gloss: "CHAO", practiceItemId: "practice-mvp-chao", aliases: ["cháo", "cháo sườn"] },
-  { label: "com", display: "Cơm", gloss: "COM", practiceItemId: "practice-mvp-com", aliases: ["cơm", "com"] },
-  { label: "pho_nt", display: "Phở (Nam/Trung)", gloss: "PHO_NT", practiceItemId: "practice-mvp-pho-nt", aliases: ["phở nam trung", "pho nam trung"] },
-  { label: "pho", display: "Phở (Bắc)", gloss: "PHO", practiceItemId: "practice-mvp-pho", aliases: ["phở bắc", "pho bac", "phở", "pho"] },
+  { label: "anhhai_bt", display: "Anh hai", gloss: "ANHHAI_BT", category: "family", region: "Bắc/Trung", practiceItemId: "practice-mvp-anhhai-bt", featured: true, aliases: ["anh hai bắc trung", "anh hai bac trung", "anh hai miền bắc miền trung"] },
+  { label: "anhhai", display: "Anh hai", gloss: "ANHHAI", category: "family", region: "Nam", practiceItemId: "practice-mvp-anhhai", aliases: ["anh hai nam", "anh hai"] },
+  { label: "bo", display: "Bố", gloss: "BO", category: "family", practiceItemId: "practice-mvp-bo", featured: true, aliases: ["bố", "ba", "cha", "bo"] },
+  { label: "chi_bt", display: "Chị", gloss: "CHI_BT", category: "family", region: "Bắc/Trung", practiceItemId: "practice-mvp-chi-bt", aliases: ["chị bắc trung", "chi bac trung", "chị miền bắc miền trung"] },
+  { label: "chi", display: "Chị", gloss: "CHI", category: "family", region: "Nam", practiceItemId: "practice-mvp-chi", aliases: ["chị nam", "chi nam", "chị"] },
+  { label: "congai", display: "Con gái", gloss: "CONGAI", category: "family", practiceItemId: "practice-mvp-congai", aliases: ["con gái", "con gai"] },
+  { label: "contrai", display: "Con trai", gloss: "CONTRAI", category: "family", practiceItemId: "practice-mvp-contrai", aliases: ["con trai"] },
+  { label: "emgai", display: "Em gái", gloss: "EMGAI", category: "family", practiceItemId: "practice-mvp-emgai", aliases: ["em gái", "em gai"] },
+  { label: "emtrai", display: "Em trai", gloss: "EMTRAI", category: "family", region: "Bắc", practiceItemId: "practice-mvp-emtrai", aliases: ["em trai bắc", "em trai bac", "em trai miền bắc"] },
+  { label: "emtrai_nt", display: "Em trai", gloss: "EMTRAI_NT", category: "family", region: "Nam/Trung", practiceItemId: "practice-mvp-emtrai-nt", aliases: ["em trai nam trung", "em trai miền nam miền trung"] },
+  { label: "me", display: "Mẹ", gloss: "ME", category: "family", practiceItemId: "practice-mvp-me", featured: true, aliases: ["mẹ", "má", "me", "ma"] },
+  { label: "buon", display: "Buồn thảm", gloss: "BUON", category: "emotion", practiceItemId: "practice-mvp-buon", featured: true, aliases: ["buồn", "buồn thảm", "buon tham"] },
+  { label: "hoangso", display: "Hoảng sợ", gloss: "HOANGSO", category: "emotion", practiceItemId: "practice-mvp-hoangso", aliases: ["hoảng sợ", "hoang so"] },
+  { label: "noigian", display: "Nổi giận", gloss: "NOIGIAN", category: "emotion", practiceItemId: "practice-mvp-noigian", aliases: ["nổi giận", "noi gian"] },
+  { label: "thuongyeu_bt", display: "Thương yêu", gloss: "THUONGYEU_BT", category: "emotion", region: "Bắc/Trung", practiceItemId: "practice-mvp-thuongyeu-bt", aliases: ["thương yêu bắc trung", "thuong yeu bac trung"] },
+  { label: "thuongyeu", display: "Thương yêu", gloss: "THUONGYEU", category: "emotion", region: "Nam", practiceItemId: "practice-mvp-thuongyeu", featured: true, aliases: ["thương yêu nam", "thuong yeu nam", "thương yêu"] },
+  { label: "vuive_bt", display: "Vui sướng", gloss: "VUIVE_BT", category: "emotion", region: "Bắc/Trung", practiceItemId: "practice-mvp-vuive-bt", aliases: ["vui sướng bắc trung", "vui suong bac trung", "vui vẻ bắc trung"] },
+  { label: "vuive", display: "Vui sướng", gloss: "VUIVE", category: "emotion", region: "Nam", practiceItemId: "practice-mvp-vuive", featured: true, aliases: ["vui sướng nam", "vui suong nam", "vui sướng", "vui vẻ"] },
+  { label: "banhmi_nt", display: "Bánh mì", gloss: "BANHMI_NT", category: "food", region: "Nam/Trung", practiceItemId: "practice-mvp-banhmi-nt", aliases: ["bánh mì nam trung", "banh mi nam trung"] },
+  { label: "banhmi", display: "Bánh mì", gloss: "BANHMI", category: "food", region: "Bắc", practiceItemId: "practice-mvp-banhmi", featured: true, aliases: ["bánh mì bắc", "banh mi bac", "bánh mì", "banh mi"] },
+  { label: "buncha", display: "Bún chả", gloss: "BUNCHA", category: "food", practiceItemId: "practice-mvp-buncha", aliases: ["bún chả", "bun cha"] },
+  { label: "bundau", display: "Bún đậu", gloss: "BUNDAU", category: "food", practiceItemId: "practice-mvp-bundau", aliases: ["bún đậu", "bun dau"] },
+  { label: "bunmam", display: "Bún mắm", gloss: "BUNMAM", category: "food", practiceItemId: "practice-mvp-bunmam", aliases: ["bún mắm", "bun mam"] },
+  { label: "bunngang", display: "Bún ngan", gloss: "BUNNGANG", category: "food", practiceItemId: "practice-mvp-bunngang", aliases: ["bún ngan", "bun ngan", "bún ngang"] },
+  { label: "bunoc", display: "Bún ốc", gloss: "BUNOC", category: "food", practiceItemId: "practice-mvp-bunoc", aliases: ["bún ốc", "bun oc"] },
+  { label: "chao", display: "Cháo", gloss: "CHAO", category: "food", practiceItemId: "practice-mvp-chao", aliases: ["cháo", "cháo sườn", "chao"] },
+  { label: "com", display: "Cơm", gloss: "COM", category: "food", practiceItemId: "practice-mvp-com", featured: true, aliases: ["cơm", "com"] },
+  { label: "pho_nt", display: "Phở", gloss: "PHO_NT", category: "food", region: "Nam/Trung", practiceItemId: "practice-mvp-pho-nt", aliases: ["phở nam trung", "pho nam trung"] },
+  { label: "pho", display: "Phở", gloss: "PHO", category: "food", region: "Bắc", practiceItemId: "practice-mvp-pho", featured: true, aliases: ["phở bắc", "pho bac", "phở", "pho"] },
 ];
 
 const AI_PREDICT_URL = `${getApiBaseUrl()}/signature-workflows/predict-landmarks`;
+const AI_FEATURE_BOUND = 10;
+
+function sanitizeFeature(value: number) {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+  return Math.max(-AI_FEATURE_BOUND, Math.min(AI_FEATURE_BOUND, value));
+}
+
+function sanitizeLandmarkSequence(sequence: number[][]) {
+  return sequence.map((frame) => frame.map(sanitizeFeature));
+}
+
+function sanitizeHandsDetectedFrames(value: number | undefined, sequenceLength: number) {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return undefined;
+  }
+  return Math.max(0, Math.min(sequenceLength, Math.trunc(value)));
+}
 
 export function normalizeAiLabel(value?: string | null) {
   if (!value) return "";
@@ -87,7 +125,13 @@ export function resolveAiPracticeTarget(text?: string | null) {
   const normalized = normalizeAiLabel(text);
   if (!normalized) return null;
   return AI_PRACTICE_TARGETS.find((target) => {
-    const keys = [target.label, target.gloss, target.display, ...(target.aliases || [])].map(normalizeAiLabel);
+    const keys = [
+      target.label,
+      target.gloss,
+      target.display,
+      target.region,
+      ...(target.aliases || []),
+    ].map(normalizeAiLabel);
     return keys.some((key) => key && (normalized === key || normalized.includes(key)));
   }) || null;
 }
@@ -96,6 +140,9 @@ export async function predictGestureLandmarks(
   sequence: number[][],
   options: { targetLabel?: string | null; handsDetectedFrames?: number; accessToken?: string } = {}
 ) {
+  const safeSequence = sanitizeLandmarkSequence(sequence);
+  const safeHandsDetectedFrames = sanitizeHandsDetectedFrames(options.handsDetectedFrames, safeSequence.length);
+
   const response = await fetch(AI_PREDICT_URL, {
     method: "POST",
     headers: {
@@ -104,9 +151,9 @@ export async function predictGestureLandmarks(
       ...(options.accessToken ? { Authorization: `Bearer ${options.accessToken}` } : {}),
     },
     body: JSON.stringify({
-      sequence,
+      sequence: safeSequence,
       target_label: options.targetLabel ? normalizeAiLabel(options.targetLabel) : undefined,
-      hands_detected_frames: options.handsDetectedFrames,
+      hands_detected_frames: safeHandsDetectedFrames,
     }),
   });
   const payload = await response.json().catch(() => null);

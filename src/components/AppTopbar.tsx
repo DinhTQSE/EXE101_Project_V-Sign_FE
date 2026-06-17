@@ -11,7 +11,7 @@ export default function AppTopbar({ onMenuClick }: AppTopbarProps) {
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <header className="sticky top-4 z-30 h-[72px] app-topbar flex items-center px-4 md:px-5 gap-3 shrink-0 mx-4 md:mx-6 mt-4">
+    <header className="relative z-30 mx-3 mt-3 flex h-16 shrink-0 items-center gap-2 app-topbar px-3 sm:gap-3 md:sticky md:top-4 md:mx-6 md:mt-4 md:h-[72px] md:px-5">
       {/* Mobile hamburger */}
       <button
         onClick={onMenuClick}
@@ -30,7 +30,7 @@ export default function AppTopbar({ onMenuClick }: AppTopbarProps) {
         />
       </div>
 
-      <div className="ml-auto flex items-center gap-1.5 sm:gap-2.5">
+      <div className="ml-auto flex min-w-0 items-center gap-1 sm:gap-2.5">
         {/* Language indicator */}
         <div className="hidden lg:flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-muted/75 border border-border/70 text-muted-foreground text-xs font-body font-bold shadow-sm">
           <Globe className="w-3.5 h-3.5" />
@@ -38,26 +38,26 @@ export default function AppTopbar({ onMenuClick }: AppTopbarProps) {
         </div>
 
         {/* XP counter */}
-        <div className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-card text-amber-700 dark:text-amber-400 text-xs font-body font-extrabold border border-amber-200/70 dark:border-amber-800/40 shadow-sm">
+        <div className="flex items-center gap-1.5 rounded-full bg-card px-2.5 py-2 text-xs font-body font-extrabold text-amber-700 shadow-sm border border-amber-200/70 dark:border-amber-800/40 dark:text-amber-400 sm:px-3.5">
           <Star className="w-3.5 h-3.5" />
           <span>{stats.xp}</span>
         </div>
 
         {/* Streak counter */}
-        <div className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-primary/10 text-primary text-xs font-body font-extrabold border border-primary/15 shadow-sm">
+        <div className="flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-2 text-xs font-body font-extrabold text-primary shadow-sm border border-primary/15 sm:px-3.5">
           <Flame className="w-3.5 h-3.5" />
           <span>{stats.streak}</span>
         </div>
 
         {/* Notification */}
-        <button className="p-2.5 rounded-full bg-muted/75 hover:bg-muted transition-colors relative">
+        <button className="hidden rounded-full bg-muted/75 p-2.5 transition-colors hover:bg-muted min-[360px]:inline-flex">
           <Bell className="w-5 h-5 text-muted-foreground" />
         </button>
 
         {/* Theme toggle (desktop) */}
         <button
           onClick={toggleTheme}
-          className="p-2.5 rounded-full bg-muted/75 hover:bg-muted transition-colors"
+          className="rounded-full bg-muted/75 p-2.5 transition-colors hover:bg-muted"
         >
           {theme === "dark" ? (
             <Sun className="w-5 h-5 text-foreground" />
@@ -69,7 +69,7 @@ export default function AppTopbar({ onMenuClick }: AppTopbarProps) {
         {/* Premium badge */}
         {isPremium && (
           <span className="hidden sm:inline-flex text-[10px] font-body font-bold bg-amber-100 text-amber-700 px-2.5 py-1 rounded-full dark:bg-amber-900/40 dark:text-amber-400">
-            Premium
+            Cao cấp
           </span>
         )}
       </div>
