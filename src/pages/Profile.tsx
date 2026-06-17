@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Flame, BookOpen, Clock, TrendingUp, Pencil, Camera, Save, X, Crown, Bell, KeyRound, WalletCards, Star } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import mascotImg from "@/assets/mascot.png";
+import PremiumModal from "@/components/PremiumModal";
 import {
   ChartContainer,
   ChartTooltip,
@@ -48,6 +49,7 @@ export default function Profile() {
   const [editBio, setEditBio] = useState(profile.bio);
   const [previewAvatar, setPreviewAvatar] = useState(profile.avatarUrl);
   const [profileMessage, setProfileMessage] = useState("");
+  const [premiumOpen, setPremiumOpen] = useState(false);
   const [securityMessage, setSecurityMessage] = useState("");
   const [securityError, setSecurityError] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
@@ -273,14 +275,24 @@ export default function Profile() {
             <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${isPremium ? "bg-amber-100" : "bg-muted"}`}>
               <Crown className={`w-7 h-7 ${isPremium ? "text-amber-500" : "text-muted-foreground"}`} />
             </div>
-            <div>
-              <span className="font-display font-bold text-foreground block">Gói cước</span>
-              <span className={`text-xs font-body font-semibold px-3 py-1 rounded-full inline-block mt-1 ${isPremium ? "bg-amber-100 text-amber-700" : "bg-muted text-muted-foreground"}`}>
-                {isPremium ? "Cao cấp" : "Miễn phí"}
-              </span>
-              <span className="text-xs text-muted-foreground block mt-1">
-                {subscription.status === "ACTIVE" ? `Còn ${subscription.remainingDays} ngày` : "Chưa kích hoạt"}
-              </span>
+            <div className="flex-1 flex justify-between items-center min-w-0">
+              <div>
+                <span className="font-display font-bold text-foreground block">Gói cước</span>
+                <span className={`text-xs font-body font-semibold px-3 py-1 rounded-full inline-block mt-1 ${isPremium ? "bg-amber-100 text-amber-700" : "bg-muted text-muted-foreground"}`}>
+                  {isPremium ? "Cao cấp" : "Miễn phí"}
+                </span>
+                <span className="text-xs text-muted-foreground block mt-1">
+                  {subscription.status === "ACTIVE" ? `Còn ${subscription.remainingDays} ngày` : "Chưa kích hoạt"}
+                </span>
+              </div>
+              {!isPremium && (
+                <button
+                  onClick={() => setPremiumOpen(true)}
+                  className="px-4 py-2 text-xs font-display font-bold rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white hover:from-amber-600 hover:to-amber-700 transition-colors shadow-sm shadow-amber-500/10 shrink-0"
+                >
+                  Nâng cấp ngay
+                </button>
+              )}
             </div>
           </div>
 
@@ -335,6 +347,7 @@ export default function Profile() {
           </div>
         </div>
       </div>
+      <PremiumModal open={premiumOpen} onClose={() => setPremiumOpen(false)} />
     </div>
   );
 }

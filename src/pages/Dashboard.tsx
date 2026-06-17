@@ -169,6 +169,20 @@ export default function Dashboard({ defaultTab = "courses" }: DashboardProps) {
         </nav>
 
         <div className="p-2 border-t border-border space-y-1">
+          {!isPremium && (
+            <button
+              onClick={() => setPremiumOpen(true)}
+              title={!sidebarOpen ? "Nâng cấp Premium" : undefined}
+              className={`w-full flex items-center rounded-2xl font-body font-bold text-sm bg-gradient-to-r from-amber-500 to-amber-600 text-white hover:from-amber-600 hover:to-amber-700 transition-all duration-300 shadow-md shadow-amber-500/10 ${
+                sidebarOpen ? "gap-3 justify-start px-4 py-3" : "justify-center px-0 py-3"
+              }`}
+            >
+              <Crown className="w-5 h-5 shrink-0 animate-pulse text-amber-100" />
+              <span className={`whitespace-nowrap transition-all duration-300 ease-in-out ${sidebarOpen ? "opacity-100 w-auto" : "opacity-0 w-0 overflow-hidden"}`}>
+                Nâng cấp Premium
+              </span>
+            </button>
+          )}
           <button onClick={toggleTheme}
             title={!sidebarOpen ? (theme === "dark" ? "Chế độ sáng" : "Chế độ tối") : undefined}
             className={`w-full flex items-center rounded-2xl text-foreground font-body font-medium text-sm hover:bg-muted transition-all duration-300 ease-in-out ${
@@ -258,6 +272,18 @@ export default function Dashboard({ defaultTab = "courses" }: DashboardProps) {
                 })}
               </nav>
               <div className="p-3 border-t border-border space-y-1">
+                {!isPremium && (
+                  <button
+                    onClick={() => {
+                      setPremiumOpen(true);
+                      setMobileDrawerOpen(false);
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl font-body font-bold text-sm bg-gradient-to-r from-amber-500 to-amber-600 text-white hover:from-amber-600 hover:to-amber-700 transition-colors shadow-md shadow-amber-500/10"
+                  >
+                    <Crown className="w-5 h-5 animate-pulse text-amber-100" />
+                    <span>Nâng cấp Premium</span>
+                  </button>
+                )}
                 <button onClick={toggleTheme}
                   className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-foreground font-body font-medium text-sm hover:bg-muted transition-colors">
                   {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
