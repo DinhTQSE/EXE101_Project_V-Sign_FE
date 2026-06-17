@@ -11,9 +11,11 @@ import {
   Sparkles,
   Users,
   Utensils,
+  Video,
   type LucideIcon,
 } from "lucide-react";
 import AiCameraPractice from "@/components/AiCameraPractice";
+import VideoPlayer from "@/components/VideoPlayer";
 import {
   AI_PRACTICE_CATEGORIES,
   AI_PRACTICE_TARGETS,
@@ -22,6 +24,7 @@ import {
   normalizeAiLabel,
   resolveAiPracticeTarget,
 } from "@/services/aiRecognition";
+import { dictionaryApi, DictionaryEntryDto } from "@/services/vsignApi";
 
 const CATEGORY_ICONS: Record<AiPracticeFilter, LucideIcon> = {
   recommended: Sparkles,
@@ -29,6 +32,8 @@ const CATEGORY_ICONS: Record<AiPracticeFilter, LucideIcon> = {
   emotion: Smile,
   food: Utensils,
 };
+
+let dictionaryVideoEntriesCache: DictionaryEntryDto[] | null = null;
 
 function findTargetIndex(target?: AiPracticeTarget | null) {
   if (!target) return 0;
@@ -41,6 +46,41 @@ function targetMeta(target: AiPracticeTarget) {
   return [category?.label, target.region].filter(Boolean).join(" · ");
 }
 
+function findMatchingVideoEntry(target: AiPracticeTarget, entries: DictionaryEntryDto[]) {
+  const keys = [
+    target.display,
+    target.gloss,
+    target.label,
+    target.region,
+    ...(target.aliases || []),
+  ]
+    .map(normalizeAiLabel)
+    .filter(Boolean);
+
+  const withVideo = entries.filter((entry) => Boolean(entry.videoUrl));
+  return (
+    withVideo.find((entry) => {
+      const fields = [entry.word, entry.keyword, entry.description].map(normalizeAiLabel).filter(Boolean);
+      return fields.some((field) => keys.some((key) => field === key || field.includes(key) || key.includes(field)));
+    }) || withVideo[0] || null
+  );
+}
+
+async function loadSampleVideoEntry(target: AiPracticeTarget) {
+  const directEntries = await dictionaryApi
+    .listEntries({ keyword: target.display, size: 20 })
+    .catch(() => []);
+  const directMatch = findMatchingVideoEntry(target, directEntries);
+  if (directMatch) return directMatch;
+
+  if (!dictionaryVideoEntriesCache) {
+    const allEntries = await dictionaryApi.listEntries({ size: 100 }).catch(() => []);
+    dictionaryVideoEntriesCache = allEntries.filter((entry) => Boolean(entry.videoUrl));
+  }
+
+  return findMatchingVideoEntry(target, dictionaryVideoEntriesCache);
+}
+
 export default function PracticeView() {
   const location = useLocation();
   const practiceSign = (location.state as { practiceSign?: string } | null)?.practiceSign;
@@ -49,6 +89,8 @@ export default function PracticeView() {
   const [activeCategory, setActiveCategory] = useState<AiPracticeFilter>(preferredTarget?.category || "recommended");
   const [query, setQuery] = useState("");
   const [expanded, setExpanded] = useState(false);
+  const [sampleEntry, setSampleEntry] = useState<DictionaryEntryDto | null>(null);
+  const [sampleLoading, setSampleLoading] = useState(false);
   const current = AI_PRACTICE_TARGETS[targetIndex] || AI_PRACTICE_TARGETS[0];
 
   useEffect(() => {
@@ -56,6 +98,28 @@ export default function PracticeView() {
     setTargetIndex(findTargetIndex(preferredTarget));
     setActiveCategory(preferredTarget.category);
   }, [preferredTarget]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setSampleLoading(true);
+    setSampleEntry(null);
+
+    loadSampleVideoEntry(current)
+      .then((entry) => {
+        if (cancelled) return;
+        setSampleEntry(entry);
+      })
+      .catch(() => {
+        if (!cancelled) setSampleEntry(null);
+      })
+      .finally(() => {
+        if (!cancelled) setSampleLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [current]);
 
   const categoryInfo = AI_PRACTICE_CATEGORIES.find((item) => item.id === activeCategory) || AI_PRACTICE_CATEGORIES[0];
   const filteredTargets = useMemo(() => {
@@ -216,7 +280,7 @@ export default function PracticeView() {
       </div>
 
       <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr] md:gap-6 mb-6">
-        <div className="card-pop p-4 md:p-6 flex flex-col justify-between min-h-[240px] md:min-h-[320px]">
+        <div className="card-pop p-4 md:p-6 min-h-[240px] md:min-h-[320px]">
           <div>
             <p className="text-xs font-body text-muted-foreground mb-3 uppercase tracking-wide">
               Bài đang luyện
@@ -231,6 +295,42 @@ export default function PracticeView() {
               hãy luyện đúng biến thể đang chọn.
             </p>
           </div>
+
+          <div className="mt-5">
+            <div className="mb-2 flex items-center justify-between gap-3">
+              <p className="font-display text-base font-extrabold text-foreground">Video mẫu</p>
+              {sampleEntry?.word && (
+                <span className="max-w-[55%] truncate rounded-full bg-primary/10 px-3 py-1 text-[11px] font-bold text-primary">
+                  {sampleEntry.word}
+                </span>
+              )}
+            </div>
+
+            {sampleLoading ? (
+              <div className="aspect-video w-full rounded-[22px] border border-border bg-muted/45 flex items-center justify-center text-sm text-muted-foreground">
+                Đang tải video mẫu...
+              </div>
+            ) : sampleEntry?.videoUrl ? (
+              <VideoPlayer
+                src={sampleEntry.videoUrl}
+                label={`Video mẫu: ${sampleEntry.word || current.display}`}
+                className="aspect-video w-full rounded-[22px] overflow-hidden bg-black shadow-xl ring-1 ring-border/80"
+                videoClassName="w-full h-full object-contain"
+                autoPlay
+                loop
+                muted
+                controls
+                preload="metadata"
+              />
+            ) : (
+              <div className="aspect-video w-full rounded-[22px] border border-dashed border-border bg-muted/45 flex flex-col items-center justify-center gap-2 px-5 text-center text-muted-foreground">
+                <Video className="h-8 w-8 text-primary" />
+                <p className="font-display font-bold text-foreground">Chưa có video mẫu</p>
+                <p className="text-xs font-body">Bạn vẫn có thể luyện trực tiếp bằng camera ở khung bên phải.</p>
+              </div>
+            )}
+          </div>
+
           <button
             onClick={cycleTarget}
             className="mt-5 inline-flex items-center justify-center gap-2 rounded-[18px] border border-border bg-card px-4 py-3 text-sm font-body font-bold text-foreground hover:bg-muted transition-colors"
