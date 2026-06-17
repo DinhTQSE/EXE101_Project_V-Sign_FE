@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { CheckCircle2, XCircle, AlertCircle, Loader2, ArrowRight, Home } from "lucide-react";
+import { CheckCircle2, XCircle, AlertCircle, Loader2, ArrowRight, Home, Mail } from "lucide-react";
+import { toast } from "sonner";
 import { paymentService } from "@/services/paymentService";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -9,7 +10,7 @@ export const PaymentResult: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { refreshUser, accessToken } = useAuth();
+  const { refreshUser, accessToken, profile } = useAuth();
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -48,6 +49,10 @@ export const PaymentResult: React.FC = () => {
         // If payment is successfully verified as PAID, refresh profile
         if (res.resolvedStatus === "PAID") {
           await refreshUser();
+          toast.success(
+            "🎉 Thanh toán thành công! Kiểm tra email của bạn để xem hóa đơn xác nhận.",
+            { duration: 6000 }
+          );
         }
       } catch (err: unknown) {
         console.error("Error syncing payment status:", err);
@@ -171,6 +176,20 @@ export const PaymentResult: React.FC = () => {
               <div className="flex justify-between">
                 <span>Trạng thái:</span>
                 <span className="font-bold text-[hsl(var(--success))]">Đã thanh toán</span>
+              </div>
+            </div>
+
+            {/* Email confirmation hint */}
+            <div className="flex items-start gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-4 text-left">
+              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                <Mail className="w-4 h-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-body font-semibold text-foreground">Hóa đơn đã được gửi qua email</p>
+                <p className="text-xs text-muted-foreground font-body mt-0.5 leading-relaxed">
+                  Xác nhận đã gửi đến <strong>{profile.email || "email của bạn"}</strong>.
+                  Vui lòng kiểm tra hộp thư (kể cả thư mục <em>Spam</em> nếu không thấy).
+                </p>
               </div>
             </div>
 
