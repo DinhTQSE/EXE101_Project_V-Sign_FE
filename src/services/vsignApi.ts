@@ -21,6 +21,12 @@ export interface AuthUserDto {
   bio?: string;
   role?: UserRole;
   accountType: AccountType;
+  subscription?: {
+    planType: string;
+    status: string;
+    startDate: string;
+    endDate: string;
+  };
 }
 
 export interface AuthSessionDto {
@@ -523,6 +529,7 @@ function toAuthUser(raw: unknown): AuthUserDto {
   const record = asRecord(raw);
   const email = asString(record.email);
   const displayName = asString(record.displayName, asString(record.fullName, email));
+  const subRecord = record.subscription ? asRecord(record.subscription) : undefined;
   return {
     id: String(record.id || ""),
     email,
@@ -532,6 +539,12 @@ function toAuthUser(raw: unknown): AuthUserDto {
     bio: asString(record.bio),
     role: normalizeRole(asString(record.role, "USER")),
     accountType: normalizeAccountType(asString(record.accountType)),
+    subscription: subRecord ? {
+      planType: asString(subRecord.planType, "FREE"),
+      status: asString(subRecord.status, "INACTIVE"),
+      startDate: asString(subRecord.startDate),
+      endDate: asString(subRecord.endDate),
+    } : undefined,
   };
 }
 

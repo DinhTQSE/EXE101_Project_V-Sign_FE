@@ -92,6 +92,7 @@ interface AuthContextType {
   setReminderTime: (t: string) => void;
   lastReward: RewardEvent | null;
   clearLastReward: () => void;
+  refreshUser: () => Promise<void>;
 }
 
 const DEFAULT_STATS: LearningStats = {
@@ -260,9 +261,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!USE_BACKEND || !token) return;
 
     try {
-      const [user, subscriptionSummary, payments, gamification] = await Promise.all([
+      const [user, payments, gamification] = await Promise.all([
         authApi.getMe(token),
-        paymentApi.getSubscription(token),
         paymentApi.getPaymentHistory(token),
         gamificationApi.getSummary(token),
       ]);
@@ -270,8 +270,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const nextProfile = userToProfile(user);
       setProfile(nextProfile);
       setUserName(nextProfile.displayName);
-      setIsPremiumState(isActiveSubscription(subscriptionSummary));
-      setSubscription(subscriptionSummary);
+      
+      const isActive = user.subscription?.status === "ACTIVE";
+      const planType = user.subscription?.planType;
+      const isPremiumUser = isActive && (planType === "PLUS" || planType === "PRO");
+      
+      const remainingDays = user.subscription?.endDate
+        ? Math.max(0, Math.ceil((new Date(user.subscription.endDate).getTime() - Date.now()) / 86400000))
+        : 0;
+
+      const subSummary: SubscriptionSummary = {
+        planType: isPremiumUser ? (planType === "PRO" ? "YEARLY" : "MONTHLY") : null,
+        status: isPremiumUser ? "ACTIVE" : "FREE",
+        startedAt: user.subscription?.startDate,
+        expiresAt: user.subscription?.endDate,
+        remainingDays,
+      };
+
+      setIsPremiumState(isPremiumUser);
+      setSubscription(subSummary);
       setPaymentHistory(payments);
       applyGamificationSummary(gamification);
     } catch {
@@ -465,6 +482,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const clearLastReward = () => setLastReward(null);
 
+  const refreshUser = useCallback(async () => {
+    if (accessToken) {
+      await hydrateBackendState(accessToken);
+    }
+  }, [accessToken, hydrateBackendState]);
+
   return (
     <AuthContext.Provider value={{
       accessToken,
@@ -475,6 +498,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isPremium, setPremium, subscription, paymentHistory, layoutMode,
       reminderEnabled, setReminderEnabled, reminderTime, setReminderTime,
       lastReward, clearLastReward,
+      refreshUser,
     }}>
       {children}
     </AuthContext.Provider>

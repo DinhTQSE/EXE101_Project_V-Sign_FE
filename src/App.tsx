@@ -22,6 +22,7 @@ const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const Profile = lazy(() => import("./pages/Profile"));
 const AssessmentExam = lazy(() => import("./pages/AssessmentExam"));
 const PracticeView = lazy(() => import("./components/PracticeView"));
+const PaymentResult = lazy(() => import("./pages/PaymentResult"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 
 function RouteFallback() {
@@ -79,6 +80,8 @@ function AppRoutes() {
       <Route path="/assessment" element={<AuthenticatedRoute><AssessmentExam /></AuthenticatedRoute>} />
       <Route path="/leaderboard" element={<AuthenticatedRoute><Leaderboard /></AuthenticatedRoute>} />
       <Route path="/profile" element={<AuthenticatedRoute><Profile /></AuthenticatedRoute>} />
+      <Route path="/payment/result" element={<AuthenticatedRoute><PaymentResult /></AuthenticatedRoute>} />
+      <Route path="/payment/cancel" element={<AuthenticatedRoute><PaymentResult /></AuthenticatedRoute>} />
       <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
 
       {/* Legacy redirects */}
