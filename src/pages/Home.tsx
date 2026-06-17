@@ -55,19 +55,18 @@ export default function Home() {
   ];
 
   return (
-    /* flex-1 + min-h-0 fill the height DashboardLayout propagates */
-    <div className="flex-1 min-h-0 w-full grid grid-cols-1 lg:grid-cols-5 gap-4">
+    <div className="w-full min-w-0 grid grid-cols-1 gap-4 xl:grid-cols-5">
 
       {/* ═══ LEFT COLUMN (3/5) — hero · stats · daily progress ═══ */}
-      <div className="col-span-1 lg:col-span-3 flex flex-col gap-3 min-h-0">
+      <div className="min-w-0 xl:col-span-3 flex flex-col gap-3">
 
         {/* Hero banner */}
-        <div className="hero-panel p-4 md:p-5 flex items-center gap-4 overflow-hidden">
+        <div className="hero-panel flex items-center gap-3 overflow-hidden p-4 md:gap-4 md:p-5">
           <div className="flex-1 min-w-0">
             <span className="inline-flex items-center gap-1.5 mb-2 rounded-full bg-white/92 px-3 py-1 text-xs font-extrabold text-foreground shadow-sm">
               <Sparkles className="w-3 h-3 text-primary" /> Hôm nay học gì?
             </span>
-            <h1 className="font-display font-extrabold text-2xl md:text-3xl text-white leading-tight mb-1 truncate">
+            <h1 className="font-display font-extrabold text-2xl md:text-3xl text-white leading-tight mb-1 line-clamp-2">
               Chào mừng trở lại, {displayName}! 👋
             </h1>
             <p className="font-body text-sm text-white/85">
@@ -123,7 +122,7 @@ export default function Home() {
             </div>
             <div>
               <div className="flex items-center justify-between text-xs font-body text-muted-foreground mb-1">
-                <span>Tiến độ lên level {level + 1}</span>
+                <span>Tiến độ lên cấp {level + 1}</span>
                 <span>Còn {xpToNext} XP</span>
               </div>
               <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -156,18 +155,18 @@ export default function Home() {
       </div>
 
       {/* ═══ RIGHT COLUMN (2/5) — quick actions · continue learning ═══ */}
-      <div className="col-span-1 lg:col-span-2 flex flex-col gap-3 min-h-0">
+      <div className="min-w-0 xl:col-span-2 flex flex-col gap-3">
 
         {/* Quick actions */}
         <div>
           <h2 className="font-display font-extrabold text-lg text-foreground mb-2">Bắt đầu nhanh</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-2">
             {quickActions.map((action, i) => (
               <motion.button
                 key={action.path}
                 initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 + i * 0.04 }}
                 onClick={() => navigate(action.path)}
-                className="card-pop p-4 flex flex-col items-center text-center group hover:-translate-y-1 transition-all cursor-pointer"
+                className="card-pop flex min-h-[132px] flex-col items-center justify-center p-3 text-center transition-all group hover:-translate-y-1 cursor-pointer sm:p-4"
               >
                 <div className={`icon-tile !w-11 !h-11 mb-2 group-hover:scale-110 transition-transform ${action.color}`}>
                   <action.icon className="w-5 h-5" />
@@ -180,7 +179,7 @@ export default function Home() {
         </div>
 
         {/* Continue learning */}
-        <div className="flex-1 min-h-0 flex flex-col">
+        <div className="flex flex-col">
           <div className="flex items-center justify-between mb-2">
             <h2 className="font-display font-extrabold text-lg text-foreground">Tiếp tục khóa học</h2>
             <button onClick={() => navigate("/courses")}
@@ -189,7 +188,7 @@ export default function Home() {
             </button>
           </div>
 
-          <div className="flex flex-col gap-3 flex-1 min-h-0 overflow-y-auto">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
             {recentUnits.length === 0 ? (
               <div className="card-pop p-4 flex items-center gap-3 text-muted-foreground">
                 <BookOpen className="w-5 h-5 shrink-0" />
@@ -200,7 +199,7 @@ export default function Home() {
                 key={unit.unitId}
                 initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 + index * 0.04 }}
                 onClick={() => navigate("/courses")}
-                className="card-pop p-4 flex items-center gap-3 text-left hover:-translate-y-0.5 transition-all cursor-pointer shrink-0"
+                className="card-pop flex items-center gap-3 p-4 text-left transition-all hover:-translate-y-0.5 cursor-pointer"
               >
                 <div className="icon-tile shrink-0" style={{ background: "var(--gradient-primary)" }}>
                   <BookOpen className="w-5 h-5 text-primary-foreground" />

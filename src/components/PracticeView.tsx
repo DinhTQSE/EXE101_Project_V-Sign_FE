@@ -95,13 +95,13 @@ export default function PracticeView() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto w-full">
-      <div className="hero-panel p-5 md:p-7 flex items-center gap-4 mb-6">
-        <div className="icon-tile shrink-0" style={{ background: "var(--gradient-primary)" }}>
-          <Cpu className="w-7 h-7 text-primary-foreground" />
+    <div className="max-w-6xl mx-auto w-full min-w-0">
+      <div className="hero-panel p-4 md:p-7 flex items-start md:items-center gap-3 md:gap-4 mb-5 md:mb-6">
+        <div className="icon-tile !h-12 !w-12 shrink-0 md:!h-14 md:!w-14" style={{ background: "var(--gradient-primary)" }}>
+          <Cpu className="w-6 h-6 md:w-7 md:h-7 text-primary-foreground" />
         </div>
         <div className="min-w-0">
-          <h2 className="font-display font-extrabold text-3xl md:text-4xl text-white leading-tight">
+          <h2 className="font-display font-extrabold text-2xl md:text-4xl text-white leading-tight">
             Nhận diện AI
           </h2>
           <p className="font-body text-sm md:text-base text-white/85">
@@ -110,13 +110,13 @@ export default function PracticeView() {
         </div>
       </div>
 
-      <div className="card-pop p-4 md:p-5 mb-6">
+      <div className="card-pop p-4 md:p-5 mb-5 md:mb-6">
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-5">
           <div>
             <p className="text-xs font-body text-muted-foreground mb-1 uppercase tracking-wide">
               Chọn ký hiệu luyện tập
             </p>
-            <h3 className="font-display font-extrabold text-2xl text-foreground">
+            <h3 className="font-display font-extrabold text-xl md:text-2xl text-foreground">
               Gợi ý theo chủ đề
             </h3>
             <p className="font-body text-sm text-muted-foreground">
@@ -161,7 +161,7 @@ export default function PracticeView() {
           })}
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {visibleTargets.map((target) => {
             const selected = target.label === current.label;
             const Icon = CATEGORY_ICONS[target.category];
@@ -169,7 +169,7 @@ export default function PracticeView() {
               <button
                 key={target.label}
                 onClick={() => selectTarget(target)}
-                className={`rounded-[22px] border p-4 text-left transition-all ${
+                className={`rounded-[20px] border p-3 text-left transition-all md:p-4 ${
                   selected
                     ? "border-primary bg-primary/10 shadow-md"
                     : "border-border bg-card hover:border-primary/50 hover:bg-primary/5"
@@ -215,13 +215,13 @@ export default function PracticeView() {
         )}
       </div>
 
-      <div className="grid lg:grid-cols-[0.9fr_1.1fr] gap-6 mb-6">
-        <div className="card-pop p-6 flex flex-col justify-between min-h-[320px]">
+      <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr] md:gap-6 mb-6">
+        <div className="card-pop p-4 md:p-6 flex flex-col justify-between min-h-[240px] md:min-h-[320px]">
           <div>
             <p className="text-xs font-body text-muted-foreground mb-3 uppercase tracking-wide">
               Bài đang luyện
             </p>
-            <div className="coral-box w-full mb-4">{current.display}</div>
+            <div className="coral-box w-full mb-4 text-2xl md:text-3xl">{current.display}</div>
             <div className="flex flex-wrap gap-2 mb-4">
               <span className="chip-soft text-muted-foreground">{targetMeta(current)}</span>
               <span className="chip-soft text-muted-foreground">{current.gloss}</span>

@@ -847,7 +847,7 @@ function LessonsTimeline({
   }, [loadLessons]);
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="w-full max-w-3xl mx-auto">
       <button onClick={onBack} className="flex items-center gap-1 text-sm text-muted-foreground font-body hover:text-foreground transition-colors mb-6">
         <ChevronLeft className="w-4 h-4" /> {unitTitle}
       </button>
@@ -873,7 +873,7 @@ function LessonsTimeline({
           <XCircle className="w-10 h-10 text-destructive mx-auto mb-3" />
           <p className="font-body text-sm text-muted-foreground mb-5">{error}</p>
           <button onClick={() => void loadLessons()} className="btn-primary-gradient inline-flex items-center gap-2">
-            <RotateCcw className="w-4 h-4" /> Táº£i láº¡i
+            <RotateCcw className="w-4 h-4" /> Tải lại
           </button>
         </div>
       ) : (
@@ -889,9 +889,9 @@ function LessonsTimeline({
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: idx * 0.04 }}
-                className="relative pl-14"
+                className="relative pl-10 sm:pl-14"
               >
-                <div className={`absolute left-4 top-4 w-5 h-5 rounded-full border-2 flex items-center justify-center z-10 ${
+                <div className={`absolute left-2 top-4 w-5 h-5 rounded-full border-2 flex items-center justify-center z-10 sm:left-4 ${
                   isDone ? "bg-[hsl(var(--success))] border-[hsl(var(--success))]"
                     : isLocked ? "bg-muted border-muted-foreground/30"
                     : "bg-primary border-primary"
@@ -909,7 +909,7 @@ function LessonsTimeline({
                     }
                     setActiveLesson(lesson);
                   }}
-                  className={`w-full card-pastel p-4 flex items-center gap-4 text-left transition-all ${
+                  className={`w-full card-pastel p-4 flex flex-col gap-3 text-left transition-all min-[430px]:flex-row min-[430px]:items-center ${
                     isLocked ? "opacity-60 hover:ring-2 hover:ring-amber-300" : "hover:shadow-md hover:ring-2 hover:ring-primary/20"
                   }`}
                 >
@@ -919,7 +919,7 @@ function LessonsTimeline({
                     {isLocked ? <Lock className="w-5 h-5 text-muted-foreground" /> : <BookOpen className="w-5 h-5 text-primary" />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-display font-bold text-foreground text-sm flex items-center gap-2">
+                    <h4 className="font-display font-bold text-foreground text-sm flex flex-wrap items-center gap-2">
                       {lesson.title}
                       {lesson.requiresPremium && (
                         <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-body">Cao cấp</span>
@@ -930,13 +930,15 @@ function LessonsTimeline({
                       <Clock className="w-3 h-3" /> {lessonDuration(lesson.durationSeconds)} · {statusText(lesson.status)}
                     </p>
                   </div>
-                  {isDone ? (
-                    <span className="text-xs text-[hsl(var(--success))] font-body font-semibold shrink-0">Hoàn thành</span>
-                  ) : isLocked ? (
-                    <span className="text-xs text-amber-700 font-body font-semibold shrink-0">Cao cấp</span>
-                  ) : (
-                    <Play className="w-4 h-4 text-primary shrink-0" />
-                  )}
+                  <div className="self-start min-[430px]:self-center">
+                    {isDone ? (
+                      <span className="text-xs text-[hsl(var(--success))] font-body font-semibold shrink-0">Hoàn thành</span>
+                    ) : isLocked ? (
+                      <span className="text-xs text-amber-700 font-body font-semibold shrink-0">Cao cấp</span>
+                    ) : (
+                      <Play className="w-4 h-4 text-primary shrink-0" />
+                    )}
+                  </div>
                 </button>
               </motion.div>
             );
@@ -1020,17 +1022,17 @@ function ChaptersList({
   }
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="w-full max-w-3xl mx-auto">
       <button onClick={onBack} className="flex items-center gap-1 text-sm text-muted-foreground font-body hover:text-foreground transition-colors mb-6">
         <ChevronLeft className="w-4 h-4" /> Tất cả khóa học
       </button>
 
-      <div className="flex items-center gap-4 mb-8">
+      <div className="flex items-start gap-4 mb-8">
         <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0" style={{ background: "var(--gradient-primary)" }}>
           <BookOpen className="w-7 h-7 text-primary-foreground" />
         </div>
         <div>
-          <h2 className="font-display font-bold text-2xl text-foreground">{unit.title}</h2>
+          <h2 className="font-display font-bold text-2xl text-foreground leading-tight">{unit.title}</h2>
           <p className="text-muted-foreground font-body text-sm">
             {productionDescription(unit.description, unitFallbackDescription(unit))}
           </p>
@@ -1046,7 +1048,7 @@ function ChaptersList({
           <XCircle className="w-10 h-10 text-destructive mx-auto mb-3" />
           <p className="font-body text-sm text-muted-foreground mb-5">{error}</p>
           <button onClick={() => void loadChapters()} className="btn-primary-gradient inline-flex items-center gap-2">
-            <RotateCcw className="w-4 h-4" /> Táº£i láº¡i
+            <RotateCcw className="w-4 h-4" /> Tải lại
           </button>
         </div>
       ) : (
@@ -1062,9 +1064,9 @@ function ChaptersList({
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.05 }}
-                className="relative pl-14"
+                className="relative pl-10 sm:pl-14"
               >
-                <div className={`absolute left-4 top-5 w-5 h-5 rounded-full border-2 z-10 flex items-center justify-center ${
+                <div className={`absolute left-2 top-5 w-5 h-5 rounded-full border-2 z-10 flex items-center justify-center sm:left-4 ${
                   progress.percent === 100 ? "bg-[hsl(var(--success))] border-[hsl(var(--success))]"
                     : isLocked ? "bg-muted border-muted-foreground/30"
                     : "bg-primary border-primary"
@@ -1086,9 +1088,9 @@ function ChaptersList({
                     isLocked ? "opacity-60 hover:ring-2 hover:ring-amber-300" : "hover:shadow-md hover:ring-2 hover:ring-primary/20"
                   }`}
                 >
-                  <div className="flex items-center justify-between mb-3 gap-4">
+                  <div className="flex items-start justify-between mb-3 gap-3">
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex flex-wrap items-center gap-2 mb-1">
                         <h3 className="font-display font-bold text-foreground text-base">{chapter.title}</h3>
                         {chapter.requiresPremium && (
                           <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-body font-bold flex items-center gap-1">
@@ -1227,7 +1229,7 @@ export default function VocabularyPack() {
   return (
     <div className="w-full max-w-5xl mx-auto">
       {/* Header with mascot */}
-      <div className="hero-panel p-5 md:p-7 flex items-center gap-5 mb-6 overflow-hidden">
+      <div className="hero-panel p-4 md:p-7 flex items-center gap-4 md:gap-5 mb-5 md:mb-6 overflow-hidden">
         <motion.img
           src={mascotImg}
           alt="Mascot"
@@ -1235,7 +1237,7 @@ export default function VocabularyPack() {
           animate={{ y: [0, -5, 0] }}
           transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
         />
-        <div className="speech-bubble flex-1 min-w-0">
+        <div className="speech-bubble flex-1 min-w-0 p-4 md:p-5">
           <p className={`font-display text-foreground ${isChildMode ? "text-xl font-extrabold" : "text-lg font-extrabold"}`}>
             {isChildMode
               ? `Chào bạn nhỏ ${userName || "ơi"}! Chọn một chủ đề để bắt đầu học nhé.`
@@ -1280,11 +1282,11 @@ export default function VocabularyPack() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.04 }}
               onClick={() => setState({ view: "unit", unitId: unit.unitId })}
-              className="w-full card-pop p-5 md:p-6 text-left cursor-pointer hover:-translate-y-0.5 hover:ring-2 hover:ring-primary/20 transition-all"
+              className="w-full card-pop p-4 md:p-6 text-left cursor-pointer hover:-translate-y-0.5 hover:ring-2 hover:ring-primary/20 transition-all"
             >
-              <div className="flex items-center gap-4">
-                <div className="icon-tile shrink-0" style={{ background: "var(--gradient-primary)" }}>
-                  <UnitIcon className="w-7 h-7 text-primary-foreground" />
+              <div className="flex items-start gap-3 md:gap-4">
+                <div className="icon-tile !h-12 !w-12 shrink-0 md:!h-14 md:!w-14" style={{ background: "var(--gradient-primary)" }}>
+                  <UnitIcon className="w-6 h-6 md:w-7 md:h-7 text-primary-foreground" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -1295,11 +1297,11 @@ export default function VocabularyPack() {
                       {progress.chaptersTotal || unit.chapterCount} chương
                     </span>
                   </div>
-                  <h3 className={`font-display font-extrabold text-foreground ${isChildMode ? "text-xl" : "text-lg"}`}>{unit.title}</h3>
+                  <h3 className={`font-display font-extrabold text-foreground leading-tight ${isChildMode ? "text-xl" : "text-lg"}`}>{unit.title}</h3>
                   <p className="text-xs text-muted-foreground font-body mt-0.5">
                     {productionDescription(unit.description, unitFallbackDescription(unit))}
                   </p>
-                  <div className="flex items-center gap-3 mt-2">
+                  <div className="flex flex-col gap-2 mt-2 min-[430px]:flex-row min-[430px]:items-center min-[430px]:gap-3">
                     <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden max-w-xs">
                       <div className="h-full rounded-full transition-all duration-500" style={{ width: `${progress.percent}%`, background: "var(--gradient-primary)" }} />
                     </div>
@@ -1308,7 +1310,7 @@ export default function VocabularyPack() {
                     </span>
                   </div>
                 </div>
-                <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
+                <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0 mt-3" />
               </div>
             </motion.button>
           );
@@ -1317,7 +1319,7 @@ export default function VocabularyPack() {
 
       {/* Pagination controls */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-3 mt-6">
+        <div className="flex flex-wrap items-center justify-center gap-3 mt-6">
           <button
             disabled={currentPage === 1}
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}

@@ -19,7 +19,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { lastReward, clearLastReward, stats } = useAuth();
 
   return (
-    <div className="min-h-screen p-0 md:p-4">
+    <div className="min-h-screen overflow-x-hidden p-0 md:p-4">
       {/* Desktop Sidebar — fixed */}
       <DesktopSidebar collapsed={collapsed} onToggle={toggleCollapsed} />
 
@@ -28,7 +28,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
       {/* Main area — offset by sidebar width */}
       <div
-        className={`flex flex-col min-h-screen transition-all duration-300 ${
+        className={`flex min-h-screen min-w-0 flex-col transition-all duration-300 ${
           collapsed ? "md:ml-[92px]" : "md:ml-[288px]"
         }`}
       >
@@ -36,8 +36,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         <AppTopbar onMenuClick={() => setMobileDrawerOpen(true)} />
 
         {/* Content */}
-        <main className="flex-1 min-h-0 overflow-y-auto pb-20 md:pb-6 flex flex-col">
-          <div className="flex-1 min-h-0 max-w-[1380px] w-full mx-auto px-4 md:px-6 py-5 md:py-6 flex flex-col">
+        <main className="flex flex-1 min-h-0 min-w-0 flex-col overflow-x-hidden md:overflow-y-auto">
+          <div className="safe-area-page-bottom flex w-full min-w-0 max-w-[1380px] flex-1 flex-col px-3 py-4 sm:px-4 md:mx-auto md:px-6 md:py-6 md:pb-6">
             {children}
           </div>
         </main>

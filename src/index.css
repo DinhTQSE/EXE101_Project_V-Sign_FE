@@ -126,6 +126,22 @@
     background-size: auto;
     background-attachment: fixed;
     min-height: 100vh;
+    min-width: 320px;
+    overflow-x: hidden;
+  }
+
+  html,
+  #root {
+    min-height: 100%;
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  @supports (min-height: 100dvh) {
+    body,
+    #root {
+      min-height: 100dvh;
+    }
   }
 
   .dark body {
@@ -155,6 +171,10 @@
   /* Mobile safe area */
   .safe-area-bottom {
     padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .safe-area-page-bottom {
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
   }
 }
 

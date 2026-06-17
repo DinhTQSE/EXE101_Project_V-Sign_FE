@@ -101,23 +101,22 @@ export default function Profile() {
   const inputCls = "w-full px-3 py-2.5 rounded-xl border border-input bg-background text-foreground font-body text-sm focus:outline-none focus:ring-2 focus:ring-ring";
 
   return (
-    /* flex-1 + min-h-0 claim the full height propagated by DashboardLayout */
-    <div className="flex-1 min-h-0 w-full flex flex-col gap-3">
+    <div className="w-full min-w-0 flex flex-col gap-3">
 
       {/* ── 3-column bento grid that fills all remaining height ── */}
-      <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 gap-3 xl:grid-cols-3">
 
         {/* ═══ LEFT COLUMN ═══ */}
-        <div className="flex flex-col gap-3 min-h-0">
+        <div className="min-w-0 flex flex-col gap-3">
 
           {/* Profile card */}
           <div className="card-pastel p-5">
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col gap-4 min-[430px]:flex-row min-[430px]:items-center">
               {/* Avatar */}
               <div className="relative shrink-0">
                 <div
                   onClick={() => editing && fileRef.current?.click()}
-                  className={`w-[72px] h-[72px] rounded-full overflow-hidden flex items-center justify-center font-display font-bold text-3xl text-primary-foreground ${editing ? "cursor-pointer" : ""}`}
+                  className={`h-[72px] w-[72px] rounded-full overflow-hidden flex items-center justify-center font-display font-bold text-3xl text-primary-foreground ${editing ? "cursor-pointer" : ""}`}
                   style={{ background: avatarSrc ? undefined : "var(--gradient-primary)" }}
                 >
                   {avatarSrc ? <img src={avatarSrc} alt="" className="w-full h-full object-cover" /> : displayName.charAt(0).toUpperCase()}
@@ -133,7 +132,7 @@ export default function Profile() {
               {/* Name / bio */}
               <div className="flex-1 min-w-0">
                 {editing ? (
-                  <div className="space-y-2">
+                <div className="space-y-2">
                     <input type="text" value={editName} onChange={e => setEditName(e.target.value)}
                       className="w-full px-3 py-2 rounded-xl border border-input bg-background text-foreground font-display font-bold text-base focus:outline-none focus:ring-2 focus:ring-ring"
                       placeholder="Tên hiển thị" />
@@ -151,17 +150,17 @@ export default function Profile() {
 
               {/* Edit controls */}
               {editing ? (
-                <div className="flex gap-2 shrink-0">
+                <div className="flex w-full gap-2 shrink-0 min-[430px]:w-auto">
                   <button onClick={handleCancel} className="p-2 rounded-xl border border-border hover:bg-muted transition-colors">
                     <X className="w-4 h-4 text-muted-foreground" />
                   </button>
-                  <button onClick={handleSave} className="btn-primary-gradient flex items-center gap-1.5 text-sm py-2 px-4">
+                  <button onClick={handleSave} className="btn-primary-gradient flex flex-1 items-center justify-center gap-1.5 text-sm py-2 px-4 min-[430px]:flex-none">
                     <Save className="w-4 h-4" /> Lưu
                   </button>
                 </div>
               ) : (
                 <button onClick={() => setEditing(true)}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-border text-foreground font-body text-sm font-medium hover:bg-muted transition-colors shrink-0">
+                  className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-border px-4 py-2 text-foreground font-body text-sm font-medium transition-colors hover:bg-muted shrink-0 min-[430px]:w-auto">
                   <Pencil className="w-4 h-4" /> Chỉnh sửa
                 </button>
               )}
@@ -183,7 +182,7 @@ export default function Profile() {
           </div>
 
           {/* Security card — flex-1 to fill remaining column height */}
-          <div className="card-pastel p-5 flex-1 flex flex-col min-h-0">
+          <div className="card-pastel p-5 flex flex-col">
             <div className="flex items-center gap-2 mb-4">
               <KeyRound className="w-5 h-5 text-primary" />
               <h3 className="font-display font-bold text-foreground">Bảo mật tài khoản</h3>
@@ -203,7 +202,7 @@ export default function Profile() {
         </div>
 
         {/* ═══ CENTER COLUMN ═══ */}
-        <div className="flex flex-col gap-3 min-h-0">
+        <div className="min-w-0 flex flex-col gap-3">
 
           {/* 4 stat cards — 2×2 */}
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-3">
@@ -214,7 +213,7 @@ export default function Profile() {
               { icon: <Clock className="w-6 h-6 text-[hsl(var(--success))]" />, bg: "bg-[hsl(var(--success))]/10", value: totalMinutes, label: "Phút học tập" },
             ].map((stat, i) => (
               <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                className="card-pastel p-4 flex items-center gap-3">
+              className="card-pastel flex min-h-[88px] items-center gap-3 p-4">
                 <div className={`w-11 h-11 rounded-2xl ${stat.bg} flex items-center justify-center shrink-0`}>{stat.icon}</div>
                 <div>
                   <div className="font-display font-bold text-xl text-foreground leading-none">{stat.value}</div>
@@ -247,9 +246,9 @@ export default function Profile() {
           </div>
 
           {/* Badges — flex-1 to fill remaining */}
-          <div className="card-pastel p-5 flex-1 flex flex-col min-h-0">
+          <div className="card-pastel p-5 flex flex-col">
             <h3 className="font-display font-bold text-foreground mb-4 flex items-center gap-2">🏅 Huy hiệu của tôi</h3>
-            <div className="grid grid-cols-3 gap-3 flex-1 content-start">
+            <div className="grid grid-cols-2 gap-3 min-[430px]:grid-cols-3">
               {BADGES.map((badge) => {
                 const unlocked = badge.unlockFn(stats);
                 return (
@@ -267,7 +266,7 @@ export default function Profile() {
         </div>
 
         {/* ═══ RIGHT COLUMN ═══ */}
-        <div className="flex flex-col gap-3 min-h-0">
+        <div className="min-w-0 flex flex-col gap-3">
 
           {/* Subscription card */}
           <div className="card-pastel p-5 flex items-center gap-4">
@@ -286,7 +285,7 @@ export default function Profile() {
           </div>
 
           {/* Payment card — flex-1 */}
-          <div className="card-pastel p-5 flex-1 flex flex-col min-h-0">
+          <div className="card-pastel p-5 flex flex-col">
             <div className="flex items-center gap-2 mb-4">
               <WalletCards className="w-5 h-5 text-primary" />
               <h3 className="font-display font-bold text-foreground">Gói cước & thanh toán</h3>
@@ -301,7 +300,7 @@ export default function Profile() {
                 </p>
               )}
             </div>
-            <div className="space-y-2 overflow-y-auto flex-1 min-h-0">
+            <div className="space-y-2">
               {paymentHistory.length === 0 ? (
                 <p className="text-sm text-muted-foreground">Chưa có giao dịch.</p>
               ) : paymentHistory.map((tx) => (

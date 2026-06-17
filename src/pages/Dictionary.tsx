@@ -132,7 +132,7 @@ export default function Dictionary({ publicMode = false }: { publicMode?: boolea
   return (
     <div className="w-full max-w-5xl mx-auto">
       {/* Hero header */}
-      <div className="hero-panel p-5 md:p-7 mb-6">
+      <div className="hero-panel p-4 md:p-7 mb-5 md:mb-6">
         {publicMode && (
           <Link
             to="/"
@@ -141,12 +141,12 @@ export default function Dictionary({ publicMode = false }: { publicMode?: boolea
             <ArrowLeft className="w-4 h-4" /> Trang chủ
           </Link>
         )}
-        <div className="flex items-center gap-4">
-          <div className="icon-tile shrink-0" style={{ background: "var(--gradient-primary)" }}>
-            <BookOpen className="w-7 h-7 text-primary-foreground" />
+        <div className="flex items-start gap-3 md:items-center md:gap-4">
+          <div className="icon-tile !h-12 !w-12 shrink-0 md:!h-14 md:!w-14" style={{ background: "var(--gradient-primary)" }}>
+            <BookOpen className="w-6 h-6 md:w-7 md:h-7 text-primary-foreground" />
           </div>
-          <div>
-            <h1 className="font-display font-extrabold text-3xl md:text-4xl text-white leading-tight">
+          <div className="min-w-0">
+            <h1 className="font-display font-extrabold text-2xl md:text-4xl text-white leading-tight">
               Từ điển Ngôn ngữ Ký hiệu
             </h1>
             <p className="font-body text-sm md:text-base text-white/85">
@@ -159,7 +159,7 @@ export default function Dictionary({ publicMode = false }: { publicMode?: boolea
 
       {/* Stats */}
       {!loading && !error && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+        <div className="grid grid-cols-2 gap-3 mb-5 sm:grid-cols-4 md:mb-6">
           <div className="card-pop p-4 text-center">
             <p className="font-display font-extrabold text-2xl text-foreground">{entries.length}</p>
             <p className="text-xs text-muted-foreground font-body">Tổng số từ</p>
@@ -269,7 +269,7 @@ export default function Dictionary({ publicMode = false }: { publicMode?: boolea
       ) : (
         <>
           <AnimatePresence mode="popLayout">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-4">
               {pageItems.map((entry, index) => (
                 <motion.button
                   key={entry.entryId || entry.id}
@@ -290,7 +290,7 @@ export default function Dictionary({ publicMode = false }: { publicMode?: boolea
                       className="w-full h-28 object-cover"
                     />
                   ) : (
-                    <div className="w-full h-28 bg-primary/8 flex items-center justify-center group-hover:bg-primary/12 transition-colors">
+                    <div className="w-full h-24 min-[420px]:h-28 bg-primary/8 flex items-center justify-center group-hover:bg-primary/12 transition-colors">
                       <BookOpen className="w-10 h-10 text-primary/40 group-hover:text-primary/60 group-hover:scale-110 transition-all" />
                     </div>
                   )}
@@ -323,7 +323,7 @@ export default function Dictionary({ publicMode = false }: { publicMode?: boolea
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-6">
+            <div className="flex flex-wrap items-center justify-between gap-3 mt-6">
               <button
                 onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
                 disabled={safePage === 0}
@@ -332,7 +332,7 @@ export default function Dictionary({ publicMode = false }: { publicMode?: boolea
                 <ChevronLeft className="w-4 h-4" /> Trước
               </button>
 
-              <div className="flex items-center gap-1">
+              <div className="order-first flex w-full items-center justify-center gap-1 sm:order-none sm:w-auto">
                 {Array.from({ length: totalPages }, (_, i) => i).map((i) => {
                   const isActive = i === safePage;
                   const isNear = Math.abs(i - safePage) <= 1 || i === 0 || i === totalPages - 1;
@@ -380,7 +380,7 @@ export default function Dictionary({ publicMode = false }: { publicMode?: boolea
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-foreground/60 backdrop-blur-sm flex items-center justify-center p-4"
+            className="fixed inset-0 z-50 bg-foreground/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4"
             onClick={() => setActiveEntry(null)}
           >
             <motion.div
@@ -388,7 +388,7 @@ export default function Dictionary({ publicMode = false }: { publicMode?: boolea
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ type: "spring", bounce: 0.25 }}
-              className="bg-card rounded-[32px] shadow-2xl w-[min(640px,94vw)] max-h-[92vh] overflow-hidden flex flex-col"
+              className="bg-card rounded-[28px] md:rounded-[32px] shadow-2xl w-[min(640px,94vw)] max-h-[92dvh] overflow-hidden flex flex-col"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Modal header */}

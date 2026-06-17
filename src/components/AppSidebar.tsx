@@ -356,19 +356,19 @@ export function MobileBottomNav() {
   const navigate = useNavigate();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-xl border-t border-border flex md:hidden z-40 safe-area-bottom shadow-[0_-10px_30px_rgba(79,51,42,0.08)]">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 flex border-t border-border bg-card/95 shadow-[0_-10px_30px_rgba(79,51,42,0.08)] backdrop-blur-xl md:hidden safe-area-bottom">
       {bottomNavItems.map((item) => {
         const active = isActive(location.pathname, item.path);
         return (
           <button
             key={item.path}
             onClick={() => navigate(item.path)}
-            className={`flex-1 flex flex-col items-center gap-1 py-2.5 min-h-[58px] transition-colors relative font-semibold ${
+            className={`relative flex min-h-[60px] min-w-0 flex-1 flex-col items-center justify-center gap-1 px-1 py-2 transition-colors font-semibold ${
               active ? "text-primary" : "text-muted-foreground"
             }`}
           >
             <item.icon className="w-5 h-5" />
-            <span className="text-[10px] font-body font-medium">{item.label}</span>
+            <span className="w-full truncate text-center text-[10px] leading-none font-body font-medium">{item.label}</span>
             {active && (
               <motion.div
                 layoutId="bottomNavIndicator"
