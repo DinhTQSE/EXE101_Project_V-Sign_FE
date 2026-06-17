@@ -36,8 +36,10 @@ import {
   DictionaryEntryDto,
   learningApi,
   LessonDetailDto,
+  LessonProgressRequest,
   LessonQuizDto,
   LessonSummaryDto,
+  PracticeItemSummaryDto,
   QuizSubmitResultDto,
   UnitSummaryDto,
 } from "@/services/vsignApi";
@@ -68,6 +70,26 @@ const UNIT_ICON_KEYWORDS: Array<{ keywords: string[]; icon: LucideIcon }> = [
 const FALLBACK_ICONS: LucideIcon[] = [
   MessageCircle, BookOpen, Users, Smile, GraduationCap, Briefcase, HeartPulse, Hash, Sparkles,
 ];
+
+function getApiMessage(error: unknown, fallback: string) {
+  if (error && typeof error === "object" && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === "string" && message.trim()) {
+      const lower = message.toLowerCase();
+      if (lower.includes("lesson video progress") || lower.includes("lesson video stage")) {
+        return "Tiến độ video chưa được backend ghi nhận. Vui lòng bấm Tiếp theo lại hoặc mở lại bài học.";
+      }
+      if (lower.includes("passed quiz")) {
+        return "Quiz chưa được backend xác nhận là đạt. Vui lòng làm lại quiz.";
+      }
+      if (lower.includes("ai practice")) {
+        return "Lượt luyện AI chưa được backend xác nhận là đạt. Vui lòng luyện lại ký hiệu bằng camera.";
+      }
+      return message;
+    }
+  }
+  return fallback;
+}
 
 function getUnitIcon(unit: UnitSummaryDto, index: number): LucideIcon {
   const titleLower = (unit.title || "").toLowerCase();
@@ -535,6 +557,7 @@ function LessonStudyModal({
   const [detail, setDetail] = useState<LessonDetailDto | null>(null);
   const [quiz, setQuiz] = useState<LessonQuizDto | null>(null);
   const [dictPool, setDictPool] = useState<DictionaryEntryDto[]>([]);
+  const [lessonPracticeItem, setLessonPracticeItem] = useState<PracticeItemSummaryDto | null>(null);
   const [quizResult, setQuizResult] = useState<QuizSubmitResultDto | null>(null);
   const [step, setStep] = useState<"video" | "quiz" | "ai-practice" | "done">("video");
   const [loading, setLoading] = useState(true);
@@ -548,17 +571,21 @@ function LessonStudyModal({
     setDetail(null);
     setQuiz(null);
     setDictPool([]);
+    setLessonPracticeItem(null);
     setQuizResult(null);
     setStep("video");
 
     Promise.all([
       learningApi.getLesson(lesson.lessonId, accessToken || undefined),
       learningApi.getLessonQuiz(lesson.lessonId, accessToken || undefined),
+      learningApi.listPracticeItems({ size: 100 }, accessToken || undefined).catch(() => null),
     ])
-      .then(([nextDetail, nextQuiz]) => {
+      .then(([nextDetail, nextQuiz, practiceItemsPage]) => {
         if (cancelled) return;
         setDetail(nextDetail);
         setQuiz(nextQuiz);
+        const matchingPracticeItem = practiceItemsPage?.content.find((item) => item.lessonId === lesson.lessonId) ?? null;
+        setLessonPracticeItem(matchingPracticeItem);
         if (!nextQuiz) {
           dictionaryApi.listEntries({ size: 30 })
             .then((entries) => { if (!cancelled) setDictPool(entries.filter((e) => !!e.videoUrl)); })
@@ -592,15 +619,56 @@ function LessonStudyModal({
     setSaving(true);
     setError("");
     try {
+      await learningApi.updateProgress(
+        lesson.lessonId,
+        {
+          completionPct: 90,
+          lastPositionSeconds: Math.max(detail?.durationSeconds ?? 0, detail?.progress?.lastPositionSeconds ?? 0),
+          phase: "PRACTICE",
+          currentQuestionIndex: null,
+          status: "IN_PROGRESS",
+        },
+        accessToken || undefined
+      );
       await learningApi.completeLesson(lesson.lessonId, accessToken || undefined);
       onLessonCompleted(lesson.lessonId);
       setStep("done");
-    } catch {
-      setError("Backend chua xac thuc du video, quiz va AI practice de hoan thanh bai hoc.");
+    } catch (err) {
+      setError(getApiMessage(err, "Backend chưa xác thực đủ video, quiz và luyện AI để hoàn thành bài học."));
     } finally {
       setSaving(false);
     }
-  }, [accessToken, lesson.lessonId, onLessonCompleted]);
+  }, [accessToken, detail?.durationSeconds, detail?.progress?.lastPositionSeconds, lesson.lessonId, onLessonCompleted]);
+
+  const saveStageProgress = useCallback(
+    async (
+      completionPct: number,
+      phase: LessonProgressRequest["phase"],
+      currentQuestionIndex: number | null = null
+    ) => {
+      await learningApi.updateProgress(
+        lesson.lessonId,
+        {
+          completionPct,
+          lastPositionSeconds: phase === "VIDEO" ? detail?.progress?.lastPositionSeconds ?? 0 : detail?.durationSeconds ?? 0,
+          phase,
+          currentQuestionIndex,
+          status: "IN_PROGRESS",
+        },
+        accessToken || undefined
+      );
+    },
+    [accessToken, detail?.durationSeconds, detail?.progress?.lastPositionSeconds, lesson.lessonId]
+  );
+
+  const handleQuizPassed = useCallback(
+    (result: QuizSubmitResultDto) => {
+      setQuizResult(result);
+      setStep("ai-practice");
+      void saveStageProgress(65, "PRACTICE").catch(() => undefined);
+    },
+    [saveStageProgress]
+  );
   const progressWidth = step === "video" ? 25 : step === "quiz" ? 50 : step === "ai-practice" ? 75 : 100;
 
   return (
@@ -674,17 +742,7 @@ function LessonStudyModal({
 
                   <button
                     onClick={async () => {
-                      await learningApi.updateProgress(
-                        lesson.lessonId,
-                        {
-                          completionPct: 25,
-                          lastPositionSeconds: 0,
-                          phase: "QUIZ",
-                          currentQuestionIndex: quiz ? 0 : null,
-                          status: "IN_PROGRESS",
-                        },
-                        accessToken || undefined
-                      ).catch(() => undefined);
+                      await saveStageProgress(35, "QUIZ", quiz ? 0 : null).catch(() => undefined);
                       setStep("quiz");
                     }}
                     disabled={saving}
@@ -714,18 +772,12 @@ function LessonStudyModal({
                       quiz={quiz}
                       lessonVideoUrl={detail?.videoUrl}
                       accessToken={accessToken || undefined}
-                      onPassed={(result) => {
-                        setQuizResult(result);
-                        setStep("ai-practice");
-                      }}
+                      onPassed={handleQuizPassed}
                     />
                   ) : import.meta.env.DEV ? (
                     <DynamicQuizPanel
                       entries={dictPool}
-                      onPassed={(result) => {
-                        setQuizResult(result);
-                        setStep("ai-practice");
-                      }}
+                      onPassed={handleQuizPassed}
                     />
                   ) : (
                     <div className="rounded-2xl bg-destructive/10 border border-destructive/30 px-4 py-3 text-sm text-destructive text-center">
@@ -754,24 +806,27 @@ function LessonStudyModal({
                   </div>
 
                   {(() => {
-                    const aiTarget = resolveAiPracticeTarget(detail?.title || lesson.title);
+                    const practiceSource = lessonPracticeItem?.expectedGloss || lessonPracticeItem?.label || detail?.title || lesson.title;
+                    const aiTarget = resolveAiPracticeTarget(practiceSource);
+                    const targetDisplay = lessonPracticeItem?.label || aiTarget?.display || practiceSource;
+                    const practiceItemId = lessonPracticeItem?.itemId || aiTarget?.practiceItemId;
                     return (
                       <div className="max-w-xl mx-auto space-y-4">
-                        {!aiTarget && (
+                        {(!aiTarget || !practiceItemId) && (
                           <div className="rounded-2xl bg-muted/60 border border-border px-4 py-3 text-sm font-body text-muted-foreground text-center">
                             Bài luyện tập này đang được cập nhật. Vui lòng chọn bài học khác hoặc quay lại sau.
                           </div>
                         )}
 
-                        {aiTarget && (
+                        {aiTarget && practiceItemId && (
                           <Suspense fallback={<div className="card-pop p-6 text-center text-sm text-muted-foreground">Đang tải camera AI...</div>}>
                             <AiCameraPractice
-                            key={lesson.lessonId}
-                            question={`Thực hiện ký hiệu '${aiTarget.display}' trước camera`}
-                            targetLabel={aiTarget.label}
-                            targetDisplay={aiTarget.display}
-                            practiceItemId={aiTarget.practiceItemId}
-                            minConfidence={0.7}
+                              key={lesson.lessonId}
+                              question={`Thực hiện ký hiệu '${targetDisplay}' trước camera`}
+                              targetLabel={aiTarget.label}
+                              targetDisplay={targetDisplay}
+                              practiceItemId={practiceItemId}
+                              minConfidence={0.7}
                               onSuccess={() => void markCompleted()}
                             />
                           </Suspense>

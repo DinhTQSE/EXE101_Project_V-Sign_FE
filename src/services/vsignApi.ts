@@ -323,6 +323,25 @@ export interface LessonDetailDto {
   progress: LessonProgressDto;
 }
 
+export interface PracticeItemSummaryDto {
+  itemId: string;
+  lessonId: string;
+  label: string;
+  category: string;
+  level: string;
+  expectedGloss: string;
+  sourceVideoFile?: string;
+  videoUrl?: string;
+}
+
+export interface PracticeItemsPageDto {
+  page: number;
+  size: number;
+  total: number;
+  totalPages: number;
+  content: PracticeItemSummaryDto[];
+}
+
 export interface LessonProgressRequest {
   completionPct: number;
   lastPositionSeconds: number;
@@ -765,6 +784,32 @@ function toLessonSummary(raw: unknown): LessonSummaryDto {
   };
 }
 
+function toPracticeItemSummary(raw: unknown): PracticeItemSummaryDto {
+  const record = asRecord(raw);
+  return {
+    itemId: asString(record.itemId),
+    lessonId: asString(record.lessonId),
+    label: asString(record.label),
+    category: asString(record.category),
+    level: asString(record.level),
+    expectedGloss: asString(record.expectedGloss),
+    sourceVideoFile: asString(record.sourceVideoFile) || undefined,
+    videoUrl: asString(record.videoUrl) || undefined,
+  };
+}
+
+function toPracticeItemsPage(raw: unknown): PracticeItemsPageDto {
+  const record = asRecord(raw);
+  const content = asArray(record.content).map(toPracticeItemSummary);
+  return {
+    page: asNumber(record.page),
+    size: asNumber(record.size, content.length),
+    total: asNumber(record.total, content.length),
+    totalPages: asNumber(record.totalPages, 1),
+    content,
+  };
+}
+
 function toLessonDetail(raw: unknown): LessonDetailDto {
   const record = asRecord(raw);
   const lessonId = asString(record.lessonId);
@@ -1078,6 +1123,21 @@ export const learningApi = {
       headers: token ? authHeader(token) : undefined,
     });
     return toLessonDetail(raw);
+  },
+
+  async listPracticeItems(
+    input: { category?: string; level?: string; page?: number; size?: number } = {},
+    token?: string
+  ): Promise<PracticeItemsPageDto> {
+    const params = new URLSearchParams();
+    params.set("page", String(input.page ?? 0));
+    params.set("size", String(input.size ?? 100));
+    if (input.category) params.set("category", input.category);
+    if (input.level) params.set("level", input.level);
+    const raw = await requestJson<unknown>(`/learning/practice-items?${params.toString()}`, {
+      headers: token ? authHeader(token) : undefined,
+    });
+    return toPracticeItemsPage(raw);
   },
 
   async updateProgress(lessonId: string, input: LessonProgressRequest, token?: string): Promise<LessonProgressDto> {
