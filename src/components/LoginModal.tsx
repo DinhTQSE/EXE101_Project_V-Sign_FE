@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { AlertCircle, Mail, X } from "lucide-react";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { useAuth } from "@/contexts/AuthContext";
+import { getApiBaseUrl } from "@/services/apiConfig";
 
 interface LoginModalProps {
   open: boolean;
@@ -89,6 +90,31 @@ export function LoginModal({ open, onClose, defaultMode = "signup" }: LoginModal
       const message = err instanceof Error ? err.message : "Không thể xử lý yêu cầu. Vui lòng thử lại.";
       setError(message);
     } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setError("");
+    setSuccessMessage("");
+    setLoading(true);
+    try {
+      const apiBaseUrl = getApiBaseUrl();
+      const response = await fetch(`${apiBaseUrl}/auth/google/login-url`);
+      if (!response.ok) {
+        throw new Error("Không thể kết nối máy chủ Google OAuth2.");
+      }
+      const payload = await response.json();
+      const loginUrl = payload?.data ?? payload;
+      if (loginUrl) {
+        window.location.href = loginUrl;
+      } else {
+        throw new Error("Không nhận được liên kết đăng nhập từ Google.");
+      }
+    } catch (err: unknown) {
+      console.error("Google OAuth error:", err);
+      const errorObj = err as { message?: string } | null;
+      setError(errorObj?.message || "Đăng nhập Google thất bại. Vui lòng thử lại.");
       setLoading(false);
     }
   };
@@ -192,6 +218,28 @@ export function LoginModal({ open, onClose, defaultMode = "signup" }: LoginModal
                 {loading && <LoadingSpinner size="sm" />}
                 {mode === "signup" ? "Đăng ký" : mode === "login" ? "Đăng nhập" : "Gửi hướng dẫn"}
               </button>
+
+              {mode !== "forgot" && (
+                <div className="space-y-4 pt-2">
+                  <div className="flex items-center gap-3">
+                    <div className="h-px flex-1 bg-border" />
+                    <span className="text-xs text-muted-foreground font-body">Hoặc tiếp tục với</span>
+                    <div className="h-px flex-1 bg-border" />
+                  </div>
+                  
+                  <button
+                    type="button"
+                    onClick={handleGoogleLogin}
+                    disabled={loading}
+                    className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-2xl border border-border bg-card text-foreground hover:bg-muted font-body font-semibold text-sm transition-all disabled:opacity-60"
+                  >
+                    <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
+                      <path fill="#EA4335" d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.114-5.137 4.114-3.5 0-6.35-2.85-6.35-6.35s2.85-6.35 6.35-6.35c1.63 0 3.109.619 4.24 1.63L21.2 4.4C19.16 2.51 16.03 1.3 12.24 1.3c-6.07 0-11 4.93-11 11s4.93 11 11 11c5.96 0 10.64-4.27 10.64-10.64 0-.67-.06-1.31-.18-1.93l-10.46.015z"/>
+                    </svg>
+                    Đăng nhập bằng Google
+                  </button>
+                </div>
+              )}
             </form>
 
             {mode !== "forgot" && (

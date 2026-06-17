@@ -198,12 +198,49 @@ function isActiveSubscription(subscription: SubscriptionSummary) {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+// Parse OAuth redirect params synchronously before first render
+// so isLoggedIn is correct BEFORE React Router's AuthenticatedRoute
+// evaluates and potentially redirects (which would destroy the URL params).
+function readOAuthParamsFromUrl(): { token: string; email: string } | null {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("accessToken");
+    const email = params.get("email");
+    return token && email ? { token, email } : null;
+  } catch {
+    return null;
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [accessToken, setAccessToken] = useState(() => loadPrimitive("vsign_accessToken", ""));
-  const [isLoggedIn, setIsLoggedIn] = useState(() => loadPrimitive("vsign_loggedIn", false));
+  // Read OAuth params ONCE synchronously at initialization time
+  const [oauthParamsRead] = useState(() => readOAuthParamsFromUrl());
+
+  const [accessToken, setAccessToken] = useState(() => {
+    if (oauthParamsRead?.token) {
+      // Persist immediately so localStorage-based effects stay consistent
+      localStorage.setItem("vsign_accessToken", JSON.stringify(oauthParamsRead.token));
+      return oauthParamsRead.token;
+    }
+    return loadPrimitive("vsign_accessToken", "");
+  });
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+    if (oauthParamsRead) {
+      localStorage.setItem("vsign_loggedIn", JSON.stringify(true));
+      return true;
+    }
+    return loadPrimitive("vsign_loggedIn", false);
+  });
   const [isNewUser, setIsNewUser] = useState(false);
-  const [userName, setUserName] = useState(() => loadPrimitive("vsign_userName", ""));
-  const [hasOnboarded, setHasOnboardedState] = useState(() => loadPrimitive("vsign_onboarded", false));
+  const [userName, setUserName] = useState(() => {
+    if (oauthParamsRead?.email) return oauthParamsRead.email;
+    return loadPrimitive("vsign_userName", "");
+  });
+  const [hasOnboarded, setHasOnboardedState] = useState(() => {
+    // Treat OAuth users as onboarded (not a new fresh signup)
+    if (oauthParamsRead) return true;
+    return loadPrimitive("vsign_onboarded", false);
+  });
   const [profile, setProfile] = useState<UserProfile>(() => loadFromStorage("vsign_profile", DEFAULT_PROFILE));
   const [stats, setStats] = useState<LearningStats>(() => loadFromStorage("vsign_stats", DEFAULT_STATS));
   const [onboardingResponses, setOnboardingResponsesState] = useState<OnboardingResponses>(
@@ -295,6 +332,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Keep cached/local state when the backend is temporarily unavailable.
     }
   }, [applyGamificationSummary]);
+
+  // Parse OAuth redirect query params on mount (Google login return)
+  // accessToken/isLoggedIn are already pre-seeded from useState initializers above.
+  // This effect only handles URL cleanup and backend hydration.
+  useEffect(() => {
+    if (oauthParamsRead?.token) {
+      // Clean query parameters immediately to protect the token
+      window.history.replaceState({}, document.title, window.location.pathname);
+
+      if (USE_BACKEND) {
+        void hydrateBackendState(oauthParamsRead.token);
+      }
+    }
+  }, [hydrateBackendState, oauthParamsRead]);
 
   useEffect(() => {
     if (USE_BACKEND && isLoggedIn && accessToken) {

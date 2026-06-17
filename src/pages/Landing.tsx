@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Video, Camera, Brain, ChevronDown, Sparkles } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
+import { toast } from "sonner";
 import logo from "@/assets/vsign-logo.png";
 import mascotImg from "@/assets/mascot.png";
 import { LoginModal } from "@/components/LoginModal";
@@ -25,6 +26,21 @@ export default function Landing() {
       setLoginOpen(true);
     }
   }, [location.state]);
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const errorParam = searchParams.get("error");
+    if (errorParam) {
+      let friendlyMessage = "Đăng nhập thất bại. Vui lòng thử lại.";
+      if (errorParam === "account_disabled") {
+        friendlyMessage = "Tài khoản của bạn đã bị khóa hoặc vô hiệu hóa.";
+      } else if (errorParam === "oauth_failed") {
+        friendlyMessage = "Đăng nhập Google thất bại hoặc bị hủy bỏ.";
+      }
+      toast.error(friendlyMessage);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [location.search]);
 
   return (
     <div className="min-h-screen bg-background">
