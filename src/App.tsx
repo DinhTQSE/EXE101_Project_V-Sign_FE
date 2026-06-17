@@ -5,6 +5,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import AnalyticsTracker from "@/components/AnalyticsTracker";
 import AppErrorBoundary from "@/components/AppErrorBoundary";
 import DashboardLayout from "@/components/DashboardLayout";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
@@ -97,6 +98,7 @@ const App = () => (
       <Sonner />
       <AuthProvider>
         <BrowserRouter>
+          <AnalyticsTracker />
           <AppErrorBoundary>
             <Suspense fallback={<RouteFallback />}>
               <AppRoutes />
