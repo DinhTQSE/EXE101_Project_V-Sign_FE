@@ -9,7 +9,7 @@ export const PaymentResult: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { refreshUser } = useAuth();
+  const { refreshUser, accessToken } = useAuth();
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -41,7 +41,7 @@ export const PaymentResult: React.FC = () => {
           orderCode: parseInt(orderCode, 10),
           status,
           cancel,
-        });
+        }, accessToken);
 
         setResolvedStatus(res.resolvedStatus);
 
