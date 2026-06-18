@@ -1,4 +1,5 @@
 import { getApiBaseUrl } from "./apiConfig";
+import { handleUnauthorizedResponse } from "./vsignApi";
 
 const API_BASE_URL = getApiBaseUrl();
 
@@ -47,6 +48,9 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
 
   const payload = await response.json().catch(() => null);
   if (!response.ok) {
+    if ((response.status === 401 || payload?.code === "UNAUTHORIZED") && payload?.code !== "INVALID_CREDENTIALS") {
+      handleUnauthorizedResponse();
+    }
     throw {
       code: payload?.code || "HTTP_ERROR",
       message: payload?.message || "Yêu cầu dịch vụ thất bại.",

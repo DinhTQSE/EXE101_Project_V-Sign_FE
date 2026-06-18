@@ -432,6 +432,17 @@ export interface AssessmentSubmitResultDto {
 const API_BASE_URL = getApiBaseUrl();
 export const USE_BACKEND = true;
 
+let unauthorizedListener: (() => void) | null = null;
+
+export function registerUnauthorizedListener(listener: () => void) {
+  unauthorizedListener = listener;
+}
+
+export function handleUnauthorizedResponse() {
+  if (unauthorizedListener) {
+    unauthorizedListener();
+  }
+}
 
 function makeApiError(code: string, message: string, validationErrors?: Record<string, string>): ApiErrorShape {
   return { code, message, validationErrors };
@@ -464,6 +475,9 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
 
   const payload = await response.json().catch(() => null);
   if (!response.ok) {
+    if ((response.status === 401 || payload?.code === "UNAUTHORIZED") && payload?.code !== "INVALID_CREDENTIALS") {
+      handleUnauthorizedResponse();
+    }
     const validationErrors = normalizeValidationErrors(payload?.validationErrors);
     if (validationErrors && Object.keys(validationErrors).length > 0) {
       throw makeApiError(payload?.code || "HTTP_ERROR", payload?.message || "API request failed", validationErrors);

@@ -12,7 +12,9 @@ import {
   PaymentTransaction,
   SubscriptionSummary,
   UserRole,
+  registerUnauthorizedListener,
 } from "@/services/vsignApi";
+import { toast } from "@/hooks/use-toast";
 
 interface UserProfile {
   displayName: string;
@@ -267,6 +269,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const layoutMode = useMemo(() => getLayoutMode(onboardingResponses.ageGroup), [onboardingResponses.ageGroup]);
 
+  const logout = useCallback(() => {
+    setAccessToken("");
+    setIsLoggedIn(false);
+    setUserName("");
+    setIsNewUser(false);
+    setIsPremiumState(false);
+    setSubscription(getDefaultSubscription(false));
+    setProfile(DEFAULT_PROFILE);
+    setHasOnboardedState(false);
+    setOnboardingResponsesState(DEFAULT_ONBOARDING);
+    setStats(DEFAULT_STATS);
+    setReminderEnabledState(false);
+    setReminderTimeState("08:00");
+    setPaymentHistory([]);
+    setLastReward(null);
+    [
+      "vsign_accessToken", "vsign_loggedIn", "vsign_premium", "vsign_subscription", "vsign_profile",
+      "vsign_userName", "vsign_onboarded", "vsign_onboarding", "vsign_stats",
+      "vsign_reminder", "vsign_reminderTime", "vsign_payment_history",
+    ].forEach((key) => localStorage.removeItem(key));
+  }, []);
+
   const applyGamificationSummary = useCallback((gamification: Awaited<ReturnType<typeof gamificationApi.getSummary>>, markActivity = false) => {
     setStats((prev) => {
       const today = vietnamDateKey();
@@ -328,10 +352,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSubscription(subSummary);
       setPaymentHistory(payments);
       applyGamificationSummary(gamification);
-    } catch {
+    } catch (err) {
       // Keep cached/local state when the backend is temporarily unavailable.
+      const apiError = err as Partial<{ code: string; status: number }>;
+      if (apiError && (apiError.code === "UNAUTHORIZED" || apiError.status === 401)) {
+        logout();
+      }
     }
-  }, [applyGamificationSummary]);
+  }, [applyGamificationSummary, logout]);
 
   // Parse OAuth redirect query params on mount (Google login return)
   // accessToken/isLoggedIn are already pre-seeded from useState initializers above.
@@ -364,6 +392,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => window.clearInterval(timer);
   }, [accessToken, isLoggedIn]);
 
+  useEffect(() => {
+    registerUnauthorizedListener(() => {
+      logout();
+      toast({
+        variant: "destructive",
+        title: "Phiên đăng nhập hết hạn",
+        description: "Vui lòng đăng nhập lại để tiếp tục học tập.",
+      });
+    });
+    return () => {
+      registerUnauthorizedListener(() => {});
+    };
+  }, [logout]);
+
   const applySession = (session: AuthSessionDto, isNew: boolean) => {
     const nextProfile = sessionToProfile(session);
     setAccessToken(session.accessToken);
@@ -393,28 +435,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = async (input: RegisterInput) => {
     const session = await authApi.register(input);
     applySession(session, true);
-  };
-
-  const logout = () => {
-    setAccessToken("");
-    setIsLoggedIn(false);
-    setUserName("");
-    setIsNewUser(false);
-    setIsPremiumState(false);
-    setSubscription(getDefaultSubscription(false));
-    setProfile(DEFAULT_PROFILE);
-    setHasOnboardedState(false);
-    setOnboardingResponsesState(DEFAULT_ONBOARDING);
-    setStats(DEFAULT_STATS);
-    setReminderEnabledState(false);
-    setReminderTimeState("08:00");
-    setPaymentHistory([]);
-    setLastReward(null);
-    [
-      "vsign_accessToken", "vsign_loggedIn", "vsign_premium", "vsign_subscription", "vsign_profile",
-      "vsign_userName", "vsign_onboarded", "vsign_onboarding", "vsign_stats",
-      "vsign_reminder", "vsign_reminderTime", "vsign_payment_history",
-    ].forEach((key) => localStorage.removeItem(key));
   };
 
   const setHasOnboarded = (v: boolean) => {
