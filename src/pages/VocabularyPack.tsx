@@ -811,6 +811,26 @@ function LessonStudyModal({
                     const aiTarget = resolveAiPracticeTarget(practiceSource);
                     const targetDisplay = lessonPracticeItem?.label || aiTarget?.display || practiceSource;
                     const practiceItemId = lessonPracticeItem?.itemId || aiTarget?.practiceItemId;
+
+                    if (practiceItemId === "practice-mvp-ongba" || practiceSource === "ONG_BA") {
+                      return (
+                        <div className="max-w-xl mx-auto card-pastel p-6 text-center space-y-4">
+                          <Cpu className="w-12 h-12 text-primary mx-auto mb-2" />
+                          <h3 className="font-display font-bold text-lg text-foreground">Luyện tập: {targetDisplay}</h3>
+                          <p className="font-body text-sm text-muted-foreground">
+                            Ký hiệu "{targetDisplay}" hiện chưa hỗ trợ nhận diện tự động bằng camera. Bạn có thể hoàn thành phần học này trực tiếp.
+                          </p>
+                          <button
+                            onClick={() => void markCompleted()}
+                            disabled={saving}
+                            className="btn-primary-gradient inline-flex items-center gap-2 mt-4"
+                          >
+                            Hoàn thành phần học
+                          </button>
+                        </div>
+                      );
+                    }
+
                     return (
                       <div className="max-w-xl mx-auto space-y-4">
                         {(!aiTarget || !practiceItemId) && (
