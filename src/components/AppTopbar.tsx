@@ -1,4 +1,4 @@
-import { Bell, Flame, Globe, Menu, Moon, Search, Star, Sun } from "lucide-react";
+import { Bell, Flame, Globe, Menu, Moon, Star, Sun } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/hooks/useTheme";
 
@@ -7,7 +7,7 @@ interface AppTopbarProps {
 }
 
 export default function AppTopbar({ onMenuClick }: AppTopbarProps) {
-  const { stats, isPremium } = useAuth();
+  const { stats, isPremium, profile } = useAuth();
   const { theme, toggleTheme } = useTheme();
 
   return (
@@ -20,17 +20,14 @@ export default function AppTopbar({ onMenuClick }: AppTopbarProps) {
         <Menu className="w-5 h-5 text-foreground" />
       </button>
 
-      {/* Search */}
-      <div className="relative flex-1 max-w-xl hidden sm:block">
-        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <input
-          type="text"
-          placeholder="Tìm bài học, từ vựng..."
-          className="app-search w-full pl-10 pr-4 py-3 text-foreground font-body text-sm focus:outline-none focus:ring-2 focus:ring-ring/40 focus:bg-card transition-all"
-        />
+      {/* Welcome Message (Replaces the search bar) */}
+      <div className="hidden sm:flex items-center gap-2 font-display text-sm md:text-base">
+        <span className="text-muted-foreground font-medium">Chào mừng trở lại,</span>
+        <span className="font-extrabold text-gradient-vsign">{profile?.displayName || "Học viên"}</span>
+        <span className="animate-bounce">👋</span>
       </div>
 
-      <div className="ml-auto flex min-w-0 items-center gap-1 sm:gap-2.5">
+      <div className="ml-auto flex min-w-0 items-center gap-1.5 sm:gap-2.5">
         {/* Language indicator */}
         <div className="hidden lg:flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-muted/75 border border-border/70 text-muted-foreground text-xs font-body font-bold shadow-sm">
           <Globe className="w-3.5 h-3.5" />
@@ -38,37 +35,37 @@ export default function AppTopbar({ onMenuClick }: AppTopbarProps) {
         </div>
 
         {/* XP counter */}
-        <div className="flex items-center gap-1.5 rounded-full bg-card px-2.5 py-2 text-xs font-body font-extrabold text-amber-700 shadow-sm border border-amber-200/70 dark:border-amber-800/40 dark:text-amber-400 sm:px-3.5">
-          <Star className="w-3.5 h-3.5" />
+        <div className="flex items-center gap-1.5 rounded-full bg-card px-2.5 py-2 text-xs font-body font-extrabold text-amber-700 shadow-sm border border-amber-200/70 dark:border-amber-800/40 dark:text-amber-400 sm:px-3.5 hover:scale-105 transition-transform duration-200 cursor-default">
+          <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-500" />
           <span>{stats.xp}</span>
         </div>
 
         {/* Streak counter */}
-        <div className="flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-2 text-xs font-body font-extrabold text-primary shadow-sm border border-primary/15 sm:px-3.5">
-          <Flame className="w-3.5 h-3.5" />
+        <div className="flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-2 text-xs font-body font-extrabold text-primary shadow-sm border border-primary/15 sm:px-3.5 hover:scale-105 transition-transform duration-200 cursor-default">
+          <Flame className="w-3.5 h-3.5 fill-primary text-primary" />
           <span>{stats.streak}</span>
         </div>
 
         {/* Notification */}
-        <button className="hidden rounded-full bg-muted/75 p-2.5 transition-colors hover:bg-muted min-[360px]:inline-flex">
+        <button className="hidden rounded-full bg-muted/75 p-2.5 transition-all duration-200 hover:bg-muted hover:scale-105 active:scale-95 min-[360px]:inline-flex">
           <Bell className="w-5 h-5 text-muted-foreground" />
         </button>
 
         {/* Theme toggle (desktop) */}
         <button
           onClick={toggleTheme}
-          className="rounded-full bg-muted/75 p-2.5 transition-colors hover:bg-muted"
+          className="rounded-full bg-muted/75 p-2.5 transition-all duration-200 hover:bg-muted hover:scale-105 active:scale-95"
         >
           {theme === "dark" ? (
-            <Sun className="w-5 h-5 text-foreground" />
+            <Sun className="w-5 h-5 text-amber-500 fill-amber-400/20" />
           ) : (
-            <Moon className="w-5 h-5 text-foreground" />
+            <Moon className="w-5 h-5 text-slate-700 fill-slate-200/20" />
           )}
         </button>
 
         {/* Premium badge */}
         {isPremium && (
-          <span className="hidden sm:inline-flex text-[10px] font-body font-bold bg-amber-100 text-amber-700 px-2.5 py-1 rounded-full dark:bg-amber-900/40 dark:text-amber-400">
+          <span className="hidden sm:inline-flex text-[9px] font-body font-bold bg-gradient-to-r from-amber-500 to-yellow-400 text-white border border-amber-400/30 shadow-sm px-2.5 py-1.5 rounded-full hover:scale-105 transition-transform duration-200 cursor-default uppercase tracking-wider">
             Cao cấp
           </span>
         )}
