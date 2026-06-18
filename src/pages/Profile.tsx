@@ -279,7 +279,7 @@ export default function Profile() {
               <div>
                 <span className="font-display font-bold text-foreground block">Gói cước</span>
                 <span className={`text-xs font-body font-semibold px-3 py-1 rounded-full inline-block mt-1 ${isPremium ? "bg-amber-100 text-amber-700" : "bg-muted text-muted-foreground"}`}>
-                  {isPremium ? "Cao cấp" : "Miễn phí"}
+                  {isPremium ? (subscription.planType === "YEARLY" ? "V-Sign Pro" : "V-Sign Plus") : "Miễn phí"}
                 </span>
                 <span className="text-xs text-muted-foreground block mt-1">
                   {subscription.status === "ACTIVE" ? `Còn ${subscription.remainingDays} ngày` : "Chưa kích hoạt"}
@@ -304,7 +304,7 @@ export default function Profile() {
             </div>
             <div className="rounded-2xl bg-muted/50 px-4 py-3 mb-4">
               <p className="text-sm font-body text-foreground">
-                Trạng thái: <span className="font-display font-bold">{subscription.status === "ACTIVE" ? "Đang dùng gói cao cấp" : "Miễn phí"}</span>
+                Trạng thái: <span className="font-display font-bold">{subscription.status === "ACTIVE" ? (subscription.planType === "YEARLY" ? "Gói V-Sign Pro hoạt động" : "Gói V-Sign Plus hoạt động") : "Miễn phí"}</span>
               </p>
               {subscription.expiresAt && (
                 <p className="text-xs text-muted-foreground mt-1">

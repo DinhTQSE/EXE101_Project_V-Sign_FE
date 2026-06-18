@@ -7,7 +7,7 @@ interface AppTopbarProps {
 }
 
 export default function AppTopbar({ onMenuClick }: AppTopbarProps) {
-  const { stats, isPremium, profile } = useAuth();
+  const { stats, isPremium, profile, subscription } = useAuth();
   const { theme, toggleTheme } = useTheme();
 
   return (
@@ -66,7 +66,7 @@ export default function AppTopbar({ onMenuClick }: AppTopbarProps) {
         {/* Premium badge */}
         {isPremium && (
           <span className="hidden sm:inline-flex text-[9px] font-body font-bold bg-gradient-to-r from-amber-500 to-yellow-400 text-white border border-amber-400/30 shadow-sm px-2.5 py-1.5 rounded-full hover:scale-105 transition-transform duration-200 cursor-default uppercase tracking-wider">
-            Cao cấp
+            {subscription.planType === "YEARLY" ? "PRO" : "PLUS"}
           </span>
         )}
       </div>
