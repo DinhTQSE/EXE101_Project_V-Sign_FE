@@ -8,6 +8,7 @@ import {
   Crown,
   GraduationCap,
   Home,
+  Lock,
   LogOut,
   Moon,
   Search,
@@ -22,6 +23,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/hooks/useTheme";
 import logo from "@/assets/vsign-logo.png";
+import PremiumModal from "@/components/PremiumModal";
+
 
 export interface SidebarNavItem {
   path: string;
@@ -64,8 +67,12 @@ interface DesktopSidebarProps {
 export function DesktopSidebar({ collapsed, onToggle }: DesktopSidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { profile, userName, isPremium, logout } = useAuth();
+  const { profile, userName, isPremium, subscription, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const [premiumOpen, setPremiumOpen] = useState(false);
+
+  const isProUser = (profile?.role === "ADMIN" || profile?.role === "SUPER_ADMIN") || 
+                    (isPremium && subscription?.planType === "YEARLY");
 
   const displayName = profile.displayName || userName || "Người học";
   const avatarSrc = profile.avatarUrl;
@@ -102,11 +109,16 @@ export function DesktopSidebar({ collapsed, onToggle }: DesktopSidebarProps) {
       <nav className="flex-1 p-2.5 space-y-1.5 overflow-y-auto overflow-x-hidden">
         {visibleNavItems(profile.role).map((item) => {
           const active = isActive(location.pathname, item.path);
+          const isLocked = item.path === "/ai-recognition" && !isProUser;
           return (
             <button
               key={item.path}
               onClick={() => {
                 if (item.comingSoon) return;
+                if (isLocked) {
+                  setPremiumOpen(true);
+                  return;
+                }
                 navigate(item.path);
               }}
               title={collapsed ? item.label : undefined}
@@ -130,6 +142,9 @@ export function DesktopSidebar({ collapsed, onToggle }: DesktopSidebarProps) {
                 }`}
               >
                 {item.label}
+                {isLocked && (
+                  <Lock className="w-3.5 h-3.5 text-amber-500 shrink-0 animate-pulse" />
+                )}
                 {item.comingSoon && (
                   <span className="text-[10px] bg-muted text-muted-foreground px-2 py-0.5 rounded-full whitespace-nowrap">
                     Sắp ra mắt
@@ -222,6 +237,7 @@ export function DesktopSidebar({ collapsed, onToggle }: DesktopSidebarProps) {
         </button>
       </div>
       </div>
+      <PremiumModal open={premiumOpen} onClose={() => setPremiumOpen(false)} />
     </aside>
   );
 }
@@ -235,8 +251,12 @@ interface MobileDrawerProps {
 export function MobileDrawer({ open, onClose }: MobileDrawerProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { profile, userName, isPremium, logout } = useAuth();
+  const { profile, userName, isPremium, subscription, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const [premiumOpen, setPremiumOpen] = useState(false);
+
+  const isProUser = (profile?.role === "ADMIN" || profile?.role === "SUPER_ADMIN") || 
+                    (isPremium && subscription?.planType === "YEARLY");
 
   const displayName = profile.displayName || userName || "Người học";
 
@@ -274,11 +294,16 @@ export function MobileDrawer({ open, onClose }: MobileDrawerProps) {
             <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
               {visibleNavItems(profile.role).map((item) => {
                 const active = isActive(location.pathname, item.path);
+                const isLocked = item.path === "/ai-recognition" && !isProUser;
                 return (
                   <button
                     key={item.path}
                     onClick={() => {
                       if (item.comingSoon) return;
+                      if (isLocked) {
+                        setPremiumOpen(true);
+                        return;
+                      }
                       navigate(item.path);
                       onClose();
                     }}
@@ -293,6 +318,9 @@ export function MobileDrawer({ open, onClose }: MobileDrawerProps) {
                     <item.icon className="w-5 h-5 shrink-0" />
                     <span className="flex items-center gap-2">
                       {item.label}
+                      {isLocked && (
+                        <Lock className="w-3.5 h-3.5 text-amber-500 shrink-0 animate-pulse" />
+                      )}
                       {item.comingSoon && (
                         <span className="text-[10px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded-full">
                           Sắp ra mắt
@@ -339,10 +367,12 @@ export function MobileDrawer({ open, onClose }: MobileDrawerProps) {
                 <span>Đăng xuất</span>
               </button>
             </div>
+            <PremiumModal open={premiumOpen} onClose={() => setPremiumOpen(false)} />
           </motion.aside>
         </>
       )}
     </AnimatePresence>
+
   );
 }
 

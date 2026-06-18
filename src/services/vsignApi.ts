@@ -284,7 +284,11 @@ export interface SignatureAttemptResponse {
   confidence?: number;
   correct?: boolean;
   feedbackCodes: string[];
+  currentUsage?: number;
+  maxLimit?: number;
+  warningMessage?: string;
 }
+
 
 export interface UnitSummaryDto {
   unitId: string;

@@ -12,6 +12,7 @@ import {
   Users,
   Utensils,
   Video,
+  Crown,
   type LucideIcon,
 } from "lucide-react";
 import AiCameraPractice from "@/components/AiCameraPractice";
@@ -25,6 +26,10 @@ import {
   resolveAiPracticeTarget,
 } from "@/services/aiRecognition";
 import { dictionaryApi, DictionaryEntryDto } from "@/services/vsignApi";
+import { useAuth } from "@/contexts/AuthContext";
+import PremiumGate from "@/components/PremiumGate";
+import PremiumModal from "@/components/PremiumModal";
+
 
 const CATEGORY_ICONS: Record<AiPracticeFilter, LucideIcon> = {
   recommended: Sparkles,
@@ -82,6 +87,12 @@ async function loadSampleVideoEntry(target: AiPracticeTarget) {
 }
 
 export default function PracticeView() {
+  const { profile, isPremium, subscription } = useAuth();
+  const [premiumOpen, setPremiumOpen] = useState(false);
+
+  const isProUser = (profile?.role === "ADMIN" || profile?.role === "SUPER_ADMIN") || 
+                    (isPremium && subscription?.planType === "YEARLY");
+
   const location = useLocation();
   const practiceSign = (location.state as { practiceSign?: string } | null)?.practiceSign;
   const preferredTarget = useMemo(() => resolveAiPracticeTarget(practiceSign), [practiceSign]);
@@ -91,13 +102,36 @@ export default function PracticeView() {
   const [expanded, setExpanded] = useState(false);
   const [sampleEntry, setSampleEntry] = useState<DictionaryEntryDto | null>(null);
   const [sampleLoading, setSampleLoading] = useState(false);
-  const current = AI_PRACTICE_TARGETS[targetIndex] || AI_PRACTICE_TARGETS[0];
 
   useEffect(() => {
     if (!preferredTarget) return;
     setTargetIndex(findTargetIndex(preferredTarget));
     setActiveCategory(preferredTarget.category);
   }, [preferredTarget]);
+
+  const current = AI_PRACTICE_TARGETS[targetIndex] || AI_PRACTICE_TARGETS[0];
+
+  if (!isProUser) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center py-20 px-4 text-center">
+        <div className="w-16 h-16 rounded-[22px] bg-amber-100 dark:bg-amber-950/40 flex items-center justify-center mb-6 text-amber-500 shadow-sm shadow-amber-500/5">
+          <Crown className="w-8 h-8 animate-pulse text-amber-500" />
+        </div>
+        <h2 className="text-2xl font-display font-bold text-foreground mb-3">Tính năng dành cho gói Pro</h2>
+        <p className="text-muted-foreground font-body max-w-md mb-8 leading-relaxed">
+          Luyện tập nhận diện tự do qua camera AI là tính năng cao cấp thuộc gói Pro. Vui lòng nâng cấp gói Pro để bắt đầu luyện tập không giới hạn.
+        </p>
+        <button
+          onClick={() => setPremiumOpen(true)}
+          className="btn-primary-gradient px-8 py-3.5 rounded-full font-body font-bold text-white shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-transform duration-200"
+        >
+          Nâng cấp Pro ngay
+        </button>
+        <PremiumModal open={premiumOpen} onClose={() => setPremiumOpen(false)} />
+      </div>
+    );
+  }
+
 
   useEffect(() => {
     let cancelled = false;

@@ -15,6 +15,7 @@ import {
   resolveAiPracticeTarget,
 } from "@/services/aiRecognition";
 import { signatureApi } from "@/services/vsignApi";
+import { toast } from "sonner";
 
 type ScanState = "idle" | "scanning" | "success" | "retry" | "error";
 
@@ -27,7 +28,9 @@ interface AiCameraPracticeProps {
   minConfidence?: number;
   captureMs?: number;
   onSuccess?: () => void;
+  userStoryId?: string;
 }
+
 
 function predictionConfidence(prediction: AiPredictionResponse | null) {
   return prediction?.confidence ?? 0;
@@ -82,6 +85,7 @@ export default function AiCameraPractice({
   minConfidence = 0.7,
   captureMs = 3000,
   onSuccess,
+  userStoryId,
 }: AiCameraPracticeProps) {
   const { accessToken } = useAuth();
   const supportError = useMemo(() => getHolisticSupportError(), []);
@@ -118,9 +122,9 @@ export default function AiCameraPractice({
       const confidentEnough = nextPrediction.status === "ok" && (nextPrediction.confidence ?? 0) >= minConfidence;
       const correct = confidentEnough && (!requestedTarget || normalizeAiLabel(nextPrediction.label) === requestedTarget.label);
 
-      await signatureApi.submitAttempt(
+      const res = await signatureApi.submitAttempt(
         {
-          userStoryId: "US-AI-MVP-PRACTICE",
+          userStoryId: userStoryId || "US-AI-MVP-PRACTICE",
           practiceItemId: practiceItemId || logTarget.practiceItemId,
           signatureVector: buildSignatureVector(nextPrediction, result.durationMs),
           durationMs: result.durationMs,
@@ -137,6 +141,11 @@ export default function AiCameraPractice({
         },
         accessToken || undefined
       );
+
+      if (res.warningMessage) {
+        toast.warning(res.warningMessage);
+      }
+
 
       setPrediction(nextPrediction);
       if (correct) {
