@@ -164,6 +164,8 @@ export default function AdminDashboard() {
   const [userSearch, setUserSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [usersPage, setUsersPage] = useState(0);
+  const [paymentsPage, setPaymentsPage] = useState(0);
   const [editForm, setEditForm] = useState({ displayName: "", accountType: "BASIC" as AccountType, role: "USER" as UserRole, active: true, reason: "" });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -173,33 +175,80 @@ export default function AdminDashboard() {
 
   const dateInput = useMemo(() => ({ fromDate, toDate }), [fromDate, toDate]);
 
+  const loadOverviewAndAudit = useCallback(async (showLoading = false) => {
+    if (!accessToken) return;
+    if (showLoading) setLoading(true);
+    setError("");
+    try {
+      const [nextOverview, nextUsage, nextAudit] = await Promise.all([
+        adminApi.getMetricsOverview(accessToken, dateInput),
+        adminApi.getUsageMetrics(accessToken, { ...dateInput, granularity: "daily" }),
+        adminApi.listAuditLogs(accessToken),
+      ]);
+      setOverview(nextOverview);
+      setUsage(nextUsage);
+      setAuditLogs(nextAudit);
+    } catch (err) {
+      setError(apiMessage(err));
+    } finally {
+      if (showLoading) setLoading(false);
+    }
+  }, [accessToken, dateInput]);
+
+  const loadUsers = useCallback(async () => {
+    if (!accessToken) return;
+    try {
+      const nextUsers = await adminApi.listUsers(accessToken, {
+        search: userSearch,
+        role: roleFilter,
+        status: statusFilter,
+        page: usersPage,
+        size: 20,
+      });
+      setUsers(nextUsers);
+    } catch (err) {
+      setError(apiMessage(err));
+    }
+  }, [accessToken, userSearch, roleFilter, statusFilter, usersPage]);
+
+  const loadPayments = useCallback(async () => {
+    if (!accessToken) return;
+    try {
+      const nextPayments = await adminApi.listPayments(accessToken, paymentsPage, 10);
+      setPayments(nextPayments);
+    } catch (err) {
+      setError(apiMessage(err));
+    }
+  }, [accessToken, paymentsPage]);
+
   const loadDashboard = useCallback(async () => {
     if (!accessToken) return;
     setLoading(true);
     setError("");
     try {
-      const [nextOverview, nextUsage, nextUsers, nextPayments, nextAudit] = await Promise.all([
-        adminApi.getMetricsOverview(accessToken, dateInput),
-        adminApi.getUsageMetrics(accessToken, { ...dateInput, granularity: "daily" }),
-        adminApi.listUsers(accessToken, { search: userSearch, role: roleFilter, status: statusFilter, page: 0, size: 20 }),
-        adminApi.listPayments(accessToken, 0, 10),
-        adminApi.listAuditLogs(accessToken),
+      await Promise.all([
+        loadOverviewAndAudit(),
+        loadUsers(),
+        loadPayments(),
       ]);
-      setOverview(nextOverview);
-      setUsage(nextUsage);
-      setUsers(nextUsers);
-      setPayments(nextPayments);
-      setAuditLogs(nextAudit);
     } catch (err) {
       setError(apiMessage(err));
     } finally {
       setLoading(false);
     }
-  }, [accessToken, dateInput, roleFilter, statusFilter, userSearch]);
+  }, [accessToken, loadOverviewAndAudit, loadUsers, loadPayments]);
 
   useEffect(() => {
-    void loadDashboard();
-  }, [loadDashboard]);
+    void loadOverviewAndAudit(true);
+  }, [loadOverviewAndAudit]);
+
+  useEffect(() => {
+    void loadUsers();
+  }, [loadUsers]);
+
+  useEffect(() => {
+    void loadPayments();
+  }, [loadPayments]);
 
   const selectUser = async (userId: string) => {
     if (!accessToken) return;
@@ -220,10 +269,11 @@ export default function AdminDashboard() {
     }
   };
 
-  const refreshUsers = async () => {
-    if (!accessToken) return;
-    const nextUsers = await adminApi.listUsers(accessToken, { search: userSearch, role: roleFilter, status: statusFilter, page: 0, size: 20 });
-    setUsers(nextUsers);
+  const refreshUsers = () => {
+    setUsersPage(0);
+    if (usersPage === 0) {
+      void loadUsers();
+    }
   };
 
   const saveUser = async () => {
@@ -410,14 +460,14 @@ export default function AdminDashboard() {
                       className="h-10 w-full rounded-lg border border-input bg-background pl-9 pr-3 text-sm"
                     />
                   </div>
-                  <select value={roleFilter} onChange={(event) => setRoleFilter(event.target.value)} className="h-10 rounded-lg border border-input bg-background px-3 text-sm">
+                  <select value={roleFilter} onChange={(event) => { setRoleFilter(event.target.value); setUsersPage(0); }} className="h-10 rounded-lg border border-input bg-background px-3 text-sm">
                     <option value="">Tất cả vai trò</option>
                     <option value="USER">Học viên</option>
                     <option value="ADMIN">Quản trị viên</option>
                     <option value="SUPER_ADMIN">Quản trị cấp cao</option>
                     <option value="CONTENT_REVIEWER">Duyệt nội dung</option>
                   </select>
-                  <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} className="h-10 rounded-lg border border-input bg-background px-3 text-sm">
+                  <select value={statusFilter} onChange={(event) => { setStatusFilter(event.target.value); setUsersPage(0); }} className="h-10 rounded-lg border border-input bg-background px-3 text-sm">
                     <option value="">Tất cả trạng thái</option>
                     <option value="ACTIVE">Đang hoạt động</option>
                     <option value="DISABLED">Đã vô hiệu hóa</option>
@@ -428,38 +478,66 @@ export default function AdminDashboard() {
                   </button>
                 </div>
 
-                <div className="overflow-x-auto rounded-lg border border-border bg-card">
-                  <table className="min-w-[840px] w-full text-left text-sm">
-                    <thead className="bg-muted/60 text-xs uppercase text-muted-foreground">
-                      <tr>
-                        <th className="px-4 py-3">Người dùng</th>
-                        <th className="px-4 py-3">Vai trò</th>
-                        <th className="px-4 py-3">Trạng thái</th>
-                        <th className="px-4 py-3">Gói</th>
-                        <th className="px-4 py-3">Lần cuối</th>
-                        <th className="px-4 py-3 text-right">XP</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {users.users.map((user) => (
-                        <tr key={user.id} className="border-t border-border hover:bg-muted/40">
-                          <td className="px-4 py-3">
-                            <button onClick={() => selectUser(user.id)} className="min-w-0 text-left">
-                              <span className="block font-bold text-foreground">{user.displayName}</span>
-                              <span className="block text-xs text-muted-foreground">{user.email}</span>
-                            </button>
-                          </td>
-                          <td className="px-4 py-3 font-semibold">{roleLabel(user.role)}</td>
-                          <td className="px-4 py-3">
-                            <span className={`rounded-full border px-2 py-1 text-xs font-bold ${statusBadge(user.status)}`}>{userStatusLabel(user.status)}</span>
-                          </td>
-                          <td className="px-4 py-3">{accountTypeLabel(user.accountType)}</td>
-                          <td className="px-4 py-3 text-muted-foreground">{formatDate(user.lastSeenAt)}</td>
-                          <td className="px-4 py-3 text-right font-semibold">{user.totalXp}</td>
+                <div className="space-y-3">
+                  <div className="overflow-x-auto rounded-lg border border-border bg-card">
+                    <table className="min-w-[840px] w-full text-left text-sm">
+                      <thead className="bg-muted/60 text-xs uppercase text-muted-foreground">
+                        <tr>
+                          <th className="px-4 py-3">Người dùng</th>
+                          <th className="px-4 py-3">Vai trò</th>
+                          <th className="px-4 py-3">Trạng thái</th>
+                          <th className="px-4 py-3">Gói</th>
+                          <th className="px-4 py-3">Lần cuối</th>
+                          <th className="px-4 py-3 text-right">XP</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {users.users.map((user) => (
+                          <tr key={user.id} className="border-t border-border hover:bg-muted/40">
+                            <td className="px-4 py-3">
+                              <button onClick={() => selectUser(user.id)} className="min-w-0 text-left">
+                                <span className="block font-bold text-foreground">{user.displayName}</span>
+                                <span className="block text-xs text-muted-foreground">{user.email}</span>
+                              </button>
+                            </td>
+                            <td className="px-4 py-3 font-semibold">{roleLabel(user.role)}</td>
+                            <td className="px-4 py-3">
+                              <span className={`rounded-full border px-2 py-1 text-xs font-bold ${statusBadge(user.status)}`}>{userStatusLabel(user.status)}</span>
+                            </td>
+                            <td className="px-4 py-3">{accountTypeLabel(user.accountType)}</td>
+                            <td className="px-4 py-3 text-muted-foreground">{formatDate(user.lastSeenAt)}</td>
+                            <td className="px-4 py-3 text-right font-semibold">{user.totalXp}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {users.totalPages > 1 && (
+                    <div className="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3 text-sm">
+                      <span className="text-muted-foreground">
+                        Hiển thị {users.users.length} học viên (Trang {users.page + 1} / {users.totalPages})
+                      </span>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          disabled={users.page <= 0}
+                          onClick={() => setUsersPage(users.page - 1)}
+                          className="inline-flex h-9 items-center justify-center rounded-lg border border-border bg-card px-3 font-bold text-foreground hover:bg-muted disabled:opacity-50"
+                        >
+                          Trước
+                        </button>
+                        <button
+                          type="button"
+                          disabled={users.page >= users.totalPages - 1}
+                          onClick={() => setUsersPage(users.page + 1)}
+                          className="inline-flex h-9 items-center justify-center rounded-lg border border-border bg-card px-3 font-bold text-foreground hover:bg-muted disabled:opacity-50"
+                        >
+                          Sau
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -563,35 +641,63 @@ export default function AdminDashboard() {
           )}
 
           {activeTab === "payments" && (
-            <section className="overflow-x-auto rounded-lg border border-border bg-card">
-              <table className="min-w-[860px] w-full text-left text-sm">
-                <thead className="bg-muted/60 text-xs uppercase text-muted-foreground">
-                  <tr>
-                    <th className="px-4 py-3">Mã giao dịch</th>
-                    <th className="px-4 py-3">Người dùng</th>
-                    <th className="px-4 py-3">Gói</th>
-                    <th className="px-4 py-3">Nhà cung cấp</th>
-                    <th className="px-4 py-3">Trạng thái</th>
-                    <th className="px-4 py-3 text-right">Số tiền</th>
-                    <th className="px-4 py-3">Ngày tạo</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {payments.payments.map((payment) => (
-                    <tr key={payment.transactionId} className="border-t border-border">
-                      <td className="px-4 py-3 font-semibold">{payment.transactionId}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{payment.userEmail}</td>
-                      <td className="px-4 py-3">{payment.planId}</td>
-                      <td className="px-4 py-3">{payment.provider}</td>
-                      <td className="px-4 py-3">
-                        <span className={`rounded-full border px-2 py-1 text-xs font-bold ${statusBadge(payment.status)}`}>{userStatusLabel(payment.status)}</span>
-                      </td>
-                      <td className="px-4 py-3 text-right font-semibold">{formatMoney(payment.amount)}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{formatDate(payment.createdAt)}</td>
+            <section className="space-y-3">
+              <div className="overflow-x-auto rounded-lg border border-border bg-card">
+                <table className="min-w-[860px] w-full text-left text-sm">
+                  <thead className="bg-muted/60 text-xs uppercase text-muted-foreground">
+                    <tr>
+                      <th className="px-4 py-3">Mã giao dịch</th>
+                      <th className="px-4 py-3">Người dùng</th>
+                      <th className="px-4 py-3">Gói</th>
+                      <th className="px-4 py-3">Nhà cung cấp</th>
+                      <th className="px-4 py-3">Trạng thái</th>
+                      <th className="px-4 py-3 text-right">Số tiền</th>
+                      <th className="px-4 py-3">Ngày tạo</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {payments.payments.map((payment) => (
+                      <tr key={payment.transactionId} className="border-t border-border">
+                        <td className="px-4 py-3 font-semibold">{payment.transactionId}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{payment.userEmail}</td>
+                        <td className="px-4 py-3">{payment.planId}</td>
+                        <td className="px-4 py-3">{payment.provider}</td>
+                        <td className="px-4 py-3">
+                          <span className={`rounded-full border px-2 py-1 text-xs font-bold ${statusBadge(payment.status)}`}>{userStatusLabel(payment.status)}</span>
+                        </td>
+                        <td className="px-4 py-3 text-right font-semibold">{formatMoney(payment.amount)}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{formatDate(payment.createdAt)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {payments.totalPages > 1 && (
+                <div className="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3 text-sm">
+                  <span className="text-muted-foreground">
+                    Hiển thị {payments.payments.length} giao dịch (Trang {payments.page + 1} / {payments.totalPages})
+                  </span>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      disabled={payments.page <= 0}
+                      onClick={() => setPaymentsPage(payments.page - 1)}
+                      className="inline-flex h-9 items-center justify-center rounded-lg border border-border bg-card px-3 font-bold text-foreground hover:bg-muted disabled:opacity-50"
+                    >
+                      Trước
+                    </button>
+                    <button
+                      type="button"
+                      disabled={payments.page >= payments.totalPages - 1}
+                      onClick={() => setPaymentsPage(payments.page + 1)}
+                      className="inline-flex h-9 items-center justify-center rounded-lg border border-border bg-card px-3 font-bold text-foreground hover:bg-muted disabled:opacity-50"
+                    >
+                      Sau
+                    </button>
+                  </div>
+                </div>
+              )}
             </section>
           )}
 
