@@ -141,14 +141,14 @@ export default function AiCameraPractice({
       setPrediction(nextPrediction);
       if (correct) {
         setScanState("success");
-        setMessage(`AI nhận diện đúng ${targetText} với độ tin cậy ${Math.round((nextPrediction.confidence ?? 0) * 100)}%.`);
+        setMessage(`AI nhận diện đúng ký hiệu ${targetText}.`);
         setTimeout(() => onSuccess?.(), 900);
       } else {
         setScanState("retry");
         setMessage(
           nextPrediction.status === "no_hands"
             ? "AI chưa phát hiện tay trong khung hình. Hãy đưa tay rõ hơn và thử lại."
-            : `AI nhận diện ${aiLabelToDisplay(nextPrediction.label)} (${Math.round((nextPrediction.confidence ?? 0) * 100)}%). Hãy thử lại chậm hơn và đúng ký hiệu yêu cầu.`
+            : `AI nhận diện thành ký hiệu ${aiLabelToDisplay(nextPrediction.label)}. Hãy thử lại chậm hơn và đúng ký hiệu yêu cầu.`
         );
       }
     } catch (err: unknown) {
@@ -212,19 +212,6 @@ export default function AiCameraPractice({
             </div>
           </div>
         )}
-      </div>
-
-      <div className="mb-4 text-left">
-        <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-          <span>Độ tin cậy</span>
-          <span>{Math.round(confidence * 100)}%</span>
-        </div>
-        <div className="h-2 rounded-full bg-muted overflow-hidden">
-          <div
-            className="h-full rounded-full transition-all"
-            style={{ width: `${Math.round(confidence * 100)}%`, background: confidence >= minConfidence ? "hsl(var(--success))" : "var(--gradient-primary)" }}
-          />
-        </div>
       </div>
 
       {message && (

@@ -130,7 +130,6 @@ export function resolveAiPracticeTarget(text?: string | null) {
       target.label,
       target.gloss,
       target.display,
-      target.region,
       ...(target.aliases || []),
     ].map(normalizeAiLabel);
     return keys.some((key) => key && (normalized === key || normalized.includes(key)));
