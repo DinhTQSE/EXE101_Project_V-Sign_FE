@@ -11,12 +11,13 @@ interface PremiumModalProps {
 }
 
 export default function PremiumModal({ open, onClose }: PremiumModalProps) {
-  const { accessToken } = useAuth();
+  const { accessToken, subscription } = useAuth();
   const [tiers, setTiers] = useState<SubscriptionTier[]>([]);
   const [selectedTierId, setSelectedTierId] = useState<string>("");
   const [fetchingTiers, setFetchingTiers] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showUpgradeConfirm, setShowUpgradeConfirm] = useState(false);
 
   const benefits = [
     "Mở khóa toàn bộ lộ trình học và từ vựng",
@@ -48,11 +49,24 @@ export default function PremiumModal({ open, onClose }: PremiumModalProps) {
 
   const handleClose = () => {
     if (loading) return;
+    setShowUpgradeConfirm(false);
     onClose();
   };
 
   const handleCheckout = async () => {
     if (!selectedTierId) return;
+
+    const selectedTier = tiers.find((t) => t.tierId === selectedTierId);
+    const isUpgrading =
+      subscription?.status === "ACTIVE" &&
+      subscription?.planType === "MONTHLY" &&
+      selectedTier?.title.toLowerCase() === "pro";
+
+    if (isUpgrading && !showUpgradeConfirm) {
+      setShowUpgradeConfirm(true);
+      return;
+    }
+
     setLoading(true);
     setError("");
     try {
@@ -65,7 +79,9 @@ export default function PremiumModal({ open, onClose }: PremiumModalProps) {
     } catch (err: unknown) {
       console.error("Checkout error:", err);
       const errorObj = err as { code?: string; message?: string } | null;
-      if (errorObj?.code === "HTTP_ERROR" || errorObj?.message?.includes("active paid")) {
+      if (errorObj?.message?.includes("active paid")) {
+        setError("Tài khoản của bạn đang có một gói Premium hoạt động! Không thể mua gói mới khi gói cũ chưa hết hạn.");
+      } else if (errorObj?.code === "HTTP_ERROR") {
         setError(errorObj?.message || "Bạn đang có một gói Premium hoạt động!");
       } else {
         setError(errorObj?.message || "Không thể tạo giao dịch thanh toán. Vui lòng thử lại.");
@@ -115,7 +131,28 @@ export default function PremiumModal({ open, onClose }: PremiumModalProps) {
             </div>
 
             <div className="p-6 space-y-6">
-              {fetchingTiers ? (
+              {showUpgradeConfirm ? (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 text-amber-500">
+                    <AlertCircle className="w-8 h-8 shrink-0 animate-pulse" />
+                    <h3 className="text-lg font-display font-bold">Xác nhận nâng cấp gói</h3>
+                  </div>
+                  <p className="text-sm text-foreground/80 font-body leading-relaxed">
+                    Tài khoản của bạn hiện đang có gói **V-Sign Plus** hoạt động.
+                  </p>
+                  <p className="text-sm text-foreground/80 font-body leading-relaxed bg-amber-500/10 border border-amber-500/20 p-4 rounded-xl">
+                    <strong>Lưu ý:</strong> Khi bạn đồng ý nâng cấp lên gói **V-Sign Pro**, gói Plus cũ sẽ bị <strong>hủy bỏ hoàn toàn</strong> ngay khi thanh toán thành công (mặc dù vẫn còn lượt sử dụng AI hoặc thời gian sử dụng). Bạn có đồng ý hủy gói cũ để nâng cấp không?
+                  </p>
+                  {error && (
+                    <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-4">
+                      <div className="flex items-start gap-2 text-sm text-destructive font-body">
+                        <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                        <span>{error}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : fetchingTiers ? (
                 <div className="py-12 flex flex-col items-center justify-center gap-3">
                   <LoadingSpinner size="md" />
                   <p className="text-sm text-muted-foreground font-body">Đang tải các gói dịch vụ...</p>
@@ -194,20 +231,47 @@ export default function PremiumModal({ open, onClose }: PremiumModalProps) {
 
             {!fetchingTiers && tiers.length > 0 && (
               <div className="p-6 border-t border-border">
-                <button
-                  type="button"
-                  onClick={handleCheckout}
-                  disabled={loading}
-                  className="btn-primary-gradient w-full text-center flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed min-h-[48px] font-display font-bold"
-                >
-                  {loading ? (
-                    <>
-                      <LoadingSpinner size="sm" /> Đang kết nối PayOS...
-                    </>
-                  ) : (
-                    "Thanh toán ngay"
-                  )}
-                </button>
+                {showUpgradeConfirm ? (
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowUpgradeConfirm(false)}
+                      disabled={loading}
+                      className="w-full sm:w-1/2 px-4 py-2.5 rounded-xl border border-border bg-card hover:bg-muted text-foreground text-sm font-semibold transition-colors disabled:opacity-50"
+                    >
+                      Quay lại
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCheckout}
+                      disabled={loading}
+                      className="btn-primary-gradient w-full sm:w-1/2 text-center flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed min-h-[48px] font-display font-bold text-sm"
+                    >
+                      {loading ? (
+                        <>
+                          <LoadingSpinner size="sm" /> Đang kết nối PayOS...
+                        </>
+                      ) : (
+                        "Đồng ý & Thanh toán"
+                      )}
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleCheckout}
+                    disabled={loading}
+                    className="btn-primary-gradient w-full text-center flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed min-h-[48px] font-display font-bold"
+                  >
+                    {loading ? (
+                      <>
+                        <LoadingSpinner size="sm" /> Đang kết nối PayOS...
+                      </>
+                    ) : (
+                      "Thanh toán ngay"
+                    )}
+                  </button>
+                )}
               </div>
             )}
           </motion.div>
