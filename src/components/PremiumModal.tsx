@@ -20,7 +20,7 @@ export default function PremiumModal({ open, onClose }: PremiumModalProps) {
 
   const benefits = [
     "Mở khóa toàn bộ lộ trình học và từ vựng",
-    "Không giới hạn AI Camera luyện tập",
+    "AI Camera luyện tập theo gói đăng ký",
     "Theo dõi XP, streak, badge và bảng xếp hạng đầy đủ",
   ];
 
@@ -153,9 +153,7 @@ export default function PremiumModal({ open, onClose }: PremiumModalProps) {
                             Sử dụng trong {tier.noMonth} tháng
                           </span>
                           <span className="inline-block text-[11px] font-semibold text-secondary bg-secondary/10 px-2 py-0.5 rounded-full mt-3">
-                            {tier.limitedToken >= 500 
-                              ? "Không giới hạn AI Camera" 
-                              : `${tier.limitedToken} lượt hỏi AI / tháng`}
+                            {`${tier.limitedToken} lượt hỏi AI / tháng`}
                           </span>
                         </button>
                       );
