@@ -368,7 +368,7 @@
 
   .btn-primary-gradient:hover {
     transform: scale(1.03);
-    box-shadow: 0 8px 25px -5px rgb(214 51 108 / 0.4);
+    box-shadow: 0 8px 25px -5px hsl(var(--primary) / 0.4);
   }
 
   .btn-primary-gradient:active {
@@ -405,7 +405,7 @@
     @apply relative overflow-hidden rounded-[32px] border border-border/80;
     background:
       radial-gradient(circle at 78% 20%, hsl(0 0% 100% / 0.24), transparent 16%),
-      linear-gradient(135deg, #D6336C, #FF4081 58%, #FFB6C1);
+      var(--gradient-primary);
     box-shadow: var(--shadow-pop);
   }
 
@@ -446,7 +446,7 @@
   .icon-tile {
     @apply flex h-14 w-14 items-center justify-center rounded-[18px] text-primary-foreground;
     background: var(--gradient-primary);
-    box-shadow: 0 16px 28px -20px rgb(214 51 108 / 0.7);
+    box-shadow: 0 16px 28px -20px hsl(var(--primary) / 0.7);
   }
 
   .text-gradient-vsign {

@@ -43,11 +43,11 @@ type SubjectCard = {
 
 const iconTones: Record<string, IconTone> = {
   rose: {
-    tile: "bg-gradient-to-br from-rose-500 via-pink-500 to-rose-300",
-    soft: "bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-200",
-    text: "text-rose-600",
-    glow: "bg-rose-300/28",
-    ring: "ring-rose-100 dark:ring-rose-500/20",
+    tile: "bg-gradient-to-br from-primary via-primary/80 to-primary/60",
+    soft: "bg-primary/10 text-primary dark:bg-primary/20",
+    text: "text-primary",
+    glow: "bg-primary/20",
+    ring: "ring-primary/10 dark:ring-primary/20",
   },
   violet: {
     tile: "bg-gradient-to-br from-fuchsia-500 via-pink-500 to-rose-300",
@@ -80,10 +80,10 @@ const iconTones: Record<string, IconTone> = {
 };
 
 const homeCardClass =
-  "card-pop border-rose-100/90 bg-gradient-to-br from-white via-rose-50/70 to-pink-50/45 dark:border-border/80 dark:from-card dark:via-card dark:to-card";
+  "card-pop border-primary/10 bg-gradient-to-br from-card via-primary/[0.02] to-primary/[0.04] dark:border-border/80 dark:from-card dark:via-card dark:to-card";
 
 const homeInnerCardClass =
-  "rounded-[26px] border border-rose-100/90 bg-gradient-to-br from-white via-rose-50/45 to-white shadow-sm dark:border-border/75 dark:from-card dark:via-card dark:to-card";
+  "rounded-[26px] border border-primary/10 bg-gradient-to-br from-card via-primary/[0.01] to-card shadow-sm dark:border-border/75 dark:from-card dark:via-card dark:to-card";
 
 const fallbackSubjects: SubjectCard[] = [
   {
@@ -470,7 +470,7 @@ export default function Home() {
           </section>
 
           <section className={cn(homeCardClass, "overflow-hidden")}>
-            <div className="bg-gradient-to-br from-rose-500 via-pink-500 to-orange-300 p-5 text-white">
+            <div className="bg-gradient-to-br from-primary via-primary/85 to-primary/70 p-5 text-white">
               <div className="mb-8 flex items-center justify-between">
                 <span className="rounded-full bg-white/18 px-3 py-1 text-xs font-extrabold backdrop-blur">Ký hiệu hôm nay</span>
                 <Hand className="h-6 w-6" />
