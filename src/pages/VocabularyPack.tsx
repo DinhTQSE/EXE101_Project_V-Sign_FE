@@ -548,10 +548,14 @@ function LessonStudyModal({
   lesson,
   onClose,
   onLessonCompleted,
+  nextLesson = null,
+  onNextLesson,
 }: {
   lesson: LessonSummaryDto;
   onClose: () => void;
   onLessonCompleted: (lessonId: string) => void;
+  nextLesson?: LessonSummaryDto | null;
+  onNextLesson?: () => void;
 }) {
   const { accessToken, refreshGamification } = useAuth();
   const [detail, setDetail] = useState<LessonDetailDto | null>(null);
@@ -833,6 +837,22 @@ function LessonStudyModal({
 
                     return (
                       <div className="max-w-xl mx-auto space-y-4">
+                        {detail?.videoUrl && (
+                          <div className="rounded-[22px] overflow-hidden border border-border bg-card p-3 shadow-md animate-fade-in">
+                            <p className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1.5 justify-center font-body">
+                              <Video className="w-3.5 h-3.5 text-primary" /> Video mẫu hướng dẫn ký hiệu
+                            </p>
+                            <div className="aspect-video w-full max-w-[280px] mx-auto rounded-xl overflow-hidden shadow-inner bg-black">
+                              <VideoPlayer
+                                src={detail.videoUrl}
+                                className="w-full h-full"
+                                preload="auto"
+                                label={`Hướng dẫn: ${targetDisplay}`}
+                              />
+                            </div>
+                          </div>
+                        )}
+
                         {(!aiTarget || !practiceItemId) && (
                           <div className="rounded-2xl bg-muted/60 border border-border px-4 py-3 text-sm font-body text-muted-foreground text-center">
                             Bài luyện tập này đang được cập nhật. Vui lòng chọn bài học khác hoặc quay lại sau.
@@ -847,8 +867,9 @@ function LessonStudyModal({
                               targetLabel={aiTarget.label}
                               targetDisplay={targetDisplay}
                               practiceItemId={practiceItemId}
-                              minConfidence={0.7}
+                              minConfidence={0.55}
                               onSuccess={() => void markCompleted()}
+                              onSkip={() => void markCompleted()}
                             />
                           </Suspense>
                         )}
@@ -869,7 +890,19 @@ function LessonStudyModal({
                   <CheckCircle className="w-16 h-16 text-[hsl(var(--success))] mx-auto mb-4" />
                   <h2 className="font-display font-bold text-2xl text-foreground mb-2">Đã lưu tiến độ</h2>
                   <p className="font-body text-muted-foreground mb-6">Bài học "{lesson.title}" đã được lưu hoàn thành.</p>
-                  <button onClick={onClose} className="btn-primary-gradient">Quay lại danh sách</button>
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+                    {nextLesson && onNextLesson && !nextLesson.locked && (
+                      <button onClick={onNextLesson} className="btn-primary-gradient inline-flex items-center justify-center gap-2 min-w-[160px]">
+                        Bài học tiếp theo <ChevronRight className="w-4 h-4" />
+                      </button>
+                    )}
+                    <button
+                      onClick={onClose}
+                      className="inline-flex items-center justify-center px-6 py-2.5 rounded-xl bg-card border border-border text-sm font-body font-semibold text-foreground hover:bg-muted transition-colors min-w-[160px]"
+                    >
+                      Quay về danh sách
+                    </button>
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -898,6 +931,20 @@ function LessonsTimeline({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const progress = chapterProgress(chapter, lessons);
+
+  const nextLesson = useMemo(() => {
+    if (!activeLesson) return null;
+    const currentIndex = lessons.findIndex((l) => l.lessonId === activeLesson.lessonId);
+    if (currentIndex === -1 || currentIndex === lessons.length - 1) return null;
+    const next = lessons[currentIndex + 1];
+    return next.locked ? null : next;
+  }, [activeLesson, lessons]);
+
+  const handleNextLesson = useCallback(() => {
+    if (nextLesson) {
+      setActiveLesson(nextLesson);
+    }
+  }, [nextLesson]);
 
   const loadLessons = useCallback(async (forceRefresh = false) => {
     if (!forceRefresh && lessonsCache.has(chapter.chapterId)) {
@@ -1032,6 +1079,8 @@ function LessonsTimeline({
               onLessonCompleted(lessonId);
               void loadLessons(true);
             }}
+            nextLesson={nextLesson}
+            onNextLesson={handleNextLesson}
           />
         )}
       </AnimatePresence>

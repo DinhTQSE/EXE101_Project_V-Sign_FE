@@ -24,6 +24,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/hooks/useTheme";
 import logo from "@/assets/vsign-logo.png";
 import PremiumModal from "@/components/PremiumModal";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 
 export interface SidebarNavItem {
@@ -158,68 +165,76 @@ export function DesktopSidebar({ collapsed, onToggle }: DesktopSidebarProps) {
 
       {/* Footer */}
       <div className="p-2.5 border-t border-border/70 space-y-1.5 shrink-0 bg-muted/20">
-        {/* Theme toggle */}
-        <button
-          onClick={toggleTheme}
-          title={collapsed ? (theme === "dark" ? "Chế độ sáng" : "Chế độ tối") : undefined}
-          className={`w-full flex items-center rounded-full text-foreground font-body font-bold text-sm hover:bg-muted/90 transition-all duration-200 ${
-            collapsed ? "justify-center px-0 py-3" : "gap-3 justify-start px-4 py-3.5"
-          }`}
-        >
-          {theme === "dark" ? <Sun className="w-5 h-5 shrink-0" /> : <Moon className="w-5 h-5 shrink-0" />}
-          <span
-            className={`whitespace-nowrap transition-all duration-300 ${
-              collapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100 w-auto"
-            }`}
-          >
-            {theme === "dark" ? "Chế độ sáng" : "Chế độ tối"}
-          </span>
-        </button>
+        {/* Dropdown Menu for Profile, Theme & Logout */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              className={`w-full flex items-center rounded-full text-foreground font-body font-bold text-sm hover:bg-muted/90 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 ${
+                collapsed ? "justify-center px-0 py-3" : "gap-3 justify-start px-4 py-3.5"
+              }`}
+            >
+              <div
+                className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center text-xs font-bold text-primary-foreground shrink-0 ring-2 ring-primary/15"
+                style={{ background: avatarSrc ? undefined : "var(--gradient-primary)" }}
+              >
+                {avatarSrc ? (
+                  <img src={avatarSrc} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  displayName.charAt(0).toUpperCase()
+                )}
+              </div>
+              <span
+                className={`flex items-center gap-2 min-w-0 whitespace-nowrap transition-all duration-300 ${
+                  collapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100 w-auto"
+                }`}
+              >
+                <span className="truncate max-w-[140px]">{displayName}</span>
+                {isPremium && <Crown className="w-4 h-4 text-amber-500 shrink-0" />}
+              </span>
+            </button>
+          </DropdownMenuTrigger>
 
-        {/* User */}
-        <button
-          onClick={() => navigate("/profile")}
-          className={`w-full flex items-center rounded-full text-foreground font-body font-bold text-sm hover:bg-muted/90 transition-all duration-200 ${
-            collapsed ? "justify-center px-0 py-3" : "gap-3 justify-start px-4 py-3.5"
-          }`}
-        >
-          <div
-            className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center text-xs font-bold text-primary-foreground shrink-0 ring-2 ring-primary/15"
-            style={{ background: avatarSrc ? undefined : "var(--gradient-primary)" }}
+          <DropdownMenuContent
+            side={collapsed ? "right" : "top"}
+            align={collapsed ? "center" : "end"}
+            className="w-56 p-1.5 rounded-[18px] border border-border/80 bg-popover shadow-xl animate-fade-in"
           >
-            {avatarSrc ? (
-              <img src={avatarSrc} alt="" className="w-full h-full object-cover" />
-            ) : (
-              displayName.charAt(0).toUpperCase()
-            )}
-          </div>
-          <span
-            className={`flex items-center gap-2 min-w-0 whitespace-nowrap transition-all duration-300 ${
-              collapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100 w-auto"
-            }`}
-          >
-            <span className="truncate max-w-[140px]">{displayName}</span>
-            {isPremium && <Crown className="w-4 h-4 text-amber-500 shrink-0" />}
-          </span>
-        </button>
+            <DropdownMenuItem
+              onClick={() => navigate("/profile")}
+              className="flex items-center gap-2.5 px-3 py-2.5 text-sm font-body font-bold text-foreground rounded-xl cursor-pointer hover:bg-muted focus:bg-muted transition-colors"
+            >
+              <User className="w-4 h-4 text-muted-foreground" />
+              <span>Hồ sơ cá nhân</span>
+            </DropdownMenuItem>
 
-        {/* Logout */}
-        <button
-          onClick={handleLogout}
-          title={collapsed ? "Đăng xuất" : undefined}
-          className={`w-full flex items-center rounded-full text-destructive font-body font-bold text-sm hover:bg-destructive/10 transition-all duration-200 ${
-            collapsed ? "justify-center px-0 py-3" : "gap-3 justify-start px-4 py-3.5"
-          }`}
-        >
-          <LogOut className="w-5 h-5 shrink-0" />
-          <span
-            className={`whitespace-nowrap transition-all duration-300 ${
-              collapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100 w-auto"
-            }`}
-          >
-            Đăng xuất
-          </span>
-        </button>
+            <DropdownMenuItem
+              onClick={toggleTheme}
+              className="flex items-center gap-2.5 px-3 py-2.5 text-sm font-body font-bold text-foreground rounded-xl cursor-pointer hover:bg-muted focus:bg-muted transition-colors"
+            >
+              {theme === "dark" ? (
+                <>
+                  <Sun className="w-4 h-4 text-muted-foreground" />
+                  <span>Giao diện sáng</span>
+                </>
+              ) : (
+                <>
+                  <Moon className="w-4 h-4 text-muted-foreground" />
+                  <span>Giao diện tối</span>
+                </>
+              )}
+            </DropdownMenuItem>
+
+            <DropdownMenuSeparator className="-mx-1.5 my-1.5 bg-border/60" />
+
+            <DropdownMenuItem
+              onClick={handleLogout}
+              className="flex items-center gap-2.5 px-3 py-2.5 text-sm font-body font-bold text-destructive rounded-xl cursor-pointer hover:bg-destructive/10 focus:bg-destructive/10 focus:text-destructive transition-colors"
+            >
+              <LogOut className="w-4 h-4 text-destructive" />
+              <span>Đăng xuất</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         {/* Collapse toggle */}
         <button
@@ -332,38 +347,56 @@ export function MobileDrawer({ open, onClose }: MobileDrawerProps) {
               })}
             </nav>
 
-            <div className="p-3 border-t border-border space-y-1 shrink-0 bg-gradient-to-br from-card via-card to-primary/5">
-              <button
-                onClick={toggleTheme}
-                className="w-full flex items-center gap-3 px-4 py-3.5 rounded-full text-foreground font-body font-bold text-sm hover:bg-muted/90 transition-colors"
-              >
-                {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-                <span>{theme === "dark" ? "Chế độ sáng" : "Chế độ tối"}</span>
-              </button>
-
+            <div className="p-3 border-t border-border space-y-1.5 shrink-0 bg-gradient-to-br from-card via-card to-primary/5">
               {/* User info */}
-              <div className="flex items-center gap-3 px-4 py-2">
+              <div className="flex items-center gap-3 px-4 py-2.5">
                 <div
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-primary-foreground shrink-0"
-                  style={{ background: "var(--gradient-primary)" }}
+                  className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center text-xs font-bold text-primary-foreground shrink-0 ring-2 ring-primary/15"
+                  style={{ background: avatarSrc ? undefined : "var(--gradient-primary)" }}
                 >
-                  {displayName.charAt(0).toUpperCase()}
+                  {avatarSrc ? (
+                    <img src={avatarSrc} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    displayName.charAt(0).toUpperCase()
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-body font-semibold text-sm text-foreground truncate">{displayName}</p>
+                  <p className="font-body font-bold text-sm text-foreground truncate">{displayName}</p>
                   {isPremium && (
-                    <span className="text-[10px] text-amber-600 font-bold flex items-center gap-0.5">
+                    <span className="text-[10px] text-amber-600 font-bold flex items-center gap-0.5 font-body">
                       <Crown className="w-3 h-3" /> Cao cấp
                     </span>
                   )}
                 </div>
               </div>
 
+              {/* Profile link */}
+              <button
+                onClick={() => {
+                  navigate("/profile");
+                  onClose();
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-full text-foreground font-body font-bold text-sm hover:bg-muted transition-colors"
+              >
+                <User className="w-5 h-5 text-muted-foreground" />
+                <span>Hồ sơ cá nhân</span>
+              </button>
+
+              {/* Theme toggle */}
+              <button
+                onClick={toggleTheme}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-full text-foreground font-body font-bold text-sm hover:bg-muted transition-colors"
+              >
+                {theme === "dark" ? <Sun className="w-5 h-5 text-muted-foreground" /> : <Moon className="w-5 h-5 text-muted-foreground" />}
+                <span>{theme === "dark" ? "Chế độ sáng" : "Chế độ tối"}</span>
+              </button>
+
+              {/* Logout */}
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center gap-3 px-4 py-3.5 rounded-full text-destructive font-body font-bold text-sm hover:bg-destructive/10 transition-colors"
+                className="w-full flex items-center gap-3 px-4 py-2.5 rounded-full text-muted-foreground font-body text-xs hover:text-destructive hover:bg-destructive/5 transition-colors"
               >
-                <LogOut className="w-5 h-5" />
+                <LogOut className="w-4 h-4 text-muted-foreground hover:text-destructive" />
                 <span>Đăng xuất</span>
               </button>
             </div>

@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Camera, CheckCircle, RefreshCw, Video, XCircle } from "lucide-react";
+import { Camera, CheckCircle, RefreshCw, SkipForward, Video, XCircle } from "lucide-react";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWebcam } from "@/hooks/useWebcam";
@@ -28,6 +28,7 @@ interface AiCameraPracticeProps {
   minConfidence?: number;
   captureMs?: number;
   onSuccess?: () => void;
+  onSkip?: () => void;
   userStoryId?: string;
 }
 
@@ -82,9 +83,10 @@ export default function AiCameraPractice({
   targetDisplay,
   practiceItemId,
   previewMode = false,
-  minConfidence = 0.7,
+  minConfidence = 0.55,
   captureMs = 3000,
   onSuccess,
+  onSkip,
   userStoryId,
 }: AiCameraPracticeProps) {
   const { accessToken } = useAuth();
@@ -93,6 +95,11 @@ export default function AiCameraPractice({
   const [scanState, setScanState] = useState<ScanState>("idle");
   const [prediction, setPrediction] = useState<AiPredictionResponse | null>(null);
   const [message, setMessage] = useState("");
+  const [failCount, setFailCount] = useState(0);
+
+  useEffect(() => {
+    setFailCount(0);
+  }, [targetLabel, practiceItemId]);
 
   const requestedTarget = useMemo(
     () => resolveAiPracticeTarget(targetLabel) || resolveAiPracticeTarget(question),
@@ -154,6 +161,7 @@ export default function AiCameraPractice({
         setTimeout(() => onSuccess?.(), 900);
       } else {
         setScanState("retry");
+        setFailCount((prev) => prev + 1);
         setMessage(
           nextPrediction.status === "no_hands"
             ? "AI chưa phát hiện tay trong khung hình. Hãy đưa tay rõ hơn và thử lại."
@@ -162,6 +170,7 @@ export default function AiCameraPractice({
       }
     } catch (err: unknown) {
       setScanState("error");
+      setFailCount((prev) => prev + 1);
       setMessage(errorMessage(err, "Không thể hoàn tất nhận diện. Vui lòng thử lại sau."));
     }
   };
@@ -236,9 +245,19 @@ export default function AiCameraPractice({
         </motion.div>
       )}
 
-      <button onClick={handleScan} disabled={!canScan} className="btn-primary-gradient flex items-center gap-2 mx-auto disabled:opacity-50">
-        <Video className="w-4 h-4" /> {scanState === "scanning" ? "Đang quét..." : "Bắt đầu nhận diện AI"}
-      </button>
+      <div className="flex flex-col gap-2 items-center justify-center animate-fade-in">
+        <button onClick={handleScan} disabled={!canScan} className="btn-primary-gradient flex items-center gap-2 mx-auto disabled:opacity-50">
+          <Video className="w-4 h-4" /> {scanState === "scanning" ? "Đang quét..." : "Bắt đầu nhận diện AI"}
+        </button>
+        {failCount >= 3 && onSkip && (
+          <button
+            onClick={onSkip}
+            className="flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground hover:text-foreground border border-border hover:bg-muted rounded-xl transition-all"
+          >
+            <SkipForward className="w-4 h-4" /> Bỏ qua luyện tập
+          </button>
+        )}
+      </div>
     </div>
   );
 }
