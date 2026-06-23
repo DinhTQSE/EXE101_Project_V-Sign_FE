@@ -80,7 +80,7 @@ export function DesktopSidebar({ collapsed, onToggle }: DesktopSidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { profile, userName, isPremium, subscription, logout } = useAuth();
-  const { theme, toggleTheme } = useTheme();
+  const { theme, setTheme, toggleTheme } = useTheme();
   const [premiumOpen, setPremiumOpen] = useState(false);
 
   const isProUser = (profile?.role === "ADMIN" || profile?.role === "SUPER_ADMIN") || 
