@@ -11,6 +11,7 @@ import {
   Lock,
   LogOut,
   Moon,
+  Palette,
   Search,
   ShieldCheck,
   Sun,
@@ -30,6 +31,10 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuPortal,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu";
 
 
@@ -207,22 +212,52 @@ export function DesktopSidebar({ collapsed, onToggle }: DesktopSidebarProps) {
               <span>Hồ sơ cá nhân</span>
             </DropdownMenuItem>
 
-            <DropdownMenuItem
-              onClick={toggleTheme}
-              className="flex items-center gap-2.5 px-3 py-2.5 text-sm font-body font-bold text-foreground rounded-xl cursor-pointer hover:bg-muted focus:bg-muted transition-colors"
-            >
-              {theme === "dark" ? (
-                <>
-                  <Sun className="w-4 h-4 text-muted-foreground" />
-                  <span>Giao diện sáng</span>
-                </>
-              ) : (
-                <>
-                  <Moon className="w-4 h-4 text-muted-foreground" />
-                  <span>Giao diện tối</span>
-                </>
-              )}
-            </DropdownMenuItem>
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger className="flex items-center gap-2.5 px-3 py-2.5 text-sm font-body font-bold text-foreground rounded-xl cursor-pointer hover:bg-muted focus:bg-muted transition-colors">
+                <Palette className="w-4 h-4 text-muted-foreground" />
+                <span>Giao diện</span>
+              </DropdownMenuSubTrigger>
+              <DropdownMenuPortal>
+                <DropdownMenuSubContent className="w-48 p-1.5 rounded-[18px] border border-border/80 bg-popover shadow-xl animate-fade-in font-body font-bold text-sm">
+                  <DropdownMenuItem
+                    onClick={() => setTheme("spring")}
+                    className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl cursor-pointer hover:bg-muted focus:bg-muted transition-colors"
+                  >
+                    <span className="w-3.5 h-3.5 rounded-full bg-[#D6336C] border border-white/20 shrink-0" />
+                    <span className={theme === "spring" ? "text-primary" : "text-foreground"}>Mùa xuân (Hồng)</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setTheme("summer")}
+                    className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl cursor-pointer hover:bg-muted focus:bg-muted transition-colors"
+                  >
+                    <span className="w-3.5 h-3.5 rounded-full bg-[#0D9488] border border-white/20 shrink-0" />
+                    <span className={theme === "summer" ? "text-primary" : "text-foreground"}>Mùa hạ (Teal)</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setTheme("fall")}
+                    className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl cursor-pointer hover:bg-muted focus:bg-muted transition-colors"
+                  >
+                    <span className="w-3.5 h-3.5 rounded-full bg-[#D97706] border border-white/20 shrink-0" />
+                    <span className={theme === "fall" ? "text-primary" : "text-foreground"}>Mùa thu (Amber)</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setTheme("winter")}
+                    className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl cursor-pointer hover:bg-muted focus:bg-muted transition-colors"
+                  >
+                    <span className="w-3.5 h-3.5 rounded-full bg-[#2563EB] border border-white/20 shrink-0" />
+                    <span className={theme === "winter" ? "text-primary" : "text-foreground"}>Mùa đông (Blue)</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="-mx-1.5 my-1.5 bg-border/60" />
+                  <DropdownMenuItem
+                    onClick={() => setTheme("dark")}
+                    className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl cursor-pointer hover:bg-muted focus:bg-muted transition-colors"
+                  >
+                    <Moon className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                    <span className={theme === "dark" ? "text-primary" : "text-foreground"}>Chế độ tối</span>
+                  </DropdownMenuItem>
+                </DropdownMenuSubContent>
+              </DropdownMenuPortal>
+            </DropdownMenuSub>
 
             <DropdownMenuSeparator className="-mx-1.5 my-1.5 bg-border/60" />
 
@@ -267,7 +302,7 @@ export function MobileDrawer({ open, onClose }: MobileDrawerProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { profile, userName, isPremium, subscription, logout } = useAuth();
-  const { theme, toggleTheme } = useTheme();
+  const { theme, setTheme, toggleTheme } = useTheme();
   const [premiumOpen, setPremiumOpen] = useState(false);
 
   const isProUser = (profile?.role === "ADMIN" || profile?.role === "SUPER_ADMIN") || 
@@ -382,14 +417,39 @@ export function MobileDrawer({ open, onClose }: MobileDrawerProps) {
                 <span>Hồ sơ cá nhân</span>
               </button>
 
-              {/* Theme toggle */}
-              <button
-                onClick={toggleTheme}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-full text-foreground font-body font-bold text-sm hover:bg-muted transition-colors"
-              >
-                {theme === "dark" ? <Sun className="w-5 h-5 text-muted-foreground" /> : <Moon className="w-5 h-5 text-muted-foreground" />}
-                <span>{theme === "dark" ? "Chế độ sáng" : "Chế độ tối"}</span>
-              </button>
+              {/* Theme selection circles */}
+              <div className="px-4 py-2 space-y-2">
+                <p className="text-xs font-body font-bold text-muted-foreground flex items-center gap-1.5">
+                  <Palette className="w-3.5 h-3.5" /> Giao diện
+                </p>
+                <div className="flex items-center gap-3 py-1">
+                  {[
+                    { id: "spring", name: "Xuân", color: "#D6336C" },
+                    { id: "summer", name: "Hạ", color: "#0D9488" },
+                    { id: "fall", name: "Thu", color: "#D97706" },
+                    { id: "winter", name: "Đông", color: "#2563EB" },
+                    { id: "dark", name: "Tối", color: "#1e293b", icon: Moon },
+                  ].map((t) => {
+                    const active = theme === t.id;
+                    return (
+                      <button
+                        key={t.id}
+                        onClick={() => setTheme(t.id as any)}
+                        title={t.name}
+                        className={`w-9 h-9 rounded-full flex items-center justify-center transition-all relative ${
+                          active ? "ring-2 ring-primary ring-offset-2 ring-offset-card scale-110" : "hover:scale-105"
+                        }`}
+                        style={{ backgroundColor: t.color }}
+                      >
+                        {t.icon && <t.icon className="w-4 h-4 text-white" />}
+                        {active && (
+                          <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-primary" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
 
               {/* Logout */}
               <button
