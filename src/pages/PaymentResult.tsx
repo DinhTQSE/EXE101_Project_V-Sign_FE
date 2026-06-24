@@ -5,6 +5,8 @@ import { CheckCircle2, XCircle, AlertCircle, Loader2, ArrowRight, Home, Mail } f
 import { toast } from "sonner";
 import { paymentService } from "@/services/paymentService";
 import { useAuth } from "@/contexts/AuthContext";
+import { trackAnalyticsEvent } from "@/services/analytics";
+
 
 export const PaymentResult: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -48,6 +50,16 @@ export const PaymentResult: React.FC = () => {
 
         // If payment is successfully verified as PAID, refresh profile
         if (res.resolvedStatus === "PAID") {
+          const sessionKey = `vsign_tracked_purchase_${orderCode}`;
+          if (!sessionStorage.getItem(sessionKey)) {
+            trackAnalyticsEvent("purchase", {
+              value: 49000,
+              currency: "VND",
+              transaction_id: orderCode,
+            });
+            sessionStorage.setItem(sessionKey, "true");
+          }
+
           await refreshUser();
           toast.success(
             "🎉 Thanh toán thành công! Kiểm tra email của bạn để xem hóa đơn xác nhận.",

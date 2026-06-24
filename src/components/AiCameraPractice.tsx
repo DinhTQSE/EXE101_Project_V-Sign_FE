@@ -16,6 +16,7 @@ import {
 } from "@/services/aiRecognition";
 import { signatureApi } from "@/services/vsignApi";
 import { toast } from "sonner";
+import { trackAnalyticsEvent } from "@/services/analytics";
 
 type ScanState = "idle" | "scanning" | "success" | "retry" | "error";
 
@@ -112,6 +113,7 @@ export default function AiCameraPractice({
 
   const handleScan = async () => {
     if (!videoRef.current || !canScan) return;
+    trackAnalyticsEvent("use_AI_camera");
     setScanState("scanning");
     setPrediction(null);
     setMessage("");

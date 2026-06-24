@@ -1,9 +1,11 @@
 import { useState, useRef } from "react";
 import { motion } from "framer-motion";
-import { Flame, BookOpen, Clock, TrendingUp, Pencil, Camera, Save, X, Crown, Bell, KeyRound, WalletCards, Star } from "lucide-react";
+import { Flame, BookOpen, Clock, TrendingUp, Pencil, Camera, Save, X, Crown, Bell, KeyRound, WalletCards, Star, Gift, Share2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import mascotImg from "@/assets/mascot.png";
 import PremiumModal from "@/components/PremiumModal";
+import { toast } from "sonner";
+import { trackAnalyticsEvent } from "@/services/analytics";
 import {
   ChartContainer,
   ChartTooltip,
@@ -96,7 +98,20 @@ export default function Profile() {
     }
   };
 
+  const handleShare = () => {
+    const shareUrl = window.location.origin;
+    navigator.clipboard.writeText(shareUrl)
+      .then(() => {
+        toast.success("Đã sao chép liên kết chia sẻ!");
+      })
+      .catch(() => {
+        toast.error("Không thể sao chép liên kết. Vui lòng thử lại.");
+      });
+    trackAnalyticsEvent("share_link");
+  };
+
   const displayName = profile.displayName || userName || "Người học mới";
+
   const avatarSrc = editing ? previewAvatar : profile.avatarUrl;
 
   /* ── input class shared ── */
@@ -295,6 +310,24 @@ export default function Profile() {
               )}
             </div>
           </div>
+          
+          {/* Referral / Share card */}
+          <div className="card-pastel p-5 flex flex-col gap-3">
+            <div className="flex items-center gap-2">
+              <Gift className="w-5 h-5 text-primary" />
+              <h3 className="font-display font-bold text-foreground">Giới thiệu bạn bè</h3>
+            </div>
+            <p className="text-xs text-muted-foreground font-body leading-relaxed">
+              Chia sẻ V-Sign với bạn bè để cùng nhau học ngôn ngữ ký hiệu và nhận những phần quà hấp dẫn!
+            </p>
+            <button
+              onClick={handleShare}
+              className="w-full py-2.5 rounded-xl bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 font-body font-semibold text-xs transition-colors flex items-center justify-center gap-2"
+            >
+              <Share2 className="w-4 h-4" /> Chia sẻ nhận quà
+            </button>
+          </div>
+
 
           {/* Payment card — flex-1 */}
           <div className="card-pastel p-5 flex flex-col">

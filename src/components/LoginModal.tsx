@@ -4,6 +4,7 @@ import { AlertCircle, Mail, X } from "lucide-react";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { useAuth } from "@/contexts/AuthContext";
 import { getApiBaseUrl } from "@/services/apiConfig";
+import { trackAnalyticsEvent } from "@/services/analytics";
 
 interface LoginModalProps {
   open: boolean;
@@ -78,6 +79,7 @@ export function LoginModal({ open, onClose, defaultMode = "signup" }: LoginModal
     try {
       if (mode === "signup") {
         await register({ displayName: name.trim(), email, password });
+        trackAnalyticsEvent("sign_up", { method: "Email" });
         closeModal(true);
       } else if (mode === "login") {
         await login({ email, password });
@@ -107,6 +109,7 @@ export function LoginModal({ open, onClose, defaultMode = "signup" }: LoginModal
       const payload = await response.json();
       const loginUrl = payload?.data ?? payload;
       if (loginUrl) {
+        trackAnalyticsEvent("sign_up", { method: "Google" });
         window.location.href = loginUrl;
       } else {
         throw new Error("Không nhận được liên kết đăng nhập từ Google.");

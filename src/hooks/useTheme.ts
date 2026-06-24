@@ -9,7 +9,9 @@ let globalTheme: Theme = (() => {
   try {
     const saved = localStorage.getItem("vsign_theme") as Theme;
     if (VALID_THEMES.includes(saved)) return saved;
-  } catch {}
+  } catch {
+    // Ignore error
+  }
   return "spring";
 })();
 
@@ -19,7 +21,10 @@ function setGlobalTheme(nextTheme: Theme) {
   globalTheme = nextTheme;
   try {
     localStorage.setItem("vsign_theme", nextTheme);
-  } catch {}
+  } catch {
+    // Ignore error
+  }
+
   
   // Update class list on HTML element
   const root = document.documentElement;

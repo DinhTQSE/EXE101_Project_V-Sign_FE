@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { useTheme } from "@/hooks/useTheme";
+import { useTheme, Theme } from "@/hooks/useTheme";
 import logo from "@/assets/vsign-logo.png";
 import PremiumModal from "@/components/PremiumModal";
 import {
@@ -434,7 +434,7 @@ export function MobileDrawer({ open, onClose }: MobileDrawerProps) {
                     return (
                       <button
                         key={t.id}
-                        onClick={() => setTheme(t.id as any)}
+                        onClick={() => setTheme(t.id as Theme)}
                         title={t.name}
                         className={`w-9 h-9 rounded-full flex items-center justify-center transition-all relative ${
                           active ? "ring-2 ring-primary ring-offset-2 ring-offset-card scale-110" : "hover:scale-105"

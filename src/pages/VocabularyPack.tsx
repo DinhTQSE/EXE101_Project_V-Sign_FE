@@ -30,6 +30,8 @@ import { LoadingSpinner } from "@/components/LoadingSpinner";
 import VideoPlayer from "@/components/VideoPlayer";
 import { useAuth } from "@/contexts/AuthContext";
 import { resolveAiPracticeTarget } from "@/services/aiRecognition";
+import { trackAnalyticsEvent } from "@/services/analytics";
+
 import {
   ChapterSummaryDto,
   dictionaryApi,
@@ -635,6 +637,9 @@ function LessonStudyModal({
         accessToken || undefined
       );
       await learningApi.completeLesson(lesson.lessonId, accessToken || undefined);
+      if (lesson.lessonId === "lesson-greetings-1") {
+        trackAnalyticsEvent("complete_lesson_1");
+      }
       await refreshGamification().catch(() => undefined);
       onLessonCompleted(lesson.lessonId);
       setStep("done");
