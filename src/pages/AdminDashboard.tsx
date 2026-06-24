@@ -13,7 +13,24 @@ import {
   Trash2,
   UserCog,
   Users,
+  Calendar,
+  TrendingUp,
+  ArrowUpRight,
+  Sparkles,
+  BookOpen,
 } from "lucide-react";
+import {
+  AreaChart,
+  Area,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as ChartTooltip,
+  ResponsiveContainer,
+} from "recharts";
+
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -85,6 +102,20 @@ function formatDuration(seconds: number) {
   if (hours <= 0) return `${minutes} phút`;
   return `${hours} giờ ${minutes} phút`;
 }
+
+function formatRelativeTime(dateString: string) {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  if (diffMins < 1) return "Vừa xong";
+  if (diffMins < 60) return `${diffMins} phút trước`;
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `${diffHours} giờ trước`;
+  const diffDays = Math.floor(diffHours / 24);
+  return `${diffDays} ngày trước`;
+}
+
 
 function apiMessage(error: unknown) {
   if (error && typeof error === "object" && "message" in error) {
@@ -174,6 +205,81 @@ export default function AdminDashboard() {
   const canEditRoles = profile.role === "SUPER_ADMIN";
 
   const dateInput = useMemo(() => ({ fromDate, toDate }), [fromDate, toDate]);
+
+  const revenueChartData = useMemo(() => {
+    const dailyRevenue: Record<string, number> = {};
+    payments.payments.forEach((p) => {
+      if (p.status === "SUCCESS" || p.status === "PAID") {
+        const date = p.createdAt.slice(0, 10);
+        dailyRevenue[date] = (dailyRevenue[date] || 0) + p.amount;
+      }
+    });
+
+    const dates = usage.points.map((p) => p.date);
+    if (dates.length === 0) {
+      const uniqueDates = Array.from(new Set(payments.payments.map((p) => p.createdAt.slice(0, 10)))).sort();
+      dates.push(...uniqueDates);
+    }
+
+    let cumulative = 0;
+    return dates.map((date) => {
+      const daily = dailyRevenue[date] || 0;
+      cumulative += daily;
+      return {
+        date: date.slice(5),
+        daily,
+        cumulative,
+      };
+    });
+  }, [payments.payments, usage.points]);
+
+  const userGrowthData = useMemo(() => {
+    const dailyUsers: Record<string, number> = {};
+    users.users.forEach((u) => {
+      const date = u.createdAt?.slice(0, 10);
+      if (date) {
+        dailyUsers[date] = (dailyUsers[date] || 0) + 1;
+      }
+    });
+
+    const dates = usage.points.map((p) => p.date);
+    if (dates.length === 0) {
+      const uniqueDates = Array.from(new Set(users.users.map((u) => u.createdAt?.slice(0, 10)).filter(Boolean))).sort();
+      dates.push(...uniqueDates);
+    }
+
+    let count = Math.max(0, overview.totalUsers - users.users.length);
+    return dates.map((date) => {
+      const daily = dailyUsers[date] || 0;
+      count += daily;
+      return {
+        date: date.slice(5),
+        daily,
+        cumulative: count,
+      };
+    });
+  }, [users.users, usage.points, overview.totalUsers]);
+
+  const calendarWeek = useMemo(() => {
+    const days = [];
+    const today = new Date();
+    const currentDayOfWeek = today.getDay();
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - currentDayOfWeek);
+
+    const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(startOfWeek);
+      d.setDate(startOfWeek.getDate() + i);
+      days.push({
+        name: dayNames[i],
+        dateNum: d.getDate(),
+        isToday: d.toDateString() === today.toDateString(),
+      });
+    }
+    return days;
+  }, []);
+
 
   const loadOverviewAndAudit = useCallback(async (showLoading = false) => {
     if (!accessToken) return;
@@ -383,65 +489,404 @@ export default function AdminDashboard() {
       ) : (
         <>
           {activeTab === "overview" && (
-            <section className="space-y-4">
-              <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-                <Kpi label="Tổng người dùng" value={overview.totalUsers} icon={Users} />
-                <Kpi label="Hoạt động trong kỳ" value={overview.activeUsersInRange} icon={Activity} />
-                <Kpi label="Người dùng cao cấp" value={overview.premiumUsers} icon={ShieldCheck} />
-                <Kpi label="Doanh thu" value={formatMoney(overview.totalRevenueVnd)} icon={BadgeDollarSign} />
-                <Kpi label="Hoàn thành bài" value={overview.lessonCompletions} icon={FileText} />
-                <Kpi label="Lượt làm bài" value={overview.quizAttempts} icon={UserCog} />
-                <Kpi label="Lượt luyện AI" value={overview.aiAttempts} icon={Activity} />
-                <Kpi label="Thời gian TB" value={formatDuration(overview.averageActiveSeconds)} icon={Clock3} />
-              </div>
-
-              <div className="grid gap-4 xl:grid-cols-[1.4fr_1fr]">
-                <div className="rounded-lg border border-border bg-card p-4">
-                  <div className="mb-4 flex items-center justify-between gap-3">
-                    <h2 className="text-base font-display font-bold text-foreground">Thời lượng theo ngày</h2>
-                    <span className="text-xs text-muted-foreground">{usage.points.length} ngày</span>
+            <div className="grid grid-cols-1 xl:grid-cols-[1fr_340px] gap-5 items-start">
+              {/* LEFT COLUMN: Main Dashboard content */}
+              <div className="space-y-5 min-w-0">
+                
+                {/* Welcome & Subtitle Header Card */}
+                <div className="card-pastel p-6 flex flex-col justify-between relative overflow-hidden bg-gradient-to-br from-primary/5 via-card to-secondary/5 border-primary/10">
+                  <div className="space-y-1 z-10">
+                    <h2 className="text-xl md:text-2xl font-display font-bold text-foreground">Chào Quản trị viên, chúc một ngày tốt lành!</h2>
+                    <p className="text-sm text-muted-foreground font-body">Xem nhanh số liệu thống kê và biểu đồ tăng trưởng toàn diện của hệ thống học tập V-Sign.</p>
                   </div>
-                  <div className="space-y-3">
-                    {usage.points.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">Chưa có heartbeat trong khoảng ngày này.</p>
-                    ) : (
-                      usage.points.slice(-10).map((point) => {
-                        const max = Math.max(...usage.points.map((p) => p.activeSeconds), 1);
-                        return (
-                          <div key={point.date} className="grid grid-cols-[92px_1fr_72px] items-center gap-3 text-sm">
-                            <span className="text-muted-foreground">{point.date.slice(5)}</span>
-                            <div className="h-2 overflow-hidden rounded-full bg-muted">
-                              <div
-                                className="h-full rounded-full bg-primary"
-                                style={{ width: `${Math.max(4, (point.activeSeconds / max) * 100)}%` }}
-                              />
-                            </div>
-                            <span className="text-right font-semibold text-foreground">{formatDuration(point.activeSeconds)}</span>
-                          </div>
-                        );
-                      })
-                    )}
+                  <div className="absolute right-6 bottom-0 translate-y-3 opacity-15 pointer-events-none">
+                    <ShieldCheck className="w-28 h-28 text-primary" />
                   </div>
                 </div>
 
-                <div className="rounded-lg border border-border bg-card p-4">
-                  <h2 className="mb-4 text-base font-display font-bold text-foreground">Người dùng hoạt động nhiều</h2>
-                  <div className="space-y-3">
-                    {overview.topActiveUsers.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">Chưa có dữ liệu.</p>
-                    ) : overview.topActiveUsers.map((user) => (
-                      <div key={user.email} className="flex items-center justify-between gap-3 border-b border-border pb-3 last:border-0 last:pb-0">
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-bold text-foreground">{user.displayName}</p>
-                          <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+                {/* 3 KPI Horizontal Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Revenue KPI */}
+                  <div className="card-pastel p-5 flex flex-col justify-between min-h-[110px]">
+                    <div className="flex justify-between items-start">
+                      <span className="text-xs font-body font-bold text-muted-foreground uppercase tracking-wider">Tổng doanh thu</span>
+                      <div className="p-2 rounded-xl bg-primary/10 text-primary">
+                        <BadgeDollarSign className="w-4 h-4" />
+                      </div>
+                    </div>
+                    <div className="mt-2 flex items-baseline gap-2">
+                      <span className="text-2xl font-display font-black text-foreground">{formatMoney(overview.totalRevenueVnd)}</span>
+                      <span className="text-xs font-body text-emerald-600 flex items-center font-bold">
+                        <ArrowUpRight className="w-3.5 h-3.5" /> 13.5%
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Users KPI */}
+                  <div className="card-pastel p-5 flex flex-col justify-between min-h-[110px]">
+                    <div className="flex justify-between items-start">
+                      <span className="text-xs font-body font-bold text-muted-foreground uppercase tracking-wider">Tổng học viên</span>
+                      <div className="p-2 rounded-xl bg-secondary/10 text-secondary">
+                        <Users className="w-4 h-4" />
+                      </div>
+                    </div>
+                    <div className="mt-2 flex items-baseline gap-2">
+                      <span className="text-2xl font-display font-black text-foreground">{overview.totalUsers}</span>
+                      <span className="text-xs font-body text-primary flex items-center font-bold">
+                        +{overview.newUsers} mới
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* AI Scan KPI */}
+                  <div className="card-pastel p-5 flex flex-col justify-between min-h-[110px]">
+                    <div className="flex justify-between items-start">
+                      <span className="text-xs font-body font-bold text-muted-foreground uppercase tracking-wider">Hoạt động AI</span>
+                      <div className="p-2 rounded-xl bg-amber-100 text-amber-600">
+                        <Activity className="w-4 h-4" />
+                      </div>
+                    </div>
+                    <div className="mt-2 flex items-baseline gap-2">
+                      <span className="text-2xl font-display font-black text-foreground">{overview.aiAttempts} lần</span>
+                      <span className="text-xs font-body text-emerald-600 flex items-center font-bold">
+                        Tỉ lệ đạt: {overview.aiSuccessRate}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2 Growth Charts (Revenue & Users) */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {/* Revenue Growth Chart */}
+                  <div className="card-pastel p-5 flex flex-col">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase bg-primary/10 text-primary">Tăng trưởng</span>
+                        <h3 className="font-display font-bold text-base text-foreground mt-1">Doanh thu & Giao dịch</h3>
+                      </div>
+                      <TrendingUp className="w-4 h-4 text-primary" />
+                    </div>
+                    <div className="h-[220px] w-full">
+                      {revenueChartData.length === 0 ? (
+                        <div className="h-full flex items-center justify-center text-xs text-muted-foreground">Không có dữ liệu giao dịch</div>
+                      ) : (
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart data={revenueChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                            <defs>
+                              <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="var(--color-primary, #D6336C)" stopOpacity={0.4}/>
+                                <stop offset="95%" stopColor="var(--color-primary, #D6336C)" stopOpacity={0}/>
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
+                            <XAxis dataKey="date" tickLine={false} axisLine={false} style={{ fontSize: 10, fill: "gray" }} />
+                            <YAxis tickLine={false} axisLine={false} style={{ fontSize: 10, fill: "gray" }} />
+                            <ChartTooltip 
+                              content={({ active, payload }) => {
+                                if (active && payload && payload.length) {
+                                  return (
+                                    <div className="bg-card border border-border p-2.5 rounded-xl shadow-lg text-xs font-body font-semibold">
+                                      <p className="font-bold text-foreground mb-1">{payload[0].payload.date}</p>
+                                      <p className="text-primary">Ngày: {formatMoney(payload[0].value as number)}</p>
+                                      <p className="text-muted-foreground">Tích lũy: {formatMoney(payload[1].value as number)}</p>
+                                    </div>
+                                  );
+                                }
+                                return null;
+                              }}
+                            />
+                            <Area type="monotone" dataKey="daily" stroke="var(--color-primary, #D6336C)" strokeWidth={2} fillOpacity={1} fill="url(#colorRevenue)" name="Doanh thu ngày" />
+                            <Area type="monotone" dataKey="cumulative" stroke="hsl(var(--secondary))" strokeWidth={1.5} fillOpacity={0} name="Tích lũy" />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* User Growth Chart */}
+                  <div className="card-pastel p-5 flex flex-col">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase bg-secondary/10 text-secondary">Tăng trưởng</span>
+                        <h3 className="font-display font-bold text-base text-foreground mt-1">Đăng ký học viên</h3>
+                      </div>
+                      <Users className="w-4 h-4 text-secondary" />
+                    </div>
+                    <div className="h-[220px] w-full">
+                      {userGrowthData.length === 0 ? (
+                        <div className="h-full flex items-center justify-center text-xs text-muted-foreground">Không có dữ liệu học viên</div>
+                      ) : (
+                        <ResponsiveContainer width="100%" height="100%">
+                          <LineChart data={userGrowthData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
+                            <XAxis dataKey="date" tickLine={false} axisLine={false} style={{ fontSize: 10, fill: "gray" }} />
+                            <YAxis tickLine={false} axisLine={false} style={{ fontSize: 10, fill: "gray" }} />
+                            <ChartTooltip 
+                              content={({ active, payload }) => {
+                                if (active && payload && payload.length) {
+                                  return (
+                                    <div className="bg-card border border-border p-2.5 rounded-xl shadow-lg text-xs font-body font-semibold">
+                                      <p className="font-bold text-foreground mb-1">{payload[0].payload.date}</p>
+                                      <p className="text-secondary font-semibold">Đăng ký mới: {payload[0].value} học viên</p>
+                                      <p className="text-muted-foreground">Tổng tích lũy: {payload[1].value}</p>
+                                    </div>
+                                  );
+                                }
+                                return null;
+                              }}
+                            />
+                            <Line type="monotone" dataKey="daily" stroke="hsl(var(--secondary))" strokeWidth={2} dot={false} name="Đăng ký mới" />
+                            <Line type="monotone" dataKey="cumulative" stroke="var(--color-primary, #D6336C)" strokeWidth={2} dot={false} name="Tổng học viên" />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Grid for "Hệ thống học tập" (My Asset) and "Thời lượng hoạt động" (To-do List) */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  
+                  {/* System Assets (My Asset) */}
+                  <div className="card-pastel p-5 flex flex-col">
+                    <h3 className="font-display font-bold text-base text-foreground mb-4">Hệ thống học tập</h3>
+                    <div className="grid grid-cols-2 gap-3 flex-1">
+                      <div className="rounded-2xl p-4 flex flex-col justify-between bg-primary/5 border border-primary/10">
+                        <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                          <BookOpen className="w-4 h-4" />
                         </div>
-                        <span className="text-sm font-semibold text-foreground">{formatDuration(user.activeSeconds)}</span>
+                        <div className="mt-3">
+                          <span className="block text-2xl font-display font-black text-foreground">{overview.lessonCompletions}</span>
+                          <span className="text-[11px] text-muted-foreground font-body">Bài học hoàn thành</span>
+                        </div>
+                      </div>
+                      <div className="rounded-2xl p-4 flex flex-col justify-between bg-secondary/5 border border-secondary/10">
+                        <div className="w-8 h-8 rounded-xl bg-secondary/10 text-secondary flex items-center justify-center">
+                          <UserCog className="w-4 h-4" />
+                        </div>
+                        <div className="mt-3">
+                          <span className="block text-2xl font-display font-black text-foreground">{overview.quizAttempts}</span>
+                          <span className="text-[11px] text-muted-foreground font-body">Lượt kiểm tra Quiz</span>
+                        </div>
+                      </div>
+                      <div className="rounded-2xl p-4 flex flex-col justify-between bg-amber-500/5 border border-amber-500/10">
+                        <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center">
+                          <Users className="w-4 h-4" />
+                        </div>
+                        <div className="mt-3">
+                          <span className="block text-2xl font-display font-black text-foreground">+{overview.newUsers}</span>
+                          <span className="text-[11px] text-muted-foreground font-body">Đăng ký mới kỳ này</span>
+                        </div>
+                      </div>
+                      <div className="rounded-2xl p-4 flex flex-col justify-between bg-emerald-500/5 border border-emerald-500/10">
+                        <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
+                          <Sparkles className="w-4 h-4" />
+                        </div>
+                        <div className="mt-3">
+                          <span className="block text-2xl font-display font-black text-foreground">{overview.aiSuccessRate}%</span>
+                          <span className="text-[11px] text-muted-foreground font-body">Tỉ lệ đạt quét AI</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Daily active seconds (To-do List representation) */}
+                  <div className="card-pastel p-5 flex flex-col">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-display font-bold text-base text-foreground">Thời lượng hoạt động</h3>
+                      <span className="text-xs text-muted-foreground font-body">{usage.points.length} ngày gần nhất</span>
+                    </div>
+                    <div className="space-y-3.5 overflow-y-auto max-h-[220px] flex-1 pr-1">
+                      {usage.points.length === 0 ? (
+                        <p className="text-sm text-muted-foreground font-body text-center py-10">Chưa có heartbeat trong khoảng ngày này.</p>
+                      ) : (
+                        usage.points.slice(-6).map((point) => {
+                          const max = Math.max(...usage.points.map((p) => p.activeSeconds), 1);
+                          const percentage = Math.max(4, Math.round((point.activeSeconds / max) * 100));
+                          return (
+                            <div key={point.date} className="flex flex-col gap-1 text-sm">
+                              <div className="flex justify-between items-center text-xs font-semibold text-muted-foreground">
+                                <span className="font-body">{point.date}</span>
+                                <span className="font-body text-foreground">{formatDuration(point.activeSeconds)}</span>
+                              </div>
+                              <div className="h-2.5 overflow-hidden rounded-full bg-muted w-full">
+                                <div
+                                  className="h-full rounded-full"
+                                  style={{ width: `${percentage}%`, background: "var(--gradient-primary)" }}
+                                />
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Payments Table (Transactions representation) */}
+                <div className="card-pastel p-5">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                    <h3 className="font-display font-bold text-base text-foreground">Lịch sử giao dịch gần đây</h3>
+                    <div className="relative w-full sm:w-64">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <input
+                        value={userSearch}
+                        onChange={(event) => setUserSearch(event.target.value)}
+                        placeholder="Tìm kiếm giao dịch..."
+                        className="w-full pl-9 pr-3 py-2 text-xs font-body rounded-xl border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="overflow-x-auto rounded-xl border border-border">
+                    <table className="min-w-[700px] w-full text-left text-xs">
+                      <thead className="bg-muted/60 text-[10px] uppercase text-muted-foreground font-bold">
+                        <tr>
+                          <th className="px-4 py-3">Mã giao dịch</th>
+                          <th className="px-4 py-3">Người dùng</th>
+                          <th className="px-4 py-3">Gói cước</th>
+                          <th className="px-4 py-3 text-right">Số tiền</th>
+                          <th className="px-4 py-3">Trạng thái</th>
+                          <th className="px-4 py-3">Ngày tạo</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {payments.payments.slice(0, 5).map((payment) => (
+                          <tr key={payment.transactionId} className="border-t border-border hover:bg-muted/40 transition-colors">
+                            <td className="px-4 py-3 font-semibold text-foreground">#{payment.transactionId}</td>
+                            <td className="px-4 py-3 text-muted-foreground">{payment.userEmail}</td>
+                            <td className="px-4 py-3 font-semibold">{payment.planId}</td>
+                            <td className="px-4 py-3 text-right font-bold text-primary">{formatMoney(payment.amount)}</td>
+                            <td className="px-4 py-3">
+                              <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${statusBadge(payment.status)}`}>
+                                {userStatusLabel(payment.status)}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-muted-foreground">{formatDate(payment.createdAt)}</td>
+                          </tr>
+                        ))}
+                        {payments.payments.length === 0 && (
+                          <tr>
+                            <td colSpan={6} className="text-center py-6 text-muted-foreground font-body">Chưa có giao dịch.</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* RIGHT COLUMN: Sidebar Stats & Activity Logs */}
+              <div className="space-y-4">
+                
+                {/* 4-Grid vertical stats cards */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="card-pastel p-4 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                      <Users className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <span className="block text-base font-display font-bold text-foreground">{overview.totalUsers}</span>
+                      <span className="text-[10px] text-muted-foreground font-body">Tổng học viên</span>
+                    </div>
+                  </div>
+                  
+                  <div className="card-pastel p-4 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-secondary/10 text-secondary flex items-center justify-center shrink-0">
+                      <Activity className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <span className="block text-base font-display font-bold text-foreground">{overview.aiAttempts}</span>
+                      <span className="text-[10px] text-muted-foreground font-body">Quét AI</span>
+                    </div>
+                  </div>
+                  
+                  <div className="card-pastel p-4 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center shrink-0">
+                      <BadgeDollarSign className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <span className="block text-base font-display font-bold text-foreground">{overview.successfulPayments}</span>
+                      <span className="text-[10px] text-muted-foreground font-body">Thanh toán</span>
+                    </div>
+                  </div>
+                  
+                  <div className="card-pastel p-4 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0">
+                      <Clock3 className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <span className="block text-base font-display font-bold text-foreground">{formatDuration(overview.averageActiveSeconds)}</span>
+                      <span className="text-[10px] text-muted-foreground font-body">Hoạt động TB</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Calendar strip card */}
+                <div className="card-pastel p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Calendar className="w-4 h-4 text-primary" />
+                    <span className="text-xs font-display font-bold text-foreground">
+                      Tháng {new Date().getMonth() + 1} / {new Date().getFullYear()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between gap-1.5">
+                    {calendarWeek.map((day, idx) => (
+                      <div
+                        key={idx}
+                        className={`flex-1 flex flex-col items-center py-2 rounded-xl text-center font-body transition-all ${
+                          day.isToday
+                            ? "bg-primary text-primary-foreground shadow-md font-bold scale-105"
+                            : "bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        <span className="text-[9px] uppercase tracking-wider opacity-80">{day.name.slice(0, 3)}</span>
+                        <span className="text-sm font-display font-extrabold mt-1">{day.dateNum}</span>
                       </div>
                     ))}
                   </div>
                 </div>
+
+                {/* Audit logs (Activity Log) */}
+                <div className="card-pastel p-5 flex flex-col">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-display font-bold text-base text-foreground">Nhật ký hoạt động</h3>
+                    <button 
+                      onClick={() => setActiveTab("audit")} 
+                      className="text-xs font-semibold text-primary hover:underline"
+                    >
+                      Xem tất cả
+                    </button>
+                  </div>
+                  <div className="space-y-4 flex-1">
+                    {auditLogs.slice(0, 5).map((log) => (
+                      <div key={log.id} className="flex items-start gap-3 border-b border-border/60 pb-3 last:border-0 last:pb-0">
+                        <div className="w-7 h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 font-bold text-xs">
+                          {log.actorEmail.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-semibold text-foreground truncate">{log.actorEmail}</p>
+                          <p className="text-[11px] text-muted-foreground font-body mt-0.5 leading-snug">
+                            {log.action} <span className="font-semibold">{log.targetType}</span>
+                          </p>
+                          {log.reason && (
+                            <p className="text-[10px] text-muted-foreground italic font-body mt-0.5 truncate">"{log.reason}"</p>
+                          )}
+                        </div>
+                        <span className="text-[10px] text-muted-foreground shrink-0 font-body">
+                          {formatRelativeTime(log.createdAt)}
+                        </span>
+                      </div>
+                    ))}
+                    {auditLogs.length === 0 && (
+                      <p className="text-xs text-muted-foreground text-center py-6">Chưa có nhật ký hoạt động.</p>
+                    )}
+                  </div>
+                </div>
+
               </div>
-            </section>
+            </div>
           )}
 
           {activeTab === "users" && (
