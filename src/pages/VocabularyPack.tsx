@@ -637,6 +637,10 @@ function LessonStudyModal({
         accessToken || undefined
       );
       await learningApi.completeLesson(lesson.lessonId, accessToken || undefined);
+      trackAnalyticsEvent("complete_lesson", {
+        lesson_id: lesson.lessonId,
+        lesson_title: lesson.title,
+      });
       if (lesson.lessonId === "lesson-greetings-1") {
         trackAnalyticsEvent("complete_lesson_1");
       }
