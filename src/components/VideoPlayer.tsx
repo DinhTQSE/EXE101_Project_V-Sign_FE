@@ -83,8 +83,8 @@ export default function VideoPlayer({
               setFailed(true);
             }}
           />
-          {!loading && !failed && hideAnswer && (
-            <div className="absolute top-0 right-0 w-[20%] h-[20%] min-w-[70px] min-h-[40px] bg-slate-900/35 backdrop-blur-2xl rounded-bl-[18px] border-l border-b border-white/10 flex items-center justify-center pointer-events-none z-10 shadow-sm animate-fade-in" />
+          {hideAnswer && (
+            <div className="absolute top-0 right-0 w-[28%] h-[20%] min-w-[100px] min-h-[45px] bg-slate-950/75 backdrop-blur-3xl rounded-bl-[18px] border-l border-b border-white/10 flex items-center justify-center pointer-events-none z-30 shadow-sm" />
           )}
         </>
       )}
