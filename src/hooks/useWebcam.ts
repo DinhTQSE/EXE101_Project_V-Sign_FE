@@ -35,12 +35,18 @@ export function useWebcam(autoStart = true): UseWebcamReturn {
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: true,
+        video: {
+          facingMode: "user",
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+          frameRate: { ideal: 15 },
+        },
         audio: false,
       });
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        videoRef.current.play().catch((err) => console.warn("Video play exception:", err));
       }
       setIsReady(true);
     } catch (err) {
@@ -56,7 +62,12 @@ export function useWebcam(autoStart = true): UseWebcamReturn {
       (async () => {
         try {
           const stream = await navigator.mediaDevices.getUserMedia({
-            video: true,
+            video: {
+              facingMode: "user",
+              width: { ideal: 640 },
+              height: { ideal: 480 },
+              frameRate: { ideal: 15 },
+            },
             audio: false,
           });
           if (cancelled) {
@@ -66,6 +77,7 @@ export function useWebcam(autoStart = true): UseWebcamReturn {
           streamRef.current = stream;
           if (videoRef.current) {
             videoRef.current.srcObject = stream;
+            videoRef.current.play().catch((err) => console.warn("Video play exception:", err));
           }
           setIsReady(true);
         } catch (err) {

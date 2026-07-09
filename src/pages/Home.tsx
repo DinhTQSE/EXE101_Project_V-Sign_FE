@@ -27,6 +27,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import mascotImg from "@/assets/mascot.png";
 import { cn } from "@/lib/utils";
 import { learningApi, UnitSummaryDto } from "@/services/vsignApi";
+import { FEATURED_UNIT_IDS } from "../constants/learning";
 
 type IconTone = {
   tile: string;
@@ -88,19 +89,19 @@ const homeInnerCardClass =
 
 const fallbackSubjects: SubjectCard[] = [
   {
-    unitId: "unit-basics",
-    title: "Giao tiếp hằng ngày",
-    description: "Chào hỏi, xưng hô, gia đình và sinh hoạt thường gặp.",
+    unitId: "unit-mvp-family",
+    title: "Gia đình",
+    description: "Học các ký hiệu về các thành viên và mối quan hệ trong gia đình.",
   },
   {
-    unitId: "unit-education-places",
-    title: "Trường học & địa điểm",
-    description: "Từ vựng trung cấp cho bối cảnh học tập, địa chỉ và dịch vụ thường gặp.",
+    unitId: "unit-mvp-emotions",
+    title: "Cảm xúc",
+    description: "Nhận biết và biểu đạt các trạng thái cảm xúc, cảm nhận cơ bản.",
   },
   {
-    unitId: "unit-specialized",
-    title: "Y tế, công nghệ & chuyên ngành",
-    description: "Từ vựng nâng cao cho y tế, công nghệ, pháp lý và kinh tế.",
+    unitId: "unit-mvp-food",
+    title: "Món ăn",
+    description: "Các từ vựng về món ăn, ẩm thực Việt Nam thông dụng hàng ngày.",
   },
 ];
 
@@ -164,7 +165,10 @@ export default function Home() {
   useEffect(() => {
     learningApi
       .listUnits()
-      .then((units) => setRecentUnits(units.slice(0, 4)))
+      .then((units) => {
+        const featured = units.filter((unit) => FEATURED_UNIT_IDS.has(unit.unitId));
+        setRecentUnits(featured.slice(0, 4));
+      })
       .catch(() => {});
   }, []);
 

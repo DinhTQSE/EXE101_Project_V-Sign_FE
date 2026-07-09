@@ -32,6 +32,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { resolveAiPracticeTarget } from "@/services/aiRecognition";
 import { trackAnalyticsEvent } from "@/services/analytics";
 import { useSearchParams } from "react-router-dom";
+import { FEATURED_UNIT_IDS } from "../constants/learning";
 
 import {
   ChapterSummaryDto,
@@ -51,8 +52,6 @@ const AiCameraPractice = lazy(() => import("@/components/AiCameraPractice"));
 const PremiumModal = lazy(() => import("@/components/PremiumModal"));
 
 type CourseChapter = ChapterSummaryDto;
-
-const FEATURED_UNIT_IDS = new Set(["unit-mvp-family", "unit-mvp-emotions", "unit-mvp-food", "unit-school"]);
 
 type ViewState =
   | { view: "units" }
