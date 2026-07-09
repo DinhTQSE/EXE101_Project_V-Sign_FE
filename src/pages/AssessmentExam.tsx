@@ -583,6 +583,7 @@ export default function AssessmentExam() {
                   videoClassName="w-full object-cover"
                   maxHeight="340px"
                   label={current.prompt}
+                  hideAnswer={true}
                 />
               </div>
             )}

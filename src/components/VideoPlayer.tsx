@@ -14,6 +14,7 @@ interface VideoPlayerProps {
   playsInline?: boolean;
   maxHeight?: string;
   label?: string;
+  hideAnswer?: boolean;
 }
 
 export default function VideoPlayer({
@@ -28,6 +29,7 @@ export default function VideoPlayer({
   playsInline = true,
   maxHeight,
   label = "Video",
+  hideAnswer = false,
 }: VideoPlayerProps) {
   const [version, setVersion] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -62,24 +64,29 @@ export default function VideoPlayer({
           </button>
         </div>
       ) : (
-        <video
-          key={`${src}-${version}`}
-          src={src}
-          className={videoClassName}
-          controls={controls}
-          autoPlay={autoPlay}
-          loop={loop}
-          muted={muted}
-          playsInline={playsInline}
-          preload={preload}
-          style={maxHeight ? { maxHeight } : undefined}
-          onLoadedData={() => setLoading(false)}
-          onCanPlay={() => setLoading(false)}
-          onError={() => {
-            setLoading(false);
-            setFailed(true);
-          }}
-        />
+        <>
+          <video
+            key={`${src}-${version}`}
+            src={src}
+            className={videoClassName}
+            controls={controls}
+            autoPlay={autoPlay}
+            loop={loop}
+            muted={muted}
+            playsInline={playsInline}
+            preload={preload}
+            style={maxHeight ? { maxHeight } : undefined}
+            onLoadedData={() => setLoading(false)}
+            onCanPlay={() => setLoading(false)}
+            onError={() => {
+              setLoading(false);
+              setFailed(true);
+            }}
+          />
+          {!loading && !failed && hideAnswer && (
+            <div className="absolute top-0 right-0 w-[20%] h-[20%] min-w-[70px] min-h-[40px] bg-slate-900/35 backdrop-blur-2xl rounded-bl-[18px] border-l border-b border-white/10 flex items-center justify-center pointer-events-none z-10 shadow-sm animate-fade-in" />
+          )}
+        </>
       )}
 
       {!loading && !failed && !controls && (

@@ -338,6 +338,7 @@ function DynamicQuizPanel({
             className="w-full aspect-video rounded-xl mb-3 overflow-hidden bg-black"
             preload="metadata"
             label={question.id}
+            hideAnswer={true}
           />
           <div className="flex items-start gap-3 mb-4">
             <span className="w-7 h-7 rounded-full bg-primary/10 text-primary font-display font-bold text-sm flex items-center justify-center shrink-0">
@@ -483,6 +484,7 @@ function QuizPanel({
                 className="w-full aspect-video rounded-xl mb-3 overflow-hidden bg-black"
                 preload={questionIndex === 0 ? "auto" : "metadata"}
                 label={question.prompt}
+                hideAnswer={true}
               />
             )}
 
@@ -515,6 +517,7 @@ function QuizPanel({
                           className="w-full aspect-video rounded-xl overflow-hidden bg-black"
                           preload="metadata"
                           label={option.text}
+                          hideAnswer={true}
                         />
                         <span className="block text-center">{option.text}</span>
                       </div>
