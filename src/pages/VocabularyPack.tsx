@@ -31,6 +31,7 @@ import VideoPlayer from "@/components/VideoPlayer";
 import { useAuth } from "@/contexts/AuthContext";
 import { resolveAiPracticeTarget } from "@/services/aiRecognition";
 import { trackAnalyticsEvent } from "@/services/analytics";
+import { useSearchParams } from "react-router-dom";
 
 import {
   ChapterSummaryDto,
@@ -51,7 +52,7 @@ const PremiumModal = lazy(() => import("@/components/PremiumModal"));
 
 type CourseChapter = ChapterSummaryDto;
 
-const FEATURED_UNIT_IDS = new Set(["unit-mvp-family", "unit-mvp-emotions", "unit-mvp-food"]);
+const FEATURED_UNIT_IDS = new Set(["unit-mvp-family", "unit-mvp-emotions", "unit-mvp-food", "unit-school"]);
 
 type ViewState =
   | { view: "units" }
@@ -1270,6 +1271,7 @@ function ChaptersList({
 
 export default function VocabularyPack() {
   const { userName, layoutMode } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [state, setState] = useState<ViewState>({ view: "units" });
   const [units, setUnits] = useState<UnitSummaryDto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1277,6 +1279,16 @@ export default function VocabularyPack() {
   const [activeFilter, setActiveFilter] = useState<FilterId>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 4;
+
+  const queryUnitId = searchParams.get("unitId");
+
+  useEffect(() => {
+    if (queryUnitId && units.some((u) => u.unitId === queryUnitId)) {
+      setState({ view: "unit", unitId: queryUnitId });
+    } else {
+      setState({ view: "units" });
+    }
+  }, [queryUnitId, units]);
 
   const handleFilterChange = (filterId: FilterId) => {
     setActiveFilter(filterId);
@@ -1354,7 +1366,7 @@ export default function VocabularyPack() {
     return (
       <ChaptersList
         unit={selectedUnit}
-        onBack={() => setState({ view: "units" })}
+        onBack={() => setSearchParams({})}
         onTreeChanged={handleLessonCompleted}
       />
     );
@@ -1415,7 +1427,7 @@ export default function VocabularyPack() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.04 }}
-              onClick={() => setState({ view: "unit", unitId: unit.unitId })}
+              onClick={() => setSearchParams({ unitId: unit.unitId })}
               className="w-full card-pop p-4 md:p-6 text-left cursor-pointer hover:-translate-y-0.5 hover:ring-2 hover:ring-primary/20 transition-all"
             >
               <div className="flex items-start gap-3 md:gap-4">

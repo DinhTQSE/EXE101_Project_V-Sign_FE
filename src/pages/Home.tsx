@@ -37,6 +37,7 @@ type IconTone = {
 };
 
 type SubjectCard = {
+  unitId: string;
   title: string;
   description: string;
 };
@@ -87,16 +88,19 @@ const homeInnerCardClass =
 
 const fallbackSubjects: SubjectCard[] = [
   {
+    unitId: "unit-basics",
     title: "Giao tiếp hằng ngày",
     description: "Chào hỏi, xưng hô, gia đình và sinh hoạt thường gặp.",
   },
   {
-    title: "Cảm xúc",
-    description: "Nhận biết và diễn đạt cảm xúc cơ bản bằng ký hiệu.",
+    unitId: "unit-education-places",
+    title: "Trường học & địa điểm",
+    description: "Từ vựng trung cấp cho bối cảnh học tập, địa chỉ và dịch vụ thường gặp.",
   },
   {
-    title: "Món ăn thường ngày",
-    description: "Từ vựng gần gũi cho bữa ăn, quán ăn và đồ uống.",
+    unitId: "unit-specialized",
+    title: "Y tế, công nghệ & chuyên ngành",
+    description: "Từ vựng nâng cao cho y tế, công nghệ, pháp lý và kinh tế.",
   },
 ];
 
@@ -167,6 +171,7 @@ export default function Home() {
   const subjectCards = useMemo<SubjectCard[]>(() => {
     if (recentUnits.length === 0) return fallbackSubjects;
     return recentUnits.slice(0, 3).map((unit) => ({
+      unitId: unit.unitId,
       title: unit.title,
       description: unit.description || "Bắt đầu với các ký hiệu gần gũi và dễ luyện tập.",
     }));
@@ -204,7 +209,7 @@ export default function Home() {
       desc: primarySubject?.title || "Chủ đề đầu tiên",
       icon: BookOpen,
       tone: iconTones.rose,
-      path: "/courses",
+      path: primarySubject ? `/courses?unitId=${primarySubject.unitId}` : "/courses",
       featured: true,
     },
     {
@@ -264,7 +269,7 @@ export default function Home() {
           </div>
           <div className="mt-5 flex flex-col gap-2 min-[440px]:flex-row">
             <button
-              onClick={() => navigate("/courses")}
+              onClick={() => navigate(primarySubject ? `/courses?unitId=${primarySubject.unitId}` : "/courses")}
               className="inline-flex items-center justify-center gap-2 rounded-[18px] bg-white px-5 py-3 font-display text-sm font-extrabold text-primary shadow-lg transition-transform hover:-translate-y-0.5"
             >
               <PlayCircle className="h-4 w-4" />
@@ -323,7 +328,7 @@ export default function Home() {
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.04 * index }}
-                  onClick={() => navigate(index === 1 ? "/ai-recognition" : index === 2 ? "/dictionary" : "/courses")}
+                  onClick={() => navigate(index === 1 ? "/ai-recognition" : index === 2 ? "/dictionary" : (primarySubject ? `/courses?unitId=${primarySubject.unitId}` : "/courses"))}
                   className={cn(homeInnerCardClass, "group p-4 text-left transition-all hover:-translate-y-0.5 hover:shadow-lg")}
                 >
                   <div className="mb-4 flex items-center justify-between">
@@ -425,7 +430,7 @@ export default function Home() {
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.14 + index * 0.04 }}
-                    onClick={() => navigate("/courses")}
+                    onClick={() => navigate(`/courses?unitId=${unit.unitId}`)}
                     className={cn(homeInnerCardClass, "group p-4 text-left transition-all hover:-translate-y-0.5 hover:shadow-lg")}
                   >
                     <div className="mb-4 flex items-center justify-between">
