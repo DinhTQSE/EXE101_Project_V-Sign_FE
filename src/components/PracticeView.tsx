@@ -6,6 +6,7 @@ import {
   ChevronRight,
   Coffee,
   Cpu,
+  GraduationCap,
   Search,
   Shuffle,
   Smile,
@@ -38,6 +39,7 @@ const CATEGORY_ICONS: Record<AiPracticeFilter, LucideIcon> = {
   emotion: Smile,
   food: Utensils,
   beverage: Coffee,
+  school: GraduationCap,
 };
 
 let dictionaryVideoEntriesCache: DictionaryEntryDto[] | null = null;

@@ -65,9 +65,11 @@ describe("predictGestureLandmarks", () => {
 });
 
 describe("resolveAiPracticeTarget", () => {
-  it("does not match 'Lớp phó' to 'Phở'", async () => {
+  it("matches 'Lớp phó' to 'lop_pho' target and not 'Phở'", async () => {
     const { resolveAiPracticeTarget } = await import("@/services/aiRecognition");
-    expect(resolveAiPracticeTarget("Lớp phó")).toBeNull();
+    const target = resolveAiPracticeTarget("Lớp phó");
+    expect(target?.label).toBe("lop_pho");
+    expect(target?.display).toBe("Lớp phó");
   });
 
   it("correctly resolves exact targets and quoted target text", async () => {

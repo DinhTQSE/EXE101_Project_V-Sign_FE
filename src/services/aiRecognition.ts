@@ -21,7 +21,7 @@ export interface AiPredictionResponse {
   message?: string | null;
 }
 
-export type AiPracticeCategory = "family" | "emotion" | "food" | "beverage";
+export type AiPracticeCategory = "family" | "emotion" | "food" | "beverage" | "school";
 export type AiPracticeFilter = "recommended" | AiPracticeCategory;
 
 export interface AiPracticeCategoryInfo {
@@ -47,6 +47,7 @@ export const AI_PRACTICE_CATEGORIES: AiPracticeCategoryInfo[] = [
   { id: "emotion", label: "Cảm xúc", description: "Biểu đạt cảm xúc trong giao tiếp." },
   { id: "food", label: "Món ăn", description: "Các món ăn quen thuộc hằng ngày." },
   { id: "beverage", label: "Đồ uống", description: "Cà phê, trà, sữa và đồ uống giải khát." },
+  { id: "school", label: "Trường học", description: "Dụng cụ học tập, thầy cô và xưng hô trường học." },
 ];
 
 export const AI_PRACTICE_TARGETS: AiPracticeTarget[] = [
@@ -86,6 +87,15 @@ export const AI_PRACTICE_TARGETS: AiPracticeTarget[] = [
   { label: "nong", display: "Nóng", gloss: "NONG", category: "beverage", practiceItemId: "practice-mvp-nong", aliases: ["nóng", "nong"] },
   { label: "sua", display: "Sữa", gloss: "SUA", category: "beverage", practiceItemId: "practice-mvp-sua", featured: true, aliases: ["sữa", "sua"] },
   { label: "tra", display: "Trà", gloss: "TRA", category: "beverage", practiceItemId: "practice-mvp-tra", aliases: ["trà", "tra"] },
+  { label: "co_giao", display: "Cô giáo", gloss: "CO_GIAO", category: "school", practiceItemId: "practice-school-co-giao", featured: true, aliases: ["cô giáo", "co giao"] },
+  { label: "thay_giao", display: "Thầy giáo", gloss: "THAY_GIAO", category: "school", practiceItemId: "practice-school-thay-giao", aliases: ["thầy giáo", "thay giao"] },
+  { label: "hoc_tro", display: "Học trò", gloss: "HOC_TRO", category: "school", practiceItemId: "practice-school-hoc-tro", aliases: ["học trò", "hoc tro"] },
+  { label: "lop_truong", display: "Lớp trưởng", gloss: "LOP_TRUONG", category: "school", practiceItemId: "practice-school-lop-truong", aliases: ["lớp trưởng", "lop truong"] },
+  { label: "lop_pho", display: "Lớp phó", gloss: "LOP_PHO", category: "school", practiceItemId: "practice-school-lop-pho", aliases: ["lớp phó", "lop pho"] },
+  { label: "but", display: "Bút", gloss: "BUT", category: "school", practiceItemId: "practice-school-but", featured: true, aliases: ["bút", "but"] },
+  { label: "cap_sach", display: "Cặp sách", gloss: "CAP_SACH", category: "school", practiceItemId: "practice-school-cap-sach", aliases: ["cặp sách", "cap sach"] },
+  { label: "quyen_vo", display: "Quyển vở", gloss: "QUYEN_VO", category: "school", practiceItemId: "practice-school-quyen-vo", aliases: ["quyển vở", "quyen vo"] },
+  { label: "sach_giao_khoa", display: "Sách giáo khoa", gloss: "SACH_GIAO_KHOA", category: "school", practiceItemId: "practice-school-sach-giao-khoa", aliases: ["sách giáo khoa", "sach giao khoa"] },
 ];
 
 const AI_PREDICT_URL = `${getApiBaseUrl()}/signature-workflows/predict-landmarks`;
