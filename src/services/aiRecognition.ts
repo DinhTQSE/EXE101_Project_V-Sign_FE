@@ -21,7 +21,7 @@ export interface AiPredictionResponse {
   message?: string | null;
 }
 
-export type AiPracticeCategory = "family" | "emotion" | "food";
+export type AiPracticeCategory = "family" | "emotion" | "food" | "beverage";
 export type AiPracticeFilter = "recommended" | AiPracticeCategory;
 
 export interface AiPracticeCategoryInfo {
@@ -46,6 +46,7 @@ export const AI_PRACTICE_CATEGORIES: AiPracticeCategoryInfo[] = [
   { id: "family", label: "Gia đình", description: "Người thân và quan hệ trong gia đình." },
   { id: "emotion", label: "Cảm xúc", description: "Biểu đạt cảm xúc trong giao tiếp." },
   { id: "food", label: "Món ăn", description: "Các món ăn quen thuộc hằng ngày." },
+  { id: "beverage", label: "Đồ uống", description: "Cà phê, trà, sữa và đồ uống giải khát." },
 ];
 
 export const AI_PRACTICE_TARGETS: AiPracticeTarget[] = [
@@ -79,6 +80,12 @@ export const AI_PRACTICE_TARGETS: AiPracticeTarget[] = [
   { label: "com", display: "Cơm", gloss: "COM", category: "food", practiceItemId: "practice-mvp-com", featured: true, aliases: ["cơm", "com"] },
   { label: "pho_nt", display: "Phở", gloss: "PHO_NT", category: "food", region: "Nam/Trung", practiceItemId: "practice-mvp-pho-nt", aliases: ["phở nam trung", "pho nam trung"] },
   { label: "pho", display: "Phở", gloss: "PHO", category: "food", region: "Bắc", practiceItemId: "practice-mvp-pho", featured: true, aliases: ["phở bắc", "pho bac", "phở", "pho"] },
+  { label: "ca_phe", display: "Cà phê", gloss: "CA_PHE", category: "beverage", practiceItemId: "practice-mvp-caphe", featured: true, aliases: ["cà phê", "ca phe", "café", "cafe", "caphe"] },
+  { label: "da", display: "Đá", gloss: "DA", category: "beverage", practiceItemId: "practice-mvp-da", aliases: ["đá", "da"] },
+  { label: "den", display: "Đen", gloss: "DEN", category: "beverage", practiceItemId: "practice-mvp-den", aliases: ["đen", "den"] },
+  { label: "nong", display: "Nóng", gloss: "NONG", category: "beverage", practiceItemId: "practice-mvp-nong", aliases: ["nóng", "nong"] },
+  { label: "sua", display: "Sữa", gloss: "SUA", category: "beverage", practiceItemId: "practice-mvp-sua", featured: true, aliases: ["sữa", "sua"] },
+  { label: "tra", display: "Trà", gloss: "TRA", category: "beverage", practiceItemId: "practice-mvp-tra", aliases: ["trà", "tra"] },
 ];
 
 const AI_PREDICT_URL = `${getApiBaseUrl()}/signature-workflows/predict-landmarks`;
@@ -123,17 +130,34 @@ export function aiLabelToDisplay(value?: string | null) {
 }
 
 export function resolveAiPracticeTarget(text?: string | null) {
+  if (!text) return null;
   const normalized = normalizeAiLabel(text);
   if (!normalized) return null;
-  return AI_PRACTICE_TARGETS.find((target) => {
-    const keys = [
-      target.label,
-      target.gloss,
-      target.display,
-      ...(target.aliases || []),
-    ].map(normalizeAiLabel);
-    return keys.some((key) => key && (normalized === key || normalized.includes(key)));
-  }) || null;
+
+  const matchKey = (inputNorm: string) =>
+    AI_PRACTICE_TARGETS.find((target) => {
+      const keys = [
+        target.label,
+        target.gloss,
+        target.display,
+        ...(target.aliases || []),
+      ].map(normalizeAiLabel);
+      return keys.some((key) => key && inputNorm === key);
+    });
+
+  const exact = matchKey(normalized);
+  if (exact) return exact;
+
+  const quotedMatch = text.match(/['"“‘]([^'"”’]+)['"”’]/);
+  if (quotedMatch?.[1]) {
+    const quotedNorm = normalizeAiLabel(quotedMatch[1]);
+    if (quotedNorm) {
+      const targetFromQuote = matchKey(quotedNorm);
+      if (targetFromQuote) return targetFromQuote;
+    }
+  }
+
+  return null;
 }
 
 export async function predictGestureLandmarks(

@@ -4,6 +4,7 @@ import {
   BookOpen,
   Check,
   ChevronRight,
+  Coffee,
   Cpu,
   Search,
   Shuffle,
@@ -36,6 +37,7 @@ const CATEGORY_ICONS: Record<AiPracticeFilter, LucideIcon> = {
   family: Users,
   emotion: Smile,
   food: Utensils,
+  beverage: Coffee,
 };
 
 let dictionaryVideoEntriesCache: DictionaryEntryDto[] | null = null;

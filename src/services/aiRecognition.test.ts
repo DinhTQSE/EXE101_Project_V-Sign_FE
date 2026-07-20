@@ -63,3 +63,17 @@ describe("predictGestureLandmarks", () => {
     expect(payload.hands_detected_frames).toBe(5);
   });
 });
+
+describe("resolveAiPracticeTarget", () => {
+  it("does not match 'Lớp phó' to 'Phở'", async () => {
+    const { resolveAiPracticeTarget } = await import("@/services/aiRecognition");
+    expect(resolveAiPracticeTarget("Lớp phó")).toBeNull();
+  });
+
+  it("correctly resolves exact targets and quoted target text", async () => {
+    const { resolveAiPracticeTarget } = await import("@/services/aiRecognition");
+    expect(resolveAiPracticeTarget("Phở")?.display).toBe("Phở");
+    expect(resolveAiPracticeTarget("pho")?.display).toBe("Phở");
+    expect(resolveAiPracticeTarget("Thực hiện ký hiệu 'Phở' trước camera")?.display).toBe("Phở");
+  });
+});
