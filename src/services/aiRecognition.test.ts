@@ -77,5 +77,6 @@ describe("resolveAiPracticeTarget", () => {
     expect(resolveAiPracticeTarget("Phở")?.display).toBe("Phở");
     expect(resolveAiPracticeTarget("pho")?.display).toBe("Phở");
     expect(resolveAiPracticeTarget("Thực hiện ký hiệu 'Phở' trước camera")?.display).toBe("Phở");
+    expect(resolveAiPracticeTarget("Cô giáo (Bắc/Trung)")?.label).toBe("co_giao");
   });
 });

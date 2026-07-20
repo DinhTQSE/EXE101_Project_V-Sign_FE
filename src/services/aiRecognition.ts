@@ -158,6 +158,15 @@ export function resolveAiPracticeTarget(text?: string | null) {
   const exact = matchKey(normalized);
   if (exact) return exact;
 
+  const textWithoutParentheses = text.replace(/\s*\([^)]*\)/g, "").trim();
+  if (textWithoutParentheses && textWithoutParentheses !== text) {
+    const strippedNorm = normalizeAiLabel(textWithoutParentheses);
+    if (strippedNorm) {
+      const matchStripped = matchKey(strippedNorm);
+      if (matchStripped) return matchStripped;
+    }
+  }
+
   const quotedMatch = text.match(/['"“‘]([^'"”’]+)['"”’]/);
   if (quotedMatch?.[1]) {
     const quotedNorm = normalizeAiLabel(quotedMatch[1]);
