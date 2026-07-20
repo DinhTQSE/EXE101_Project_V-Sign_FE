@@ -174,26 +174,15 @@ export default function PracticeView() {
     selectTarget(next);
   };
 
-  if (!isProUser) {
-    return (
-      <div className="flex-1 flex flex-col items-center justify-center py-20 px-4 text-center">
-        <div className="w-16 h-16 rounded-[22px] bg-amber-100 dark:bg-amber-950/40 flex items-center justify-center mb-6 text-amber-500 shadow-sm shadow-amber-500/5">
-          <Crown className="w-8 h-8 animate-pulse text-amber-500" />
-        </div>
-        <h2 className="text-2xl font-display font-bold text-foreground mb-3">Tính năng dành cho gói Pro</h2>
-        <p className="text-muted-foreground font-body max-w-md mb-8 leading-relaxed">
-          Luyện tập nhận diện tự do qua camera AI là tính năng cao cấp thuộc gói Pro. Vui lòng nâng cấp gói Pro để bắt đầu luyện tập không giới hạn.
-        </p>
-        <button
-          onClick={() => setPremiumOpen(true)}
-          className="btn-primary-gradient px-8 py-3.5 rounded-full font-body font-bold text-white shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-transform duration-200"
-        >
-          Nâng cấp Pro ngay
-        </button>
-        <PremiumModal open={premiumOpen} onClose={() => setPremiumOpen(false)} />
-      </div>
-    );
-  }
+  const isCategoryAllowed = (categoryId: AiPracticeFilter) => {
+    if (isProUser) return true;
+    return categoryId === "recommended" || categoryId === "family" || categoryId === "emotion";
+  };
+
+  const isTargetAllowed = (target: AiPracticeTarget) => {
+    if (isProUser) return true;
+    return isCategoryAllowed(target.category);
+  };
 
   return (
     <div className="max-w-6xl mx-auto w-full min-w-0">
@@ -243,10 +232,15 @@ export default function PracticeView() {
           {AI_PRACTICE_CATEGORIES.map((category) => {
             const Icon = CATEGORY_ICONS[category.id];
             const active = activeCategory === category.id && !query.trim();
+            const allowed = isCategoryAllowed(category.id);
             return (
               <button
                 key={category.id}
                 onClick={() => {
+                  if (!allowed) {
+                    setPremiumOpen(true);
+                    return;
+                  }
                   setActiveCategory(category.id);
                   setQuery("");
                   setExpanded(false);
@@ -257,6 +251,7 @@ export default function PracticeView() {
               >
                 <Icon className="w-3.5 h-3.5" />
                 {category.label}
+                {!allowed && <Crown className="w-3.5 h-3.5 text-amber-500 ml-0.5" />}
               </button>
             );
           })}
@@ -266,15 +261,22 @@ export default function PracticeView() {
           {visibleTargets.map((target) => {
             const selected = target.label === current.label;
             const Icon = CATEGORY_ICONS[target.category];
+            const allowed = isTargetAllowed(target);
             return (
               <button
                 key={target.label}
-                onClick={() => selectTarget(target)}
-                className={`rounded-[20px] border p-3 text-left transition-all md:p-4 ${
+                onClick={() => {
+                  if (!allowed) {
+                    setPremiumOpen(true);
+                    return;
+                  }
+                  selectTarget(target);
+                }}
+                className={`rounded-[20px] border p-3 text-left transition-all md:p-4 relative ${
                   selected
                     ? "border-primary bg-primary/10 shadow-md"
                     : "border-border bg-card hover:border-primary/50 hover:bg-primary/5"
-                }`}
+                } ${!allowed ? "opacity-75" : ""}`}
               >
                 <div className="flex items-start gap-3">
                   <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ${
@@ -282,10 +284,13 @@ export default function PracticeView() {
                   }`}>
                     {selected ? <Check className="w-5 h-5" /> : <Icon className="w-5 h-5" />}
                   </div>
-                  <div className="min-w-0">
-                    <p className="font-display font-extrabold text-base text-foreground leading-tight">
-                      {target.display}
-                    </p>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-1">
+                      <p className="font-display font-extrabold text-base text-foreground leading-tight">
+                        {target.display}
+                      </p>
+                      {!allowed && <Crown className="w-3.5 h-3.5 text-amber-500 shrink-0" />}
+                    </div>
                     <p className="text-xs text-muted-foreground font-body mt-1">
                       {targetMeta(target)}
                     </p>
@@ -386,6 +391,8 @@ export default function PracticeView() {
           minConfidence={0.7}
         />
       </div>
+
+      <PremiumModal open={premiumOpen} onClose={() => setPremiumOpen(false)} />
     </div>
   );
 }

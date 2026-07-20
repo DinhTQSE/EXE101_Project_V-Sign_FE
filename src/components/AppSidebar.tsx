@@ -121,7 +121,7 @@ export function DesktopSidebar({ collapsed, onToggle }: DesktopSidebarProps) {
       <nav className="flex-1 p-2.5 space-y-1.5 overflow-y-auto overflow-x-hidden">
         {visibleNavItems(profile.role).map((item) => {
           const active = isActive(location.pathname, item.path);
-          const isLocked = item.path === "/ai-recognition" && !isProUser;
+          const isLocked = false;
           return (
             <button
               key={item.path}
@@ -344,7 +344,7 @@ export function MobileDrawer({ open, onClose }: MobileDrawerProps) {
             <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
               {visibleNavItems(profile.role).map((item) => {
                 const active = isActive(location.pathname, item.path);
-                const isLocked = item.path === "/ai-recognition" && !isProUser;
+                const isLocked = false;
                 return (
                   <button
                     key={item.path}
