@@ -29,6 +29,7 @@ export interface SyncReturnRequest {
 export interface SyncReturnResponse {
   orderCode: number;
   resolvedStatus: string;
+  amount?: number;
   message: string;
 }
 

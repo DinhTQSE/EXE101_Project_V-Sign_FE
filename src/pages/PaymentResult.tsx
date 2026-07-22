@@ -52,8 +52,9 @@ export const PaymentResult: React.FC = () => {
         if (res.resolvedStatus === "PAID") {
           const sessionKey = `vsign_tracked_purchase_${orderCode}`;
           if (!sessionStorage.getItem(sessionKey)) {
+            const purchaseValue = typeof res.amount === "number" && res.amount > 0 ? res.amount : 49000;
             trackAnalyticsEvent("purchase", {
-              value: 49000,
+              value: purchaseValue,
               currency: "VND",
               transaction_id: orderCode,
             });
