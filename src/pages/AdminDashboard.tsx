@@ -204,13 +204,19 @@ export default function AdminDashboard() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
+  const [allUsersList, setAllUsersList] = useState<AdminUserDto[]>([]);
+  const [allPaymentsList, setAllPaymentsList] = useState<PaymentTransaction[]>([]);
+
   const canEditRoles = profile.role === "SUPER_ADMIN";
 
   const dateInput = useMemo(() => ({ fromDate, toDate }), [fromDate, toDate]);
 
+  const targetUsers = useMemo(() => (allUsersList.length > 0 ? allUsersList : users.users), [allUsersList, users.users]);
+  const targetPayments = useMemo(() => (allPaymentsList.length > 0 ? allPaymentsList : payments.payments), [allPaymentsList, payments.payments]);
+
   const revenueChartData = useMemo(() => {
     const dailyRevenue: Record<string, number> = {};
-    payments.payments.forEach((p) => {
+    targetPayments.forEach((p) => {
       if (p.status === "SUCCESS" || p.status === "PAID") {
         const date = p.createdAt.slice(0, 10);
         dailyRevenue[date] = (dailyRevenue[date] || 0) + p.amount;
@@ -219,7 +225,7 @@ export default function AdminDashboard() {
 
     const dates = usage.points.map((p) => p.date);
     if (dates.length === 0) {
-      const uniqueDates = Array.from(new Set(payments.payments.map((p) => p.createdAt.slice(0, 10)))).sort();
+      const uniqueDates = Array.from(new Set(targetPayments.map((p) => p.createdAt.slice(0, 10)))).sort();
       dates.push(...uniqueDates);
     }
 
@@ -233,11 +239,11 @@ export default function AdminDashboard() {
         cumulative,
       };
     });
-  }, [payments.payments, usage.points]);
+  }, [targetPayments, usage.points]);
 
   const userGrowthData = useMemo(() => {
     const dailyUsers: Record<string, number> = {};
-    users.users.forEach((u) => {
+    targetUsers.forEach((u) => {
       const date = u.createdAt?.slice(0, 10);
       if (date) {
         dailyUsers[date] = (dailyUsers[date] || 0) + 1;
@@ -246,11 +252,11 @@ export default function AdminDashboard() {
 
     const dates = usage.points.map((p) => p.date);
     if (dates.length === 0) {
-      const uniqueDates = Array.from(new Set(users.users.map((u) => u.createdAt?.slice(0, 10)).filter(Boolean))).sort();
+      const uniqueDates = Array.from(new Set(targetUsers.map((u) => u.createdAt?.slice(0, 10)).filter(Boolean))).sort();
       dates.push(...uniqueDates);
     }
 
-    let count = Math.max(0, overview.totalUsers - users.users.length);
+    let count = Math.max(0, overview.totalUsers - targetUsers.length);
     return dates.map((date) => {
       const daily = dailyUsers[date] || 0;
       count += daily;
@@ -260,7 +266,7 @@ export default function AdminDashboard() {
         cumulative: count,
       };
     });
-  }, [users.users, usage.points, overview.totalUsers]);
+  }, [targetUsers, usage.points, overview.totalUsers]);
 
   const weeklyStatsData = useMemo(() => {
     const startDate = new Date("2026-06-15T00:00:00");
@@ -302,7 +308,7 @@ export default function AdminDashboard() {
       if (curr > now && buckets.length >= 6) break;
     }
 
-    users.users.forEach((u) => {
+    targetUsers.forEach((u) => {
       if (!u.createdAt) return;
       const uDate = new Date(u.createdAt);
       const bucket = buckets.find((b) => uDate >= b.startDate && uDate <= b.endDate);
@@ -311,7 +317,7 @@ export default function AdminDashboard() {
       }
     });
 
-    payments.payments.forEach((p) => {
+    targetPayments.forEach((p) => {
       if (p.status === "SUCCESS" || p.status === "PAID") {
         const pDate = new Date(p.createdAt);
         const bucket = buckets.find((b) => pDate >= b.startDate && pDate <= b.endDate);
@@ -322,7 +328,7 @@ export default function AdminDashboard() {
     });
 
     return buckets;
-  }, [users.users, payments.payments]);
+  }, [targetUsers, targetPayments]);
 
   const calendarWeek = useMemo(() => {
     const days = [];
@@ -350,14 +356,18 @@ export default function AdminDashboard() {
     if (showLoading) setLoading(true);
     setError("");
     try {
-      const [nextOverview, nextUsage, nextAudit] = await Promise.all([
+      const [nextOverview, nextUsage, nextAudit, fullUsersPage, fullPaymentsPage] = await Promise.all([
         adminApi.getMetricsOverview(accessToken, dateInput),
         adminApi.getUsageMetrics(accessToken, { ...dateInput, granularity: "daily" }),
         adminApi.listAuditLogs(accessToken),
+        adminApi.listUsers(accessToken, { page: 0, size: 1000 }),
+        adminApi.listPayments(accessToken, 0, 1000),
       ]);
       setOverview(nextOverview);
       setUsage(nextUsage);
       setAuditLogs(nextAudit);
+      setAllUsersList(fullUsersPage.users || []);
+      setAllPaymentsList(fullPaymentsPage.payments || []);
     } catch (err) {
       setError(apiMessage(err));
     } finally {
