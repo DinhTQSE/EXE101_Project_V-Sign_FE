@@ -24,6 +24,8 @@ import {
   Area,
   LineChart,
   Line,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -259,6 +261,68 @@ export default function AdminDashboard() {
       };
     });
   }, [users.users, usage.points, overview.totalUsers]);
+
+  const weeklyStatsData = useMemo(() => {
+    const startDate = new Date("2026-06-15T00:00:00");
+    const now = new Date();
+
+    interface WeekBucket {
+      weekLabel: string;
+      rangeLabel: string;
+      startDate: Date;
+      endDate: Date;
+      newUsers: number;
+      paidUpgrades: number;
+    }
+
+    const buckets: WeekBucket[] = [];
+    let curr = new Date(startDate);
+    let weekIndex = 1;
+
+    while (curr <= now || buckets.length < 6) {
+      const wStart = new Date(curr);
+      const wEnd = new Date(curr);
+      wEnd.setDate(wEnd.getDate() + 6);
+      wEnd.setHours(23, 59, 59, 999);
+
+      const startStr = `${wStart.getDate().toString().padStart(2, "0")}/${(wStart.getMonth() + 1).toString().padStart(2, "0")}`;
+      const endStr = `${wEnd.getDate().toString().padStart(2, "0")}/${(wEnd.getMonth() + 1).toString().padStart(2, "0")}`;
+
+      buckets.push({
+        weekLabel: `Tuần ${weekIndex}`,
+        rangeLabel: `${startStr} - ${endStr}`,
+        startDate: wStart,
+        endDate: wEnd,
+        newUsers: 0,
+        paidUpgrades: 0,
+      });
+
+      curr.setDate(curr.getDate() + 7);
+      weekIndex++;
+      if (curr > now && buckets.length >= 6) break;
+    }
+
+    users.users.forEach((u) => {
+      if (!u.createdAt) return;
+      const uDate = new Date(u.createdAt);
+      const bucket = buckets.find((b) => uDate >= b.startDate && uDate <= b.endDate);
+      if (bucket) {
+        bucket.newUsers += 1;
+      }
+    });
+
+    payments.payments.forEach((p) => {
+      if (p.status === "SUCCESS" || p.status === "PAID") {
+        const pDate = new Date(p.createdAt);
+        const bucket = buckets.find((b) => pDate >= b.startDate && pDate <= b.endDate);
+        if (bucket) {
+          bucket.paidUpgrades += 1;
+        }
+      }
+    });
+
+    return buckets;
+  }, [users.users, payments.payments]);
 
   const calendarWeek = useMemo(() => {
     const days = [];
@@ -644,6 +708,60 @@ export default function AdminDashboard() {
                   </div>
                 </div>
 
+                {/* Weekly Statistics Chart (From June 15th) */}
+                <div className="card-pastel p-5 flex flex-col">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+                    <div>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase bg-amber-500/10 text-amber-600">
+                        Thống kê hàng tuần
+                      </span>
+                      <h3 className="font-display font-bold text-base text-foreground mt-1">
+                        Đăng ký mới & Nâng cấp gói trả phí (Từ 15/06)
+                      </h3>
+                    </div>
+                    <div className="flex items-center gap-4 text-xs font-semibold">
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-3 h-3 rounded bg-primary inline-block" />
+                        <span>Người dùng mới</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-3 h-3 rounded bg-amber-500 inline-block" />
+                        <span>Nâng cấp trả phí</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="h-[250px] w-full">
+                    {weeklyStatsData.length === 0 ? (
+                      <div className="h-full flex items-center justify-center text-xs text-muted-foreground">Không có dữ liệu thống kê tuần</div>
+                    ) : (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={weeklyStatsData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
+                          <XAxis dataKey="weekLabel" tickLine={false} axisLine={false} style={{ fontSize: 11, fontWeight: 600, fill: "gray" }} />
+                          <YAxis allowDecimals={false} tickLine={false} axisLine={false} style={{ fontSize: 10, fill: "gray" }} />
+                          <ChartTooltip
+                            content={({ active, payload }) => {
+                              if (active && payload && payload.length) {
+                                const data = payload[0].payload;
+                                return (
+                                  <div className="bg-card border border-border p-3 rounded-xl shadow-lg text-xs font-body font-semibold space-y-1">
+                                    <p className="font-bold text-foreground mb-1">{data.weekLabel} ({data.rangeLabel})</p>
+                                    <p className="text-primary font-semibold">Tạo mới: <span className="font-bold">{data.newUsers}</span> học viên</p>
+                                    <p className="text-amber-600 font-semibold">Trả phí / Nâng cấp: <span className="font-bold">{data.paidUpgrades}</span> lượt</p>
+                                  </div>
+                                );
+                              }
+                              return null;
+                            }}
+                          />
+                          <Bar dataKey="newUsers" fill="var(--color-primary, #D6336C)" radius={[4, 4, 0, 0]} name="Người dùng mới" />
+                          <Bar dataKey="paidUpgrades" fill="#f59e0b" radius={[4, 4, 0, 0]} name="Nâng cấp trả phí" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    )}
+                  </div>
+                </div>
+
                 {/* Grid for "Hệ thống học tập" (My Asset) and "Thời lượng hoạt động" (To-do List) */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   
@@ -932,7 +1050,7 @@ export default function AdminDashboard() {
                           <th className="px-4 py-3">Vai trò</th>
                           <th className="px-4 py-3">Trạng thái</th>
                           <th className="px-4 py-3">Gói</th>
-                          <th className="px-4 py-3">Lần cuối</th>
+                          <th className="px-4 py-3">Ngày tạo</th>
                           <th className="px-4 py-3 text-right">XP</th>
                         </tr>
                       </thead>
@@ -950,7 +1068,7 @@ export default function AdminDashboard() {
                               <span className={`rounded-full border px-2 py-1 text-xs font-bold ${statusBadge(user.status)}`}>{userStatusLabel(user.status)}</span>
                             </td>
                             <td className="px-4 py-3">{accountTypeLabel(user.accountType)}</td>
-                            <td className="px-4 py-3 text-muted-foreground">{formatDate(user.lastSeenAt)}</td>
+                            <td className="px-4 py-3 text-muted-foreground">{formatDate(user.createdAt)}</td>
                             <td className="px-4 py-3 text-right font-semibold">{user.totalXp}</td>
                           </tr>
                         ))}
