@@ -8,6 +8,7 @@ import {
 } from "@/components/AppSidebar";
 import AppTopbar from "@/components/AppTopbar";
 import StreakPopup from "@/components/StreakPopup";
+import DemoBanner from "@/components/DemoBanner";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface DashboardLayoutProps {
@@ -20,6 +21,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <div className="min-h-screen overflow-x-hidden p-0 md:p-4">
+      <DemoBanner />
       {/* Desktop Sidebar — fixed */}
       <DesktopSidebar collapsed={collapsed} onToggle={toggleCollapsed} />
 

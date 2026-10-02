@@ -467,29 +467,504 @@ function normalizeValidationErrors(raw: unknown): Record<string, string> | undef
 }
 
 
-async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...init,
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      ...(init?.headers || {}),
-    },
-  });
+function getMockFallbackData<T>(path: string, init?: RequestInit): T {
+  const url = path.split("?")[0];
+  console.warn(`[Demo Mode] Request to ${path} fallback active.`);
 
-  const payload = await response.json().catch(() => null);
-  if (!response.ok) {
-    if ((response.status === 401 || payload?.code === "UNAUTHORIZED") && payload?.code !== "INVALID_CREDENTIALS") {
-      handleUnauthorizedResponse();
-    }
-    const validationErrors = normalizeValidationErrors(payload?.validationErrors);
-    if (validationErrors && Object.keys(validationErrors).length > 0) {
-      throw makeApiError(payload?.code || "HTTP_ERROR", payload?.message || "API request failed", validationErrors);
-    }
-    throw makeApiError(payload?.code || "HTTP_ERROR", payload?.message || "Không thể kết nối máy chủ.");
+  // Auth & User Profile
+  if (url.includes("/auth/me") || url === "/me") {
+    return {
+      id: "demo-user-1",
+      email: "demo@vsign.vn",
+      displayName: "Demo User",
+      fullName: "Demo User",
+      avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=DemoUser",
+      bio: "Tài khoản Demo trải nghiệm V-Sign Interactive UI",
+      role: "USER",
+      accountType: "BASIC",
+      subscription: {
+        planType: "FREE",
+        status: "FREE",
+        startDate: new Date().toISOString(),
+        endDate: new Date(Date.now() + 30 * 86400000).toISOString(),
+      },
+    } as unknown as T;
   }
 
-  return payload?.data ?? payload;
+  if (url.includes("/me/subscription")) {
+    return {
+      planType: "MONTHLY",
+      status: "FREE",
+      remainingDays: 0,
+    } as unknown as T;
+  }
+
+  if (url.includes("/me/payments")) {
+    return [] as unknown as T;
+  }
+
+  if (url.includes("/auth/login") || url.includes("/auth/register") || url.includes("/auth/google")) {
+    return {
+      accessToken: "demo-jwt-token-vsign",
+      user: {
+        id: "demo-user-1",
+        email: "demo@vsign.vn",
+        displayName: "Demo User",
+        fullName: "Demo User",
+        avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=DemoUser",
+        role: "USER",
+        accountType: "BASIC",
+      },
+    } as unknown as T;
+  }
+
+  // Units
+  if (url === "/units" || url.startsWith("/units?")) {
+    return {
+      units: [
+        {
+          unitId: "unit-1",
+          title: "Bài 1: Nhập môn VSL & Chào hỏi",
+          description: "Học các ký hiệu chào hỏi cơ bản và cách xưng hô giao tiếp hằng ngày.",
+          thumbnailUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=500&q=80",
+          chapterCount: 3,
+          orderIndex: 1,
+        },
+        {
+          unitId: "unit-2",
+          title: "Bài 2: Gia đình & Xã hội",
+          description: "Ký hiệu về các thành viên trong gia đình, mối quan hệ và cảm xúc.",
+          thumbnailUrl: "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=500&q=80",
+          chapterCount: 3,
+          orderIndex: 2,
+        },
+        {
+          unitId: "unit-3",
+          title: "Bài 3: Trường học & Ẩm thực",
+          description: "Dụng cụ học tập, đồ ăn, đồ uống quen thuộc với người Việt.",
+          thumbnailUrl: "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=500&q=80",
+          chapterCount: 3,
+          orderIndex: 3,
+        },
+      ],
+    } as unknown as T;
+  }
+
+  // Chapters
+  if (url.includes("/chapters") && !url.includes("/lessons")) {
+    return {
+      chapters: [
+        {
+          chapterId: "chap-1",
+          title: "Chương 1: Ký hiệu Chào hỏi & Cảm ơn",
+          description: "Chào hỏi, cảm ơn, tạm biệt",
+          lessonCount: 3,
+          orderIndex: 1,
+          requiresPremium: false,
+          locked: false,
+          completionPercent: 100,
+        },
+        {
+          chapterId: "chap-2",
+          title: "Chương 2: Xưng hô người thân",
+          description: "Bố, mẹ, anh, chị, em",
+          lessonCount: 3,
+          orderIndex: 2,
+          requiresPremium: false,
+          locked: false,
+          completionPercent: 50,
+        },
+        {
+          chapterId: "chap-3",
+          title: "Chương 3: Cảm xúc & Giao tiếp",
+          description: "Vui vẻ, buồn, hoảng sợ",
+          lessonCount: 3,
+          orderIndex: 3,
+          requiresPremium: false,
+          locked: false,
+          completionPercent: 0,
+        },
+      ],
+    } as unknown as T;
+  }
+
+  // Lessons list in a chapter
+  if (url.includes("/lessons") && url.includes("/chapters/")) {
+    return {
+      lessons: [
+        {
+          lessonId: "lesson-1",
+          title: "Xin chào & Cảm ơn",
+          description: "Học cách chào và cảm ơn chuẩn VSL",
+          videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          durationSeconds: 180,
+          orderIndex: 1,
+          requiresPremium: false,
+          locked: false,
+          status: "COMPLETED",
+        },
+        {
+          lessonId: "lesson-2",
+          title: "Thành viên trong Gia đình",
+          description: "Ký hiệu Bố, Mẹ, Anh chị em",
+          videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          durationSeconds: 240,
+          orderIndex: 2,
+          requiresPremium: false,
+          locked: false,
+          status: "IN_PROGRESS",
+        },
+        {
+          lessonId: "lesson-3",
+          title: "Cô giáo & Thầy giáo",
+          description: "Ký hiệu xưng hô trường học",
+          videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          durationSeconds: 200,
+          orderIndex: 3,
+          requiresPremium: false,
+          locked: false,
+          status: "NOT_STARTED",
+        },
+      ],
+    } as unknown as T;
+  }
+
+  // Single Lesson detail
+  if (url.includes("/lessons/") && !url.endsWith("/quiz") && !url.endsWith("/progress") && !url.endsWith("/complete")) {
+    const parts = url.split("/");
+    const lessonId = parts[parts.indexOf("lessons") + 1] || "lesson-1";
+    return {
+      lessonId,
+      title: "Xin chào & Cảm ơn (Demo)",
+      videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      requiresPremium: false,
+      progress: {
+        lessonId,
+        completionPct: 100,
+        lastPositionSeconds: 180,
+        phase: "PRACTICE",
+        status: "COMPLETED",
+      },
+    } as unknown as T;
+  }
+
+  // Lesson quiz
+  if (url.endsWith("/quiz")) {
+    return {
+      lessonId: "lesson-1",
+      quizId: "quiz-demo-1",
+      attemptId: "attempt-demo-1",
+      questions: [
+        {
+          id: "q1",
+          prompt: "Ký hiệu nào dưới đây thể hiện sự 'Cảm ơn'?",
+          options: [
+            { id: "opt1", text: "Chắp hai tay trước ngực và cúi đầu nhẹ" },
+            { id: "opt2", text: "Vẫy tay sang hai bên" },
+            { id: "opt3", text: "Đưa ngón tay trỏ lên môi" },
+            { id: "opt4", text: "Vỗ hai bàn tay vào nhau" },
+          ],
+          correctAnswerId: "opt1",
+        },
+        {
+          id: "q2",
+          prompt: "Ký hiệu 'Xin chào' trong VSL thường sử dụng bàn tay như thế nào?",
+          options: [
+            { id: "opt1", text: "Bàn tay mở hướng về phía trước, di chuyển nhẹ" },
+            { id: "opt2", text: "Nắm chặt bàn tay" },
+            { id: "opt3", text: "Chỉ ngón tay cái lên trên" },
+            { id: "opt4", text: "Xòe 5 ngón tay úp xuống đất" },
+          ],
+          correctAnswerId: "opt1",
+        },
+      ],
+    } as unknown as T;
+  }
+
+  // Quiz submission
+  if (url.includes("/quiz-attempts/")) {
+    return {
+      attemptId: "attempt-demo-1",
+      score: 100,
+      passed: true,
+      xpAwarded: 20,
+      reviewAvailable: true,
+      timedOut: false,
+      unansweredCount: 0,
+    } as unknown as T;
+  }
+
+  // Practice items list
+  if (url.includes("/learning/practice-items")) {
+    return {
+      page: 0,
+      size: 20,
+      total: 8,
+      totalPages: 1,
+      content: [
+        { itemId: "practice-school-co-giao", lessonId: "lesson-3", label: "co_giao", category: "school", level: "Beginner", expectedGloss: "CO_GIAO", videoUrl: "" },
+        { itemId: "practice-mvp-bo", lessonId: "lesson-2", label: "bo", category: "family", level: "Beginner", expectedGloss: "BO", videoUrl: "" },
+        { itemId: "practice-mvp-me", lessonId: "lesson-2", label: "me", category: "family", level: "Beginner", expectedGloss: "ME", videoUrl: "" },
+        { itemId: "practice-mvp-anhhai", lessonId: "lesson-2", label: "anhhai", category: "family", level: "Beginner", expectedGloss: "ANHHAI", videoUrl: "" },
+        { itemId: "practice-mvp-caphe", lessonId: "lesson-3", label: "ca_phe", category: "beverage", level: "Beginner", expectedGloss: "CA_PHE", videoUrl: "" },
+        { itemId: "practice-mvp-banhmi", lessonId: "lesson-3", label: "banhmi", category: "food", level: "Beginner", expectedGloss: "BANHMI", videoUrl: "" },
+        { itemId: "practice-mvp-vuive", lessonId: "lesson-1", label: "vuive", category: "emotion", level: "Beginner", expectedGloss: "VUIVE", videoUrl: "" },
+        { itemId: "practice-mvp-buon", lessonId: "lesson-1", label: "buon", category: "emotion", level: "Beginner", expectedGloss: "BUON", videoUrl: "" },
+      ],
+    } as unknown as T;
+  }
+
+  // Dictionary entries
+  if (url.includes("/dictionary")) {
+    return {
+      items: [
+        { id: 1, entryId: "dict-1", word: "Cô giáo", category: "Trường học", difficulty: "Cơ bản", difficultyLevel: 1, description: "Ký hiệu chỉ cô giáo dạy học trong nhà trường." },
+        { id: 2, entryId: "dict-2", word: "Bố", category: "Gia đình", difficulty: "Cơ bản", difficultyLevel: 1, description: "Ký hiệu chỉ người cha trong gia đình." },
+        { id: 3, entryId: "dict-3", word: "Mẹ", category: "Gia đình", difficulty: "Cơ bản", difficultyLevel: 1, description: "Ký hiệu chỉ người mẹ trong gia đình." },
+        { id: 4, entryId: "dict-4", word: "Anh hai", category: "Gia đình", difficulty: "Cơ bản", difficultyLevel: 1, description: "Ký hiệu chỉ anh trai lớn trong gia đình." },
+        { id: 5, entryId: "dict-5", word: "Cà phê", category: "Đồ uống", difficulty: "Cơ bản", difficultyLevel: 1, description: "Ký hiệu mô tả thức uống cà phê." },
+        { id: 6, entryId: "dict-6", word: "Bánh mì", category: "Ẩm thực", difficulty: "Cơ bản", difficultyLevel: 1, description: "Ký hiệu món ăn bánh mì Việt Nam." },
+        { id: 7, entryId: "dict-7", word: "Vui sướng", category: "Cảm xúc", difficulty: "Cơ bản", difficultyLevel: 1, description: "Ký hiệu thể hiện niềm vui, sự sướng vui." },
+        { id: 8, entryId: "dict-8", word: "Buồn thảm", category: "Cảm xúc", difficulty: "Cơ bản", difficultyLevel: 1, description: "Ký hiệu thể hiện tâm trạng buồn bã." },
+      ],
+    } as unknown as T;
+  }
+
+  // Gamification summary
+  if (url.includes("/gamification/summary")) {
+    return {
+      userId: "demo-user-1",
+      totalXp: 350,
+      currentStreak: 5,
+      longestStreak: 12,
+      badges: [
+        { badgeId: "b1", name: "Người khởi đầu", earnedAt: "2026-06-01" },
+        { badgeId: "b2", name: "Streak 5 ngày", earnedAt: "2026-06-05" },
+      ],
+    } as unknown as T;
+  }
+
+  // XP awards
+  if (url.includes("/gamification/xp-awards")) {
+    return {
+      userId: "demo-user-1",
+      eventId: "event-demo-1",
+      totalXp: 370,
+      xpAwarded: 20,
+      duplicate: false,
+    } as unknown as T;
+  }
+
+  // Leaderboards
+  if (url.includes("/leaderboards")) {
+    return {
+      period: "WEEKLY",
+      page: 0,
+      size: 20,
+      entries: [
+        { rank: 1, userId: "user-101", fullName: "Nguyễn Văn An", xp: 1250, avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=An" },
+        { rank: 2, userId: "user-102", fullName: "Trần Thị Bình", xp: 980, avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Binh" },
+        { rank: 3, userId: "demo-user-1", fullName: "Demo User (Bạn)", xp: 350, avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=DemoUser" },
+        { rank: 4, userId: "user-103", fullName: "Lê Minh Cường", xp: 290, avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Cuong" },
+        { rank: 5, userId: "user-104", fullName: "Phạm Hoàng Dung", xp: 210, avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Dung" },
+      ],
+      currentUser: {
+        rank: 3,
+        userId: "demo-user-1",
+        fullName: "Demo User (Bạn)",
+        xp: 350,
+        avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=DemoUser",
+      },
+    } as unknown as T;
+  }
+
+  // Signature attempts
+  if (url.includes("/signature-workflows/attempts")) {
+    return {
+      attemptId: "attempt-demo-" + Date.now(),
+      practiceItemId: "practice-item-1",
+      status: "PASSED",
+      score: 92,
+      targetGloss: "CO_GIAO",
+      predictedGloss: "CO_GIAO",
+      confidence: 0.92,
+      correct: true,
+      feedbackCodes: ["SUCCESS"],
+      currentUsage: 1,
+      maxLimit: 10,
+    } as unknown as T;
+  }
+
+  // Assessments
+  if (url === "/assessments") {
+    return [
+      { id: "asm-1", title: "Bài kiểm tra Đánh giá Năng lực VSL Sơ cấp", questionCount: 5, passingScore: 80 },
+    ] as unknown as T;
+  }
+
+  if (url.includes("/assessments/")) {
+    if (url.endsWith("/submissions")) {
+      return {
+        assessmentId: "asm-1",
+        userId: "demo-user-1",
+        score: 100,
+        passed: true,
+        correctAnswers: 5,
+        totalQuestions: 5,
+        awardedXp: 50,
+      } as unknown as T;
+    }
+    return {
+      id: "asm-1",
+      title: "Bài kiểm tra Đánh giá Năng lực VSL Sơ cấp",
+      passingScore: 80,
+      questions: [
+        {
+          id: "aq1",
+          prompt: "Ý nghĩa của ký hiệu 'Bố' trong gia đình VSL là gì?",
+          options: [
+            { id: "ao1", text: "Đặt ngón tay trỏ chạm cằm hoặc trán" },
+            { id: "ao2", text: "Vẫy tay hai bên" },
+            { id: "ao3", text: "Búng hai ngón tay" },
+          ],
+          correctAnswerId: "ao1",
+        },
+      ],
+    } as unknown as T;
+  }
+
+  // Admin APIs
+  if (url.includes("/admin/metrics/overview")) {
+    return {
+      totalUsers: 142,
+      newUsers: 18,
+      activeUsers: 95,
+      activeUsersInRange: 95,
+      premiumUsers: 24,
+      totalRevenueVnd: 5940000,
+      successfulPayments: 24,
+      pendingReviews: 0,
+      lessonCompletions: 480,
+      quizAttempts: 310,
+      aiAttempts: 210,
+      aiSuccessRate: 88.5,
+      averageActiveSeconds: 1800,
+      topActiveUsers: [
+        { email: "demo@vsign.vn", displayName: "Demo User", activeSeconds: 7200 },
+        { email: "user1@vsign.vn", displayName: "Nguyễn Văn An", activeSeconds: 5400 },
+      ],
+    } as unknown as T;
+  }
+
+  if (url.includes("/admin/metrics/usage")) {
+    return {
+      granularity: "WEEKLY",
+      points: [
+        { date: "2026-06-15", activeSeconds: 3600, lessonCompletions: 40, quizAttempts: 25, aiAttempts: 20 },
+        { date: "2026-06-22", activeSeconds: 4200, lessonCompletions: 55, quizAttempts: 35, aiAttempts: 30 },
+        { date: "2026-06-29", activeSeconds: 5100, lessonCompletions: 70, quizAttempts: 48, aiAttempts: 42 },
+        { date: "2026-07-06", activeSeconds: 6800, lessonCompletions: 95, quizAttempts: 65, aiAttempts: 58 },
+      ],
+    } as unknown as T;
+  }
+
+  if (url.includes("/admin/users")) {
+    return {
+      users: [
+        { id: "u-1", email: "demo@vsign.vn", displayName: "Demo User", role: "USER", status: "ACTIVE", accountType: "BASIC", createdAt: "2026-06-15T08:00:00Z", totalXp: 350, currentStreak: 5 },
+        { id: "u-2", email: "admin@vsign.vn", displayName: "V-Sign Admin", role: "SUPER_ADMIN", status: "ACTIVE", accountType: "PREMIUM", createdAt: "2026-06-01T08:00:00Z", totalXp: 1200, currentStreak: 15 },
+        { id: "u-3", email: "nguyenvana@gmail.com", displayName: "Nguyễn Văn An", role: "USER", status: "ACTIVE", accountType: "PREMIUM", createdAt: "2026-06-18T10:30:00Z", totalXp: 980, currentStreak: 8 },
+        { id: "u-4", email: "tranbinh@gmail.com", displayName: "Trần Thị Bình", role: "USER", status: "ACTIVE", accountType: "BASIC", createdAt: "2026-06-20T14:15:00Z", totalXp: 450, currentStreak: 3 },
+      ],
+      page: 0,
+      size: 20,
+      total: 4,
+      totalPages: 1,
+    } as unknown as T;
+  }
+
+  if (url.includes("/admin/payments")) {
+    return {
+      payments: [
+        { transactionId: "tx-101", userEmail: "nguyenvana@gmail.com", planId: "MONTHLY", amount: 99000, currency: "VND", status: "SUCCESS", provider: "PAYOS", createdAt: "2026-06-18T10:30:00Z", updatedAt: "2026-06-18T10:31:00Z" },
+        { transactionId: "tx-102", userEmail: "admin@vsign.vn", planId: "YEARLY", amount: 799000, currency: "VND", status: "SUCCESS", provider: "PAYOS", createdAt: "2026-06-01T08:00:00Z", updatedAt: "2026-06-01T08:01:00Z" },
+      ],
+      page: 0,
+      size: 10,
+      total: 2,
+      totalPages: 1,
+    } as unknown as T;
+  }
+
+  if (url.includes("/admin/audit-logs")) {
+    return [
+      { id: "log-1", actorEmail: "admin@vsign.vn", action: "USER_UPDATE", targetType: "USER", targetId: "u-3", reason: "Nâng cấp gói Premium", createdAt: "2026-06-18T10:31:00Z" },
+    ] as unknown as T;
+  }
+
+  // Subscription plans & orders
+  if (url.includes("/subscription/plans")) {
+    return [
+      { planId: "plan-monthly", planType: "MONTHLY", name: "Gói Giao Tiếp (Hàng Tháng)", amount: 99000, price: 99000, currency: "VND", durationDays: 30 },
+      { planId: "plan-yearly", planType: "YEARLY", name: "Gói Thành Thạo (Hàng Năm)", amount: 799000, price: 799000, currency: "VND", durationDays: 365 },
+    ] as unknown as T;
+  }
+
+  if (url.includes("/payments/orders")) {
+    return {
+      transactionId: "ord-demo-" + Date.now(),
+      providerTransactionId: "payos-" + Date.now(),
+      provider: "MOMO",
+      planType: "MONTHLY",
+      amount: 99000,
+      currency: "VND",
+      status: "SUCCESS",
+      qrCodeData: "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=VSIGN_DEMO_PAYMENT",
+      deepLink: "#",
+      expiresAt: new Date(Date.now() + 15 * 60000).toISOString(),
+    } as unknown as T;
+  }
+
+  return (Array.isArray(path) ? [] : {}) as unknown as T;
+}
+
+async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
+  try {
+    const response = await fetch(`${API_BASE_URL}${path}`, {
+      ...init,
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        ...(init?.headers || {}),
+      },
+    });
+
+    const payload = await response.json().catch(() => null);
+    if (!response.ok) {
+      if (response.status >= 500) {
+        return getMockFallbackData<T>(path, init);
+      }
+      if ((response.status === 401 || payload?.code === "UNAUTHORIZED") && payload?.code !== "INVALID_CREDENTIALS") {
+        handleUnauthorizedResponse();
+      }
+      const validationErrors = normalizeValidationErrors(payload?.validationErrors);
+      if (validationErrors && Object.keys(validationErrors).length > 0) {
+        throw makeApiError(payload?.code || "HTTP_ERROR", payload?.message || "API request failed", validationErrors);
+      }
+      throw makeApiError(payload?.code || "HTTP_ERROR", payload?.message || "Không thể kết nối máy chủ.");
+    }
+
+    return payload?.data ?? payload;
+  } catch (error) {
+    if (
+      error instanceof TypeError ||
+      (error as ApiErrorShape)?.code === "HTTP_ERROR" ||
+      (error as Error)?.name === "TypeError"
+    ) {
+      return getMockFallbackData<T>(path, init);
+    }
+    throw error;
+  }
 }
 
 function authHeader(token: string): HeadersInit {

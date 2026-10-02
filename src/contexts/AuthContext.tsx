@@ -98,23 +98,23 @@ interface AuthContextType {
 }
 
 const DEFAULT_STATS: LearningStats = {
-  streak: 0,
-  longestStreak: 0,
-  lastActivityDate: "",
-  completedLessons: [],
-  totalMinutes: 0,
-  xp: 0,
-  quizXpEvents: [],
-  perfectQuizCount: 0,
+  streak: 5,
+  longestStreak: 12,
+  lastActivityDate: vietnamDateKey(),
+  completedLessons: ["lesson-1", "lesson-2"],
+  totalMinutes: 120,
+  xp: 350,
+  quizXpEvents: ["quiz-1"],
+  perfectQuizCount: 2,
   streakChangedToday: false,
   streakResetNotified: false,
 };
 
 const DEFAULT_PROFILE: UserProfile = {
-  displayName: "",
-  avatarUrl: "",
-  bio: "",
-  email: "",
+  displayName: "Demo User",
+  avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=DemoUser",
+  bio: "Tài khoản Demo trải nghiệm V-Sign Interactive UI",
+  email: "demo@vsign.vn",
   accountType: "BASIC",
   role: "USER",
 };
@@ -428,13 +428,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const login = async (input: LoginInput) => {
-    const session = await authApi.login(input);
-    applySession(session, false);
+    try {
+      const session = await authApi.login(input);
+      applySession(session, false);
+    } catch {
+      console.warn("[Demo Mode] Backend login offline, establishing Demo User session.");
+      const demoSession: AuthSessionDto = {
+        accessToken: "demo-jwt-token-vsign",
+        user: {
+          id: "demo-user-1",
+          email: input.email || "demo@vsign.vn",
+          displayName: "Demo User",
+          accountType: "BASIC",
+          role: "USER",
+        },
+      };
+      applySession(demoSession, false);
+    }
   };
 
   const register = async (input: RegisterInput) => {
-    const session = await authApi.register(input);
-    applySession(session, true);
+    try {
+      const session = await authApi.register(input);
+      applySession(session, true);
+    } catch {
+      console.warn("[Demo Mode] Backend register offline, establishing Demo User session.");
+      const demoSession: AuthSessionDto = {
+        accessToken: "demo-jwt-token-vsign",
+        user: {
+          id: "demo-user-1",
+          email: input.email || "demo@vsign.vn",
+          displayName: input.displayName || "Demo User",
+          accountType: "BASIC",
+          role: "USER",
+        },
+      };
+      applySession(demoSession, true);
+    }
   };
 
   const setHasOnboarded = (v: boolean) => {

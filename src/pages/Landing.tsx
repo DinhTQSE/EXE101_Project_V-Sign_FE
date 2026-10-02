@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import logo from "@/assets/vsign-logo.png";
 import mascotImg from "@/assets/mascot.png";
 import { LoginModal } from "@/components/LoginModal";
+import DemoBanner from "@/components/DemoBanner";
 
 export default function Landing() {
   const location = useLocation();
@@ -44,6 +45,7 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-background">
+      <DemoBanner />
       {/* Sticky Navbar */}
       <nav className="glass-nav fixed top-0 left-0 right-0 z-50 px-6 py-3">
         <div className="container mx-auto flex items-center justify-between">

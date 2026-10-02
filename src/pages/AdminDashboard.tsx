@@ -97,6 +97,19 @@ function formatMoney(value: number) {
   return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(value);
 }
 
+function formatPercent(rate: number) {
+  if (!rate) return "0%";
+  const pct = rate <= 1 ? rate * 100 : rate;
+  return `${pct.toFixed(1)}%`;
+}
+
+function formatCompactNumber(val: number) {
+  if (!val) return "0";
+  if (val >= 1000000) return `${(val / 1000000).toFixed(1)}M`;
+  if (val >= 1000) return `${Math.round(val / 1000)}k`;
+  return `${val}`;
+}
+
 function formatDuration(seconds: number) {
   if (!seconds) return "0 phút";
   const hours = Math.floor(seconds / 3600);
@@ -623,7 +636,7 @@ export default function AdminDashboard() {
                     <div className="mt-2 flex items-baseline gap-2">
                       <span className="text-2xl font-display font-black text-foreground">{overview.aiAttempts} lần</span>
                       <span className="text-xs font-body text-emerald-600 flex items-center font-bold">
-                        Tỉ lệ đạt: {overview.aiSuccessRate}%
+                        Tỉ lệ đạt: {formatPercent(overview.aiSuccessRate)}
                       </span>
                     </div>
                   </div>
@@ -654,7 +667,7 @@ export default function AdminDashboard() {
                             </defs>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
                             <XAxis dataKey="date" tickLine={false} axisLine={false} style={{ fontSize: 10, fill: "gray" }} />
-                            <YAxis tickLine={false} axisLine={false} style={{ fontSize: 10, fill: "gray" }} />
+                            <YAxis tickLine={false} axisLine={false} tickFormatter={formatCompactNumber} width={45} style={{ fontSize: 10, fill: "gray" }} />
                             <ChartTooltip 
                               content={({ active, payload }) => {
                                 if (active && payload && payload.length) {
