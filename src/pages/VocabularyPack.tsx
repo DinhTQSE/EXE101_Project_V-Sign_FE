@@ -1284,7 +1284,8 @@ export default function VocabularyPack() {
     setError("");
     try {
       const nextUnits = await learningApi.listUnits();
-      setUnits(nextUnits.filter((unit) => FEATURED_UNIT_IDS.has(unit.unitId)));
+      const featured = nextUnits.filter((unit) => FEATURED_UNIT_IDS.has(unit.unitId));
+      setUnits(featured.length > 0 ? featured : nextUnits);
     } catch {
       setError("Không thể tải khóa học. Vui lòng thử lại sau.");
     } finally {

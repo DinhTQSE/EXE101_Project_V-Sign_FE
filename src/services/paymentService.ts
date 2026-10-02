@@ -37,29 +37,10 @@ const authHeader = (token?: string | null): HeadersInit => {
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
-async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
-  try {
-    const response = await fetch(`${API_BASE_URL}${path}`, {
-      ...init,
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        ...(init?.headers || {}),
-      },
-    });
+let isBackendUnreachable = true;
 
-    const payload = await response.json().catch(() => null);
-    if (!response.ok) {
-      if ((response.status === 401 || payload?.code === "UNAUTHORIZED") && payload?.code !== "INVALID_CREDENTIALS") {
-        handleUnauthorizedResponse();
-      }
-      throw {
-        code: payload?.code || "HTTP_ERROR",
-        message: payload?.message || "Yêu cầu dịch vụ thất bại.",
-      };
-    }
-    return payload?.data ?? payload;
-  } catch {
+async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
+  if (isBackendUnreachable) {
     console.warn(`[Demo Mode] paymentService request to ${path} fallback active.`);
     if (path.includes("/tiers")) {
       return [
@@ -82,6 +63,38 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
       amount: 99000,
       message: "Thanh toán thành công (Demo Mode)",
     } as unknown as T;
+  }
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 1500);
+
+  try {
+    const response = await fetch(`${API_BASE_URL}${path}`, {
+      ...init,
+      signal: init?.signal || controller.signal,
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        ...(init?.headers || {}),
+      },
+    });
+    clearTimeout(timeoutId);
+
+    const payload = await response.json().catch(() => null);
+    if (!response.ok) {
+      if ((response.status === 401 || payload?.code === "UNAUTHORIZED") && payload?.code !== "INVALID_CREDENTIALS") {
+        handleUnauthorizedResponse();
+      }
+      throw {
+        code: payload?.code || "HTTP_ERROR",
+        message: payload?.message || "Yêu cầu dịch vụ thất bại.",
+      };
+    }
+    return payload?.data ?? payload;
+  } catch {
+    clearTimeout(timeoutId);
+    isBackendUnreachable = true;
+    return requestJson<T>(path, init);
   }
 }
 

@@ -523,28 +523,36 @@ function getMockFallbackData<T>(path: string, init?: RequestInit): T {
     return {
       units: [
         {
-          unitId: "unit-1",
-          title: "Bài 1: Nhập môn VSL & Chào hỏi",
-          description: "Học các ký hiệu chào hỏi cơ bản và cách xưng hô giao tiếp hằng ngày.",
-          thumbnailUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=500&q=80",
+          unitId: "unit-mvp-family",
+          title: "Bài 1: Gia đình & Người thân",
+          description: "Học các ký hiệu về các thành viên trong gia đình, mối quan hệ và xưng hô.",
+          thumbnailUrl: "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=500&q=80",
           chapterCount: 3,
           orderIndex: 1,
         },
         {
-          unitId: "unit-2",
-          title: "Bài 2: Gia đình & Xã hội",
-          description: "Ký hiệu về các thành viên trong gia đình, mối quan hệ và cảm xúc.",
-          thumbnailUrl: "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=500&q=80",
+          unitId: "unit-mvp-emotions",
+          title: "Bài 2: Cảm xúc & Giao tiếp",
+          description: "Biểu đạt niềm vui, nỗi buồn, hoảng sợ và các trạng thái cảm xúc VSL.",
+          thumbnailUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=500&q=80",
           chapterCount: 3,
           orderIndex: 2,
         },
         {
-          unitId: "unit-3",
-          title: "Bài 3: Trường học & Ẩm thực",
-          description: "Dụng cụ học tập, đồ ăn, đồ uống quen thuộc với người Việt.",
+          unitId: "unit-mvp-food",
+          title: "Bài 3: Món ăn & Đồ uống",
+          description: "Các món ăn, đồ uống quen thuộc hằng ngày của người Việt.",
           thumbnailUrl: "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=500&q=80",
           chapterCount: 3,
           orderIndex: 3,
+        },
+        {
+          unitId: "unit-school",
+          title: "Bài 4: Trường học & Học tập",
+          description: "Thầy cô, bạn bè, dụng cụ học tập và giao tiếp môi trường lớp học.",
+          thumbnailUrl: "https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=500&q=80",
+          chapterCount: 3,
+          orderIndex: 4,
         },
       ],
     } as unknown as T;
@@ -928,16 +936,31 @@ function getMockFallbackData<T>(path: string, init?: RequestInit): T {
   return (Array.isArray(path) ? [] : {}) as unknown as T;
 }
 
+let isBackendUnreachable = true;
+
+export function setDemoModeActive(active: boolean) {
+  isBackendUnreachable = active;
+}
+
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
+  if (isBackendUnreachable) {
+    return getMockFallbackData<T>(path, init);
+  }
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 1500);
+
   try {
     const response = await fetch(`${API_BASE_URL}${path}`, {
       ...init,
+      signal: init?.signal || controller.signal,
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
         ...(init?.headers || {}),
       },
     });
+    clearTimeout(timeoutId);
 
     const payload = await response.json().catch(() => null);
     if (!response.ok) {
@@ -956,14 +979,9 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
 
     return payload?.data ?? payload;
   } catch (error) {
-    if (
-      error instanceof TypeError ||
-      (error as ApiErrorShape)?.code === "HTTP_ERROR" ||
-      (error as Error)?.name === "TypeError"
-    ) {
-      return getMockFallbackData<T>(path, init);
-    }
-    throw error;
+    clearTimeout(timeoutId);
+    isBackendUnreachable = true;
+    return getMockFallbackData<T>(path, init);
   }
 }
 
